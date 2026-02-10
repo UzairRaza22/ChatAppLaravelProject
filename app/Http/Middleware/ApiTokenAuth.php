@@ -21,13 +21,19 @@ class ApiTokenAuth
         $token = $this->extractTokenFromRequest($request);
         
         if (!$token) {
-            abort(401, 'Token required');
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid or empty token'
+            ], 401);
         }
 
         $apiToken = ApiToken::findValidToken($token);
         
         if (!$apiToken) {
-            abort(401, 'Invalid or expired token');
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid or empty token'
+            ], 401);
         }
 
         // Update token usage information
@@ -37,7 +43,10 @@ class ApiTokenAuth
         $user = User::find($apiToken->user_id);
         
         if (!$user || !$user->is_active) {
-            abort(401, 'User not found or inactive');
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid or empty token'
+            ], 401);
         }
 
         // Authenticate the user

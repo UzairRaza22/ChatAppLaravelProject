@@ -18,7 +18,7 @@ class UpdateChannelRequest extends FormRequest
         return [
             'name' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string|max:1000',
-            'type' => 'sometimes|required|string|in:text,voice',
+            'type' => 'sometimes|required|string|in:public,private',
             'user_ids' => 'nullable|array',
             'user_ids.*' => 'exists:users,_id',
             'settings' => 'nullable|array',
@@ -35,7 +35,7 @@ class UpdateChannelRequest extends FormRequest
             'description.max' => 'Description must not exceed 1000 characters',
             'type.required' => 'Channel type is required',
             'type.string' => 'Channel type must be a string',
-            'type.in' => 'Channel type must be either text or voice',
+            'type.in' => 'Channel type must be either public or private',
             'user_ids.array' => 'User IDs must be an array',
             'user_ids.*.exists' => 'One or more selected users do not exist',
             'settings.array' => 'Settings must be an array',

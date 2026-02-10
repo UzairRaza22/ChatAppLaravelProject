@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Resources\SuccessResource;
 use App\Http\Resources\FileResource;
 use App\Models\File;
+use App\Models\Workspace;
+use App\Models\Team;
+use App\Models\Channel;
 use App\Services\GridFSService;
 use App\Http\Requests\File\CreateFileRequest;
 use App\Http\Requests\File\UpdateFileRequest;
@@ -38,8 +41,49 @@ class FileController extends Controller
     public function create(CreateFileRequest $request)
     {
         $file = $request->file('file');
+        $workspaceId = $request->workspace_id;
+        $teamId = $request->team_id;
         $channelId = $request->channel_id;
-        $channel = $request->user()->channels()->findOrFail($channelId);
+
+        // Validate workspace exists
+        $workspace = Workspace::find($workspaceId);
+        if (!$workspace) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Incorrect workspace ID'
+            ], 404);
+        }
+
+        // Validate team belongs to workspace
+        $team = Team::where('id', $teamId)
+            ->where('workspace_id', $workspace->id)
+            ->first();
+        if (!$team) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Incorrect team ID or team does not belong to this workspace'
+            ], 404);
+        }
+
+        // Validate channel belongs to team
+        $channel = Channel::where('id', $channelId)
+            ->where('workspace_id', $workspace->id)
+            ->where('team_id', $team->id)
+            ->first();
+        if (!$channel) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Incorrect channel ID or channel does not belong to this team'
+            ], 404);
+        }
+
+        // Check if user has access to this channel
+        if ($channel->type !== 'public' && !in_array($request->user()->_id, $channel->user_ids ?? [])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You do not have access to this channel'
+            ], 403);
+        }
 
         $gridFSId = $this->gridFSService->uploadFile($file);
 
@@ -50,7 +94,9 @@ class FileController extends Controller
             'size' => $file->getSize(),
             'gridfs_id' => $gridFSId,
             'uploaded_by' => $request->user()->id,
-            'channel_id' => $channelId,
+            'workspace_id' => $workspace->id,
+            'team_id' => $team->id,
+            'channel_id' => $channel->id,
         ]);
 
         return new FileResource($fileRecord->load(['uploadedBy']));
