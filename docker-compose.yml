@@ -17,7 +17,7 @@ services:
       - APP_DEBUG=true
       - APP_URL=http://localhost:8000
       - DB_CONNECTION=mongodb
-      - MONGO_HOST=mongodb
+      - MONGO_HOST=host.docker.internal
       - MONGO_PORT=27017
       - MONGO_DATABASE=whistle_it
       - MONGO_USERNAME=whistle_user

@@ -1,12 +1,5 @@
 #!/bin/bash
 
-# Wait for MongoDB to be ready
-echo "🔄 Waiting for MongoDB to be ready..."
-while ! nc -z mongodb 27017; do
-  sleep 1
-done
-echo "✅ MongoDB is ready!"
-
 # Generate Laravel application key if not exists
 if [ ! -f /var/www/html/.env ]; then
     echo "📝 Creating .env file from .env.docker..."
