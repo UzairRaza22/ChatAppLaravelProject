@@ -119,18 +119,21 @@
             z-index: 1;
         }
         .otp-code {
-            font-size: 42px;
+            font-size: 24px;
             font-weight: bold;
             color: #e74c3c;
-            letter-spacing: 12px;
+            letter-spacing: 2px;
             margin: 15px 0;
             font-family: 'Courier New', monospace;
             background: #ffffff;
-            padding: 20px;
+            padding: 25px 20px;
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(231, 76, 60, 0.2);
             position: relative;
             z-index: 1;
+            word-break: break-all;
+            line-height: 1.4;
+            text-align: center;
         }
         .security-notice {
             background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
@@ -265,7 +268,7 @@
                 <p>We received a request to reset your password for your Whistle IT account.</p>
             </div>
 
-            <p>To proceed with the password reset, please use the One-Time Password (OTP) below:</p>
+            <p>To proceed with the password reset, please use the verification code below:</p>
 
             <div class="otp-container">
                 <div class="otp-label">Your Password Reset Code</div>
@@ -290,9 +293,9 @@
             <div class="steps">
                 <h4>Reset Your Password</h4>
                 <ol>
-                    <li><strong>Copy</strong> the 6-digit OTP code above</li>
+                    <li><strong>Copy</strong> the verification code above</li>
                     <li><strong>Go to</strong> the password reset page</li>
-                    <li><strong>Enter</strong> the OTP code along with your new password</li>
+                    <li><strong>Enter</strong> the verification code along with your new password</li>
                     <li><strong>Submit</strong> the form to complete the password reset</li>
                     <li><strong>Login</strong> with your new password to access your account</li>
                 </ol>

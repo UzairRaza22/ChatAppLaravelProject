@@ -1,11 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Workspace;
+namespace App\Http\Requests\Auth;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
-class UpdateWorkspaceRequest extends FormRequest
+class LogoutRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -23,9 +22,9 @@ class UpdateWorkspaceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'workspace_id' => 'required|exists:workspaces,id',
-            'name' => 'required|string|min:2|max:255',
-            'description' => 'sometimes|string|max:255',
+            // Logout typically doesn't require validation parameters
+            // Token is usually extracted from Authorization header
+            // No validation rules needed
         ];
     }
 }

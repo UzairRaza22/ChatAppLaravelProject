@@ -3,52 +3,38 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 
-/*
-|--------------------------------------------------------------------------
-| Authentication Routes
-|--------------------------------------------------------------------------
-*/
+//user sign-up route
+Route::post('/signup', [AuthController::class, 'signup'])->middleware([
+    'check.validation:signup_request',
+    'check.user.exists',
+]);
 
-// Public routes (no authentication required)
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+//verify sign-up route
+Route::post('/verify-signup', [AuthController::class, 'verifySignup'])->middleware([
+    'check.validation:verify_signup_request',
+    'check.token:signup_verification_token',
+]);
 
-// OTP Authentication
-Route::post('/send-otp', [AuthController::class, 'sendOtp']);
-Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
-Route::post('/login-with-otp', [AuthController::class, 'loginWithOtp']);
-Route::post('/delete-account', [AuthController::class, 'deleteOtpVerification']);
-Route::post('/complete-registration', [AuthController::class, 'completeRegistration']);
-Route::post('/forgot-password', [AuthController::class, 'sendOtp']);
-Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+//user login route
+Route::post('/login', [AuthController::class, 'login'])->middleware([
+    'check.validation:login_request',
+    'check.credentials',
+    'check.active',
+]);
 
-// Email verification
-Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
-    ->name('verification.verify');
+//forgot password route
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware([
+    'check.validation:forgot_password_request',
+    'check.user.exists.forgot',
+]);
 
-// Public users listing (separate from auth prefix)
-Route::get('/users', [AuthController::class, 'users']);
+//reset password
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware([
+    'check.validation:reset_password_request',
+    'check.token:forgot_password_token',
+]);
 
-// Protected routes (authentication required)
-Route::middleware(['api.token'])->group(function () {
-    // Authentication routes
-    Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/profile', [AuthController::class, 'profile']);
-    Route::put('/profile', [AuthController::class, 'updateProfile']);
-    Route::post('/change-password', [AuthController::class, 'changePassword']);
-    Route::post('/refresh', [AuthController::class, 'refresh']);
-
-    // Email verification
-    Route::post('/email/verification-notification', [AuthController::class, 'sendVerificationEmail']);
-    Route::get('/email/verify', [AuthController::class, 'checkEmailVerification']);
-
-    // Token management routes
-    Route::prefix('tokens')->group(function () {
-        Route::get('/', [AuthController::class, 'tokens']);
-        Route::post('/', [AuthController::class, 'createToken']);
-        Route::get('/current', [AuthController::class, 'currentToken']);
-        Route::post('/refresh', [AuthController::class, 'refreshToken']);
-        Route::put('/{id}/revoke', [AuthController::class, 'revokeToken']);
-        Route::delete('/{id}', [AuthController::class, 'deleteToken']);
-    });
-});
+//user logout route
+Route::post('/logout', [AuthController::class, 'logout'])->middleware([
+    'check.token:login_token',
+]);

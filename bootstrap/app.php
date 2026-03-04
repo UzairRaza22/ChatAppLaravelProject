@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -21,8 +22,28 @@ return Application::configure(basePath: dirname(__DIR__))
             'channel.access' => \App\Http\Middleware\CheckChannelAccess::class,
             'channel.ownership' => \App\Http\Middleware\CheckChannelOwnership::class,
             'api.token' => \App\Http\Middleware\ApiTokenAuth::class,
+            'check.validation' => \App\Http\Middleware\CheckValidationMiddleware::class,
+            'check.token' => \App\Http\Middleware\auth\CheckTokenMiddleware::class,
+            'check.credentials' => \App\Http\Middleware\auth\CheckCredentialsMiddleware::class,
+            'check.active' => \App\Http\Middleware\auth\CheckActiveMiddleware::class,
+            'check.user.exists' => \App\Http\Middleware\auth\CheckUserExistMiddleware::class,
+            'check.user.exists.forgot' => \App\Http\Middleware\auth\CheckUserExistForForgotMiddleware::class,
+            'workspace.unique.name' => \App\Http\Middleware\Workspace\CheckUniqueWorkspaceNameMiddleware::class,
+            'workspace.creator' => \App\Http\Middleware\Workspace\CheckWorkspaceCreatorMiddleware::class,
+            'workspace.exists' => \App\Http\Middleware\Workspace\CheckWorkspaceExistsMiddleware::class,
+            'workspaces.exist' => \App\Http\Middleware\Workspace\CheckWorkspacesExistMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (Throwable $e, Request $request) {
+            // Handle validation exceptions for API routes
+            if ($e instanceof \Illuminate\Validation\ValidationException && $request->is('api/*')) {
+                return response()->json([
+                    'message' => $e->getMessage(),
+                    'errors' => $e->errors()
+                ], $e->status);
+            }
+            
+            return null;
+        });
     })->create();

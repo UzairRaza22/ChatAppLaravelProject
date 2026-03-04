@@ -3,9 +3,8 @@
 namespace App\Http\Requests\Workspace;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
-class UpdateWorkspaceRequest extends FormRequest
+class RemoveWorkspaceMemberRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -23,9 +22,23 @@ class UpdateWorkspaceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'workspace_id' => 'required|exists:workspaces,id',
-            'name' => 'required|string|min:2|max:255',
-            'description' => 'sometimes|string|max:255',
+            'workspace_id'=>'required|exists:workspaces,id',
+            'emails' => 'required|array',
+            'emails.*' => 'email|exists:users,email'
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'emails.*.exists' => 'The email :input is not registered.',
+        ];
+    }
+
+    public function attributes(): array
+    {
+        return [
+            'emails.*' => 'email address',
         ];
     }
 }

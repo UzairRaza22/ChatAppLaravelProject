@@ -2,26 +2,26 @@
 
 namespace App\Http\Resources;
 
-class UserResource extends BaseResource
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+
+class UserResource extends JsonResource
 {
     /**
-     * Transform the resource data.
+     * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @return array<string, mixed>
      */
-    protected function transformData($request)
+    public function toArray(Request $request): array
     {
         return [
-            'id' => (string) $this->_id,
-            'name' => $this->name,
-            'email' => $this->email,
-            'avatar' => $this->avatar,
-            'is_active' => $this->is_active,
-            'email_verified_at' => $this->email_verified_at,
-            'otp_verified_at' => $this->otp_verified_at,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
+            "id"=> $this->id,
+            "name"=> $this->name,
+            "email"=> $this->email,
+            "is_active"=> $this->is_active,
+            "access_token"=> $this->access_token,
+            "updated_at"=> $this->updated_at,
+            "created_at"=> $this->created_at,
         ];
     }
 }

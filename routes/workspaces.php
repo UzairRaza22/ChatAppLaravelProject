@@ -2,22 +2,46 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\WorkspaceController;
+//use App\Http\Controllers\TeamController;
 
-/*
-|--------------------------------------------------------------------------
-| Workspace Routes
-|--------------------------------------------------------------------------
-*/
+Route::middleware('check.token:login_token')->group(function () {
 
-// Protected routes (token authentication required)
-Route::middleware(['api.token'])->group(function () {
-    // Workspace CRUD operations
-    Route::get('/', [WorkspaceController::class, 'readAll']);
-    Route::post('/', [WorkspaceController::class, 'create']);
-    Route::get('/{id}', [WorkspaceController::class, 'read'])->middleware('workspace.access');
-    Route::put('/{id}', [WorkspaceController::class, 'update'])->middleware('workspace.access');
-    Route::delete('/{id}', [WorkspaceController::class, 'delete'])->middleware(['workspace.access', 'workspace.ownership']);
-    
-    // Workspace member management
-    Route::post('/{id}/add-member', [WorkspaceController::class, 'addMember'])->middleware(['workspace.access', 'workspace.ownership']);
+    //create workspace
+    Route::post('/create', [WorkspaceController::class, 'create'])->middleware([
+        'check.validation:CreateWorkspaceRequest',
+        'workspace.unique.name'
+    ]);
+
+    //read workspaces
+    Route::get('/read', [WorkspaceController::class, 'get'])->middleware(
+        'check.workspaces.exist'
+    );
+
+
+    //update workspace
+    Route::patch('/update', [WorkspaceController::class, 'update'])->middleware([
+        'check.validation:UpdateWorkspaceRequest',
+        'workspace.creator',
+        'workspace.unique.name'
+    ]);
+
+    //delete workspace
+    Route::delete('/delete', [WorkspaceController::class, 'delete'])->middleware([
+        'check.workspace.exists',
+        'check.workspace.creator',
+    ]);
+
+    //add members
+    Route::post('/add-members', [WorkspaceController::class, 'addMembers'])->middleware([
+        'workspace.exists',
+        'workspace.creator',
+        'check.validation:AddWorkspaceMemberRequest'
+    ]);
+
+    //remove members
+    Route::delete('/remove-members', [WorkspaceController::class, 'removeMembers'])->middleware([
+        'workspace.exists',
+        'workspace.creator',
+        'check.validation:RemoveWorkspaceMemberRequest'
+    ]);
 });

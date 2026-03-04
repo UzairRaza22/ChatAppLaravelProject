@@ -2,33 +2,29 @@
 
 namespace App\Http\Resources;
 
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
 use App\Http\Resources\UserResource;
-use App\Http\Resources\TeamResource;
-use App\Http\Resources\ChannelResource;
+//use App\Http\Resources\TeamResource;
 
-class WorkspaceResource extends BaseResource
+class WorkspaceResource extends JsonResource
 {
     /**
-     * Transform the resource data.
+     * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @return array<string, mixed>
      */
-    protected function transformData($request)
+    public function toArray(Request $request): array
     {
         return [
-            'id' => (string) $this->_id,
+            'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
-            'slug' => $this->slug,
-            'is_active' => $this->is_active,
-            'settings' => $this->settings ?? [],
-            'owner' => $this->when($this->relationLoaded('owner'), new UserResource($this->owner)),
-            'members' => $this->when($this->relationLoaded('members'), UserResource::collection($this->members)),
-            'teams' => $this->when($this->relationLoaded('teams'), TeamResource::collection($this->teams)),
-            'channels' => $this->when($this->relationLoaded('channels'), ChannelResource::collection($this->channels)),
+            'creator_id' => $this->creator_id,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+            'members' => $this->whenLoaded('members') ? UserResource::collection($this->members) : [],
+            //'teams' => $this->whenLoaded('teams') ? TeamResource::collection($this->teams) : [],
         ];
     }
 }

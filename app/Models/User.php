@@ -2,48 +2,71 @@
 
 namespace App\Models;
 
-use App\Notifications\EmailVerificationNotification;
-use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Auth\Authenticatable;
-use Illuminate\Notifications\Notifiable;
 use MongoDB\Laravel\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
-class User extends Model implements AuthenticatableContract, MustVerifyEmail
+class User extends Model
 {
-    use Authenticatable, HasFactory, Notifiable;
-
-    protected $connection = 'mongodb';
+    /** @use HasFactory<\Database\Factories\UserFactory> */
+    use HasFactory, Notifiable, SoftDeletes;
     protected $collection = 'users';
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var list<string>
+     */
+
+    protected $attributes = [
+        'is_active' => false,
+        'workspace_ids' => [],
+        'access_token' => null,
+    ];
 
     protected $fillable = [
         'name',
         'email',
         'password',
-        'avatar',
         'is_active',
-        'last_login_at',
-        'email_verified_at',
-        'otp_verified_at'
+        'workspace_ids',
+        'access_token',
     ];
 
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var list<string>
+     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-        'last_login_at' => 'datetime',
-        'otp_verified_at' => 'datetime',
-        'is_active' => 'boolean',
-        'password' => 'hashed',
-    ];
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+            'is_active' => 'boolean',
+            'deleted_at' => 'datetime',
+        ];
+    }
+
+    public function createdWorkspaces()
+    {
+        return $this->hasMany(Workspace::class, 'creator_id', '_id');
+    }
 
     public function workspaces()
     {
-        return $this->hasMany(Workspace::class, 'owner_id');
+        return $this->belongsToMany(Workspace::class, null, 'user_ids', 'workspace_ids');
     }
 
     public function teams()
@@ -51,64 +74,19 @@ class User extends Model implements AuthenticatableContract, MustVerifyEmail
         return $this->belongsToMany(Team::class, null, 'user_ids', 'team_ids');
     }
 
-    public function messages()
+    public function tasks()
     {
-        return $this->hasMany(Message::class, 'sender_id');
+        return $this->belongsToMany(Task::class, null, 'task_ids', 'assignee_ids');
     }
 
-    public function hasVerifiedEmail()
-    {
-        return !is_null($this->email_verified_at);
-    }
 
-    public function markEmailAsVerified()
+    public static function add($data)
     {
-        return $this->forceFill([
-            'email_verified_at' => $this->freshTimestamp(),
-        ])->save();
-    }
-
-    public function getEmailForVerification()
-    {
-        return $this->email;
-    }
-
-    public function sendEmailVerificationNotification()
-    {
-        $this->notify(new EmailVerificationNotification());
-    }
-
-    public function getAvatarUrlAttribute()
-    {
-        if ($this->avatar) {
-            return asset('storage/avatars/' . $this->avatar);
-        }
-        
-        return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&color=7F9CF5&background=EBF4FF';
-    }
-
-    /**
-     * Check if user is OTP verified
-     */
-    public function isOtpVerified()
-    {
-        return !is_null($this->otp_verified_at);
-    }
-
-    /**
-     * Mark user as OTP verified
-     */
-    public function markOtpVerified()
-    {
-        $this->otp_verified_at = now();
-        return $this->save();
-    }
-
-    /**
-     * Check if user can login (OTP verified)
-     */
-    public function canLogin()
-    {
-        return $this->is_active && $this->isOtpVerified();
+        return self::create([
+            'name' => data_get($data, 'name'),
+            'email' => data_get($data, 'email'),
+            'password' => data_get($data, 'password'),
+            'is_active' => false,
+        ]);
     }
 }

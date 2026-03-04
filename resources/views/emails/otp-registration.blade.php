@@ -119,18 +119,21 @@
             z-index: 1;
         }
         .otp-code {
-            font-size: 42px;
+            font-size: 24px;
             font-weight: bold;
             color: #7F9CF5;
-            letter-spacing: 12px;
+            letter-spacing: 2px;
             margin: 15px 0;
             font-family: 'Courier New', monospace;
             background: #ffffff;
-            padding: 20px;
+            padding: 25px 20px;
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(127, 156, 245, 0.2);
             position: relative;
             z-index: 1;
+            word-break: break-all;
+            line-height: 1.4;
+            text-align: center;
         }
         .security-notice {
             background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
@@ -215,7 +218,7 @@
                 <p>Thank you for choosing Whistle IT! We're excited to have you on board.</p>
             </div>
 
-            <p>To activate your account and start collaborating, please verify your email address using the One-Time Password (OTP) below:</p>
+            <p>To activate your account and start collaborating, please verify your email address using the verification code below:</p>
 
             <div class="otp-container">
                 <div class="otp-label">Your Verification Code</div>
@@ -235,9 +238,9 @@
             <div class="steps">
                 <h4>Next Steps</h4>
                 <ol>
-                    <li><strong>Copy</strong> the 6-digit verification code above</li>
+                    <li><strong>Copy</strong> the verification code above</li>
                     <li><strong>Go to</strong> the registration verification page</li>
-                    <li><strong>Enter</strong> the OTP code in the verification field</li>
+                    <li><strong>Enter</strong> the verification code in the verification field</li>
                     <li><strong>Complete</strong> your registration with your name and password</li>
                     <li><strong>Start using</strong> Whistle IT immediately! 🚀</li>
                 </ol>

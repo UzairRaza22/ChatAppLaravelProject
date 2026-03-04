@@ -2,78 +2,94 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\SuccessResource;
-use App\Http\Resources\WorkspaceResource;
-use App\Models\Workspace;
-use App\Models\User;
-use App\Http\Requests\Workspace\CreateWorkspaceRequest;
-use App\Http\Requests\Workspace\UpdateWorkspaceRequest;
 use Illuminate\Http\Request;
+use App\Models\Workspace;
+use App\Http\Resources\WorkspaceResource;
+use App\Models\User;
 
 class WorkspaceController extends Controller
 {
-    /**
-     * Display a listing of workspaces.
-     */
-    public function readAll(Request $request)
+    public function create(Request $request)
     {
-        $workspaces = Workspace::with(['owner', 'members'])
-            ->where('owner_id', $request->user()->_id)
-            ->paginate(20);
+        $user = $request->user();
 
-        return WorkspaceResource::collection($workspaces);
-    }
+        // Create workspace using createdWorkspaces relation to set creator_id
+        $workspace = $user->createdWorkspaces()->create($request->only(['name', 'description']));
 
-    /**
-     * Store a newly created workspace.
-     */
-    public function create(CreateWorkspaceRequest $request)
-    {
-        $workspace = Workspace::create([
-            'name' => $request->name,
-            'description' => $request->description,
-            'owner_id' => $request->user()->id,
+        // Attach user as member
+        $workspace->members()->attach($user->id);
+
+        return response()->json([
+            'message' => 'Workspace created successfully!',
+            'data' => [
+                'workspace' => WorkspaceResource::make($workspace)
+            ]
         ]);
-
-        // Add owner as a member
-        $workspace->members()->attach($request->user()->id, ['role' => 'owner']);
-
-        return new WorkspaceResource($workspace);
     }
 
-    /**
-     * Display the specified workspace.
-     */
-    public function read(Request $request, $id)
+    public function get(Request $request)
     {
-        $workspace = $request->user()->workspaces()
-            ->with(['owner', 'members'])
-            ->findOrFail($id);
+        $workspace = data_get($request, 'workspace');
+        $createdWorkspaces = data_get($request, 'createdWorkspaces');
+        $joinedWorkspaces = data_get($request, 'joinedWorkspaces');
 
-        return new WorkspaceResource($workspace);
+        return response()->success("Workspace(s) retrieved successfully!", [
+            'Workspaces' =>  $workspace ? WorkspaceResource::make($workspace) :
+                [
+                    'created_workspaces' => WorkspaceResource::collection($createdWorkspaces),
+                    'joined_workspaces' => WorkspaceResource::collection($joinedWorkspaces)
+                ]
+        ]);
     }
 
-    /**
-     * Update the specified workspace.
-     */
-    public function update(UpdateWorkspaceRequest $request, $id)
+
+    public function update(Request $request)
     {
-        $workspace = $request->user()->workspaces()
-            ->findOrFail($id);
+        $workspace = Workspace::edit($request);
 
-        $workspace->update($request->validated());
 
-        return new WorkspaceResource($workspace);
+        return response()->success('Workspace updated successfully!', [
+            'workspace' => WorkspaceResource::make($workspace)
+        ]);
     }
 
-    /**
-     * Remove the specified workspace.
-     */
-    public function delete(Request $request, $id)
+    public function delete(Request $request)
     {
-        $workspace = $request->user()->workspaces()->findOrFail($id);
+        $workspace = data_get($request, 'workspace');
+        $workspace->teams()->delete(); // delete all teams in this workspace
+        $workspace->members()->detach(); // detach all members
         $workspace->delete();
 
-        return new SuccessResource(['message' => 'Workspace deleted successfully']);
+        return response()->success('Workspace deleted successfully!');
+    }
+
+    public function addMembers(Request $request)
+    {
+
+        $workspace = data_get($request, 'workspace');
+
+        // Find users by emails
+        $users = User::whereIn('email', $request->emails)->get();
+        // Extract IDs, using the MongoDB _id
+        $userIds = $users->pluck('_id')->toArray();
+
+        // Sync without detaching to add new members
+        $workspace->members()->syncWithoutDetaching($userIds);
+
+        return response()->success('Members added successfully!', [
+            'workspace' => WorkspaceResource::make($workspace->load('members'))
+        ]);
+    }
+
+    public function removeMembers(Request $request)
+    {
+        $workspace = data_get($request, 'workspace');
+
+        $users = User::whereIn('email', $request->emails)->get();
+        $userIds = $users->pluck('_id')->toArray();
+
+        $workspace->members()->detach($userIds);
+
+        return response()->success('Members removed successfully!');
     }
 }
