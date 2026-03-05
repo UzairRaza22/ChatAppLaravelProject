@@ -1,0 +1,1873 @@
+{
+  "info": {
+    "_postman_id": "c78bcbcf-6e06-4c2e-87ad-b1681c603ca6",
+    "name": "project",
+    "description": "### Welcome to Postman! This is your first collection. \n\nCollections are your starting point for building and testing APIs. You can use this one to:\n\n• Group related requests\n• Test your API in real-world scenarios\n• Document and share your requests\n\nUpdate the name and overview whenever you’re ready to make it yours.\n\n[Learn more about Postman Collections.](https://learning.postman.com/docs/collections/collections-overview/)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "52013827",
+    "_collection_link": "https://go.postman.co/collection/52013827-c78bcbcf-6e06-4c2e-87ad-b1681c603ca6?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "authentication",
+      "item": [
+        {
+          "name": "register",
+          "item": [
+            {
+              "name": "happy case",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"name\": \"Uzair Raza\",\r\n    \"email\": \"uzairraza10@gmail.com\",\r\n    \"password\": \"password24242424\",\r\n    \"password_confirmation\": \"password24242424\"\r\n}"
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/auth/register",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "register"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "email already registered",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"name\": \"Uzair Raza\",\r\n    \"email\": \"uzairraza10@gmail.com\",\r\n    \"password\": \"password24242424\",\r\n    \"password_confirmation\": \"password24242424\"\r\n}"
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/auth/register",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "register"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "input field required",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/auth/register",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "register"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "password doesnot match",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"name\": \"Uzair Raza\",\r\n    \"email\": \"uzairraza11@gmail.com\",\r\n    \"password\": \"password24242424\",\r\n    \"password_confirmation\": \"password24242425\"\r\n}"
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/auth/register",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "register"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "too short password",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"name\": \"Uzair Raza\",\r\n    \"email\": \"uzairraza11@gmail.com\",\r\n    \"password\": \"password24242424\",\r\n    \"password_confirmation\": \"password24242425\"\r\n}"
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/auth/register",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "register"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "item": [
+            {
+              "name": "happy case",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"name\": \"Shaheen Shah Afridi\",\r\n  \"email\": \"shaheen_afridi10@test.com\",\r\n  \"password\": \"password242410\",\r\n  \"password_confirmation\": \"password242410\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/auth/login",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "login"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "invalid username or password",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"email\": \"uzairraza13@gmail.com\",\r\n    \"name\": \"Uzair Raza\",\r\n    \"password\": \"password24242524\",\r\n    \"otp\": \"179768\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/auth/login",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "login"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "email not registered",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"name\": \"Shaheen Shah Afridi\",\r\n  \"email\": \"shaheen_afridi10@test.com\",\r\n  \"password\": \"password242410\",\r\n  \"password_confirmation\": \"password242410\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/auth/login",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "login"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "invalid otp",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"email\": \"uzairraza13@gmail.com\",\r\n    \"name\": \"Uzair Raza\",\r\n    \"password\": \"password24242424\",\r\n    \"otp\": \"123456\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/auth/login",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "login"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "login second time",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"email\": \"uzairraza13@gmail.com\",\r\n    \"name\": \"Uzair Raza\",\r\n    \"password\": \"password24242424\",\r\n    \"otp\": \"123456\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/auth/login",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "login"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "input field required",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"email\": \"uzairraza13@gmail.com\",\r\n    \"name\": \"Uzair Raza\",\r\n    \"password\": \"password24242424\",\r\n    \"otp\": \"123456\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/auth/login",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "login"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Forgot Password",
+          "item": [
+            {
+              "name": "happy case",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"name\": \"Uzair Raza\",\r\n  \"email\": \"uzairraza13@gmail.com\",\r\n  \"type\": \"forgot_password\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/auth/forgot-password",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "forgot-password"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "no account found",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"name\": \"Uzair Raza\",\r\n  \"email\": \"uzairraza13@gmail.com\",\r\n  \"type\": \"forgot_password\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/auth/forgot-password",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "forgot-password"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "input field required",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"name\": \"Uzair Raza\",\r\n  \"email\": \"uzairraza13@gmail.com\",\r\n  \"type\": \"forgot_password\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/auth/forgot-password",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "forgot-password"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Reset Password",
+          "item": [
+            {
+              "name": "happy case",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"email\": \"uzairraza188@gmail.com\",\r\n    \"otp\": \"369762\",\r\n    \"password\": \"Password@241061\",\r\n    \"password_confirmation\": \"Password@241061\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/auth/reset-password",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "reset-password"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "input field required",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"email\": \"uzairraza188@gmail.com\",\r\n    \"otp\": \"369762\",\r\n    \"password\": \"Password@241061\",\r\n    \"password_confirmation\": \"Password@241061\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/auth/reset-password",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "reset-password"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "email not registered",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"email\": \"uzairraza188@gmail.com\",\r\n    \"otp\": \"369762\",\r\n    \"password\": \"Password@241061\",\r\n    \"password_confirmation\": \"Password@241061\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/auth/reset-password",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "reset-password"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "invalid otp",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"email\": \"uzairraza188@gmail.com\",\r\n    \"otp\": \"369762\",\r\n    \"password\": \"Password@241061\",\r\n    \"password_confirmation\": \"Password@241061\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/auth/reset-password",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "reset-password"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "too short password",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"email\": \"uzairraza188@gmail.com\",\r\n    \"otp\": \"369762\",\r\n    \"password\": \"Password@241061\",\r\n    \"password_confirmation\": \"Password@241061\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/auth/reset-password",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "reset-password"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "User Management",
+      "item": [
+        {
+          "name": "Logout",
+          "item": [
+            {
+              "name": "happy case",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "whistle_0PXGvRpWZFDTmTAPDV77vY3WgyCCguaTNv9I477RLzXusWcYkoU2XrSNjNIS",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"name\": \"Shaheen Shah Afridi\",\r\n  \"email\": \"shaheen_afridi10@test.com\",\r\n  \"password\": \"password1210\",\r\n  \"password_confirmation\": \"password1210\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/auth/logout",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "logout"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "token required",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "whistle_0PXGvRpWZFDTmTAPDV77vY3WgyCCguaTNv9I477RLzXusWcYkoU2XrSNjNIS",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"name\": \"Shaheen Shah Afridi\",\r\n  \"email\": \"shaheen_afridi10@test.com\",\r\n  \"password\": \"password1210\",\r\n  \"password_confirmation\": \"password1210\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/auth/logout",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "logout"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "input field required",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "whistle_0PXGvRpWZFDTmTAPDV77vY3WgyCCguaTNv9I477RLzXusWcYkoU2XrSNjNIS",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"name\": \"Shaheen Shah Afridi\",\r\n  \"email\": \"shaheen_afridi10@test.com\",\r\n  \"password\": \"password1210\",\r\n  \"password_confirmation\": \"password1210\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/auth/logout",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "logout"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "whistle_pypekx2bGtnmV3Tl2XjuUBJSifo6xfkZPT8aoWqQcXCbUfUrkv9XwWfShYZx",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Shaheen Shah Afridi\",\r\n  \"email\": \"shaheen_afridi10@test.com\",\r\n  \"password\": \"password1210\",\r\n  \"password_confirmation\": \"password1210\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/api/auth/profile",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "profile"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/api/users",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Workspaces",
+      "item": [
+        {
+          "name": "Create Workspace",
+          "item": [
+            {
+              "name": "happy case",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "whistle_83U4pS9sTVRg4JDOTWabMeP74D8aZdw207hIPWFcvSUAtAaokmOfMvP0vrY7",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"name\": \"Bilal Workspace\",\r\n  \"description\": \"This is bilal workspace\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/workspaces",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "workspaces"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "input empty field",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "whistle_83U4pS9sTVRg4JDOTWabMeP74D8aZdw207hIPWFcvSUAtAaokmOfMvP0vrY7",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"name\": \"Bilal Workspace\",\r\n  \"description\": \"This is bilal workspace\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/workspaces",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "workspaces"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "invalid token",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "whistle_83U4pS9sTVRg4JDOTWabMeP74D8aZdw207hIPWFcvSUAtAaokmOfMvP0vrY7",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"name\": \"Bilal Workspace\",\r\n  \"description\": \"This is bilal workspace\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/workspaces",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "workspaces"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "List Workspaces",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "whistle_83U4pS9sTVRg4JDOTWabMeP74D8aZdw207hIPWFcvSUAtAaokmOfMvP0vrY7",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/api/workspaces",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "workspaces"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Workspace",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "whistle_83U4pS9sTVRg4JDOTWabMeP74D8aZdw207hIPWFcvSUAtAaokmOfMvP0vrY7",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Bilal Tariq Workspace\",\r\n  \"description\": \"This is bilal tariq workspace\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/api/workspaces/6980741e344a4a8405096ea6",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "6980741e344a4a8405096ea6"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Workspace",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "whistle_83U4pS9sTVRg4JDOTWabMeP74D8aZdw207hIPWFcvSUAtAaokmOfMvP0vrY7",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/api/workspaces/6980741e344a4a8405096ea6",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "6980741e344a4a8405096ea6"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Teams",
+      "item": [
+        {
+          "name": "Create Team",
+          "item": [
+            {
+              "name": "happy case",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "whistle_qlGpwu7cYvByyfgZJ75LwJIP9CI06g0mbnIW1kQDolOcTdOZ4UBMibSTxvAAgw7L_1770641057",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"name\": \"Uzair Raza Team\",\r\n  \"workspace_id\": \"6989d277c9df7b9cbb0de173\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/teams",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "teams"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "workspace doesnot exist",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "whistle_qlGpwu7cYvByyfgZJ75LwJIP9CI06g0mbnIW1kQDolOcTdOZ4UBMibSTxvAAgw7L_1770641057",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"name\": \"Uzair Raza Team\",\r\n  \"workspace_id\": \"6989d277c9df7b9cbb0de173\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/teams",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "teams"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "invalid token",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "whistle_83U4pS9sTVRg4JDOTWabMeP74D8aZdw207hIPWFcvSUAtAaokmOfMvP0vrY7",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{ \"name\": \"Bilal Team\" }",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/workspaces/69806f7e344a4a8405096ea5/teams",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "workspaces",
+                    "69806f7e344a4a8405096ea5",
+                    "teams"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "input empty field",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "whistle_83U4pS9sTVRg4JDOTWabMeP74D8aZdw207hIPWFcvSUAtAaokmOfMvP0vrY7",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{ \"name\": \"Bilal Team\" }",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseURL}}/api/workspaces/69806f7e344a4a8405096ea5/teams",
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "workspaces",
+                    "69806f7e344a4a8405096ea5",
+                    "teams"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "List Teams",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "whistle_83U4pS9sTVRg4JDOTWabMeP74D8aZdw207hIPWFcvSUAtAaokmOfMvP0vrY7",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/api/workspaces/69806f7e344a4a8405096ea5/teams",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "69806f7e344a4a8405096ea5",
+                "teams"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Team",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "whistle_83U4pS9sTVRg4JDOTWabMeP74D8aZdw207hIPWFcvSUAtAaokmOfMvP0vrY7",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"name\": \"Uzair Team\" }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/api/workspaces/69806f7e344a4a8405096ea5/teams/69807f01a64593f33301cbd2",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "69806f7e344a4a8405096ea5",
+                "teams",
+                "69807f01a64593f33301cbd2"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Team",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "whistle_83U4pS9sTVRg4JDOTWabMeP74D8aZdw207hIPWFcvSUAtAaokmOfMvP0vrY7",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/api/workspaces/69806f7e344a4a8405096ea5/teams/69808142a64593f33301cbd4",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "69806f7e344a4a8405096ea5",
+                "teams",
+                "69808142a64593f33301cbd4"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Channels",
+      "item": [
+        {
+          "name": "Create Channel",
+          "item": [
+            {
+              "name": "Create Channel",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "whistle_qlGpwu7cYvByyfgZJ75LwJIP9CI06g0mbnIW1kQDolOcTdOZ4UBMibSTxvAAgw7L_1770641057",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{ \r\n    \"name\": \"Uzair Channel\",\r\n    \"type\": \"text\",\r\n  \"workspace_id\" : \"6989d277c9df7b9cbb0de173\",\r\n  \"team_id\" : \"6989d8ed0b8cbe7d260882f5\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:8000/api/channels",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "8000",
+                  "path": [
+                    "api",
+                    "channels"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "input empty field",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "whistle_qlGpwu7cYvByyfgZJ75LwJIP9CI06g0mbnIW1kQDolOcTdOZ4UBMibSTxvAAgw7L_1770641057",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{ \r\n    \"name\": \"Uzair Channel\",\r\n    \"type\": \"text\",\r\n  \"workspace_id\" : \"6989d277c9df7b9cbb0de173\",\r\n  \"team_id\" : \"6989d8ed0b8cbe7d260882f5\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:8000/api/channels",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "8000",
+                  "path": [
+                    "api",
+                    "channels"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "team doesnot exist",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "whistle_qlGpwu7cYvByyfgZJ75LwJIP9CI06g0mbnIW1kQDolOcTdOZ4UBMibSTxvAAgw7L_1770641057",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{ \r\n    \"name\": \"Uzair Channel\",\r\n    \"type\": \"text\",\r\n  \"workspace_id\" : \"6989d277c9df7b9cbb0de173\",\r\n  \"team_id\" : \"6989d8ed0b8cbe7d260882f5\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:8000/api/channels",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "8000",
+                  "path": [
+                    "api",
+                    "channels"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "channel type required",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "whistle_qlGpwu7cYvByyfgZJ75LwJIP9CI06g0mbnIW1kQDolOcTdOZ4UBMibSTxvAAgw7L_1770641057",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{ \r\n    \"name\": \"Uzair Channel\",\r\n    \"type\": \"text\",\r\n  \"workspace_id\" : \"6989d277c9df7b9cbb0de173\",\r\n  \"team_id\" : \"6989d8ed0b8cbe7d260882f5\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:8000/api/channels",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "8000",
+                  "path": [
+                    "api",
+                    "channels"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "invalid token",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "whistle_qlGpwu7cYvByyfgZJ75LwJIP9CI06g0mbnIW1kQDolOcTdOZ4UBMibSTxvAAgw7L_1770641057",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{ \r\n    \"name\": \"Uzair Channel\",\r\n    \"type\": \"text\",\r\n  \"workspace_id\" : \"6989d277c9df7b9cbb0de173\",\r\n  \"team_id\" : \"6989d8ed0b8cbe7d260882f5\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:8000/api/channels",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "8000",
+                  "path": [
+                    "api",
+                    "channels"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "List Channels",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "whistle_83U4pS9sTVRg4JDOTWabMeP74D8aZdw207hIPWFcvSUAtAaokmOfMvP0vrY7",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/api/workspaces/69806f7e344a4a8405096ea5/teams/69807f01a64593f33301cbd2/channels",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "69806f7e344a4a8405096ea5",
+                "teams",
+                "69807f01a64593f33301cbd2",
+                "channels"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Channel",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "whistle_83U4pS9sTVRg4JDOTWabMeP74D8aZdw207hIPWFcvSUAtAaokmOfMvP0vrY7",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"type\" : \"public\" }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/api/channels",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "channels"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Channel",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "whistle_83U4pS9sTVRg4JDOTWabMeP74D8aZdw207hIPWFcvSUAtAaokmOfMvP0vrY7",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/api/workspaces/69806f7e344a4a8405096ea5/teams/69807f01a64593f33301cbd2/channels/69808b7401a12502780a2c84",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "69806f7e344a4a8405096ea5",
+                "teams",
+                "69807f01a64593f33301cbd2",
+                "channels",
+                "69808b7401a12502780a2c84"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Messages",
+      "item": [
+        {
+          "name": "Create Message",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "whistle_83U4pS9sTVRg4JDOTWabMeP74D8aZdw207hIPWFcvSUAtAaokmOfMvP0vrY7",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"content\": \"Allah Hafiz\" }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/api/workspaces/69806f7e344a4a8405096ea5/teams/69807f01a64593f33301cbd2/channels/69808b4c01a12502780a2c82/messages",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "69806f7e344a4a8405096ea5",
+                "teams",
+                "69807f01a64593f33301cbd2",
+                "channels",
+                "69808b4c01a12502780a2c82",
+                "messages"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Upload File",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "whistle_83U4pS9sTVRg4JDOTWabMeP74D8aZdw207hIPWFcvSUAtAaokmOfMvP0vrY7",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "content",
+                  "value": "check out this file",
+                  "type": "text",
+                  "uuid": "646991b3-a331-4a09-93ce-e965fa2bd990"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "uuid": "1b5d9c3b-bde4-46c2-8858-f572e2cd0d16",
+                  "src": "/C:/Users/Uzair Raza/Downloads/UzairRazaBhuttaLatestPicture.jpeg"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseURL}}/api/workspaces/69806f7e344a4a8405096ea5/teams/69807f01a64593f33301cbd2/channels/69808b4c01a12502780a2c82/messages",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "69806f7e344a4a8405096ea5",
+                "teams",
+                "69807f01a64593f33301cbd2",
+                "channels",
+                "69808b4c01a12502780a2c82",
+                "messages"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Messages",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "whistle_83U4pS9sTVRg4JDOTWabMeP74D8aZdw207hIPWFcvSUAtAaokmOfMvP0vrY7",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/api/workspaces/69806f7e344a4a8405096ea5/teams/69807f01a64593f33301cbd2/channels/69808b4c01a12502780a2c82/messages",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "69806f7e344a4a8405096ea5",
+                "teams",
+                "69807f01a64593f33301cbd2",
+                "channels",
+                "69808b4c01a12502780a2c82",
+                "messages"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Download File",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "whistle_83U4pS9sTVRg4JDOTWabMeP74D8aZdw207hIPWFcvSUAtAaokmOfMvP0vrY7",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/api/files/6980a0ea200bac6e4202b464/download",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "files",
+                "6980a0ea200bac6e4202b464",
+                "download"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Messages",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "whistle_83U4pS9sTVRg4JDOTWabMeP74D8aZdw207hIPWFcvSUAtAaokmOfMvP0vrY7",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"content\": \"I am fine Alhamdullilah\" }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseURL}}/api/workspaces/69806f7e344a4a8405096ea5/teams/69807f01a64593f33301cbd2/channels/69808b4c01a12502780a2c82/messages/6980931b6575420f25002cf3",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "69806f7e344a4a8405096ea5",
+                "teams",
+                "69807f01a64593f33301cbd2",
+                "channels",
+                "69808b4c01a12502780a2c82",
+                "messages",
+                "6980931b6575420f25002cf3"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Message",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "whistle_83U4pS9sTVRg4JDOTWabMeP74D8aZdw207hIPWFcvSUAtAaokmOfMvP0vrY7",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/api/workspaces/69806f7e344a4a8405096ea5/teams/69807f01a64593f33301cbd2/channels/69808b4c01a12502780a2c82/messages/6980932e6575420f25002cf4",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "69806f7e344a4a8405096ea5",
+                "teams",
+                "69807f01a64593f33301cbd2",
+                "channels",
+                "69808b4c01a12502780a2c82",
+                "messages",
+                "6980932e6575420f25002cf4"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete File",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "whistle_83U4pS9sTVRg4JDOTWabMeP74D8aZdw207hIPWFcvSUAtAaokmOfMvP0vrY7",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/api/files/6980a0ea200bac6e4202b464",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "files",
+                "6980a0ea200bac6e4202b464"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "View File",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "whistle_83U4pS9sTVRg4JDOTWabMeP74D8aZdw207hIPWFcvSUAtAaokmOfMvP0vrY7",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseURL}}/api/files/6980a0ea200bac6e4202b464/metadata",
+              "host": [
+                "{{baseURL}}"
+              ],
+              "path": [
+                "api",
+                "files",
+                "6980a0ea200bac6e4202b464",
+                "metadata"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseURL",
+      "value": "",
+      "type": "default"
+    }
+  ]
+}
