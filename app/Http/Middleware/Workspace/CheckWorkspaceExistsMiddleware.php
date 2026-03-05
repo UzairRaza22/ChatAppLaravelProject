@@ -22,7 +22,7 @@ class CheckWorkspaceExistsMiddleware
         $workspace = Workspace::where('_id', $workspaceId)->first();
 
         if (!$workspace) {
-            return response()->notFound('Workspace not found here.');
+            return response()->notFound('Workspace not found.');
         }
 
 

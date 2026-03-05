@@ -26,11 +26,9 @@ class AuthController extends Controller
 
         Mail::to($request->email)->send(new SignupVerificationEmail($user,$token));
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Signup successfull!. Please check your email for verification link.',
+        return response()->success([
             'user' => UserResource::make($user)
-        ]);
+        ], 'Signup successfull!. Please check your email for verification link.');
     }
 
     public function verifySignup(Request $request)
@@ -46,11 +44,9 @@ class AuthController extends Controller
         // Delete the verification token
         $tokenRecord->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Account activated successfully! You can now login.',
+        return response()->success([
             'user' => UserResource::make($user)
-        ]);
+        ], 'Account activated successfully! You can now login.');
     }
 
     public function login(Request $request)
@@ -62,12 +58,10 @@ class AuthController extends Controller
         // Store encrypted token in user model
         $user->update(['access_token' => hash('sha256', $token)]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Login successful!',
+        return response()->success([
             'access_token' => $token,
             'user' => UserResource::make($user)
-        ]);
+        ], 'Login successful!');
     }
 
     public function logout(Request $request)
@@ -80,10 +74,7 @@ class AuthController extends Controller
 
         $tokenRecord->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Logout successful!'
-        ]);
+        return response()->success(null, 'Logout successful!');
     }
 
     public function forgotPassword(Request $request)
@@ -94,11 +85,9 @@ class AuthController extends Controller
         
         Mail::to($user->email)->send(new \App\Mail\ResetPasswordEmail($user, $token));
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Password reset link sent to your email.',
-            'forgot_password_token' => $token,
-        ]);
+        return response()->success([
+            'forgot_password_token' => $token
+        ], 'Password reset link sent to your email.');
     }
 
     public function resetPassword(Request $request)
@@ -113,9 +102,6 @@ class AuthController extends Controller
 
         $tokenRecord->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Password reset successfully!'
-        ]);
+        return response()->success(null, 'Password reset successfully!');
     }
 }
