@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Team;
-use App\Models\User;
 use Illuminate\Http\Request;
 
 class TeamController extends Controller
@@ -11,6 +10,7 @@ class TeamController extends Controller
     // 1. Create Team
     public function create(Request $request)
     {
+        // Uzair's style: User request se nikalna
         $user = $request->user();
 
         if (!$user) {
@@ -22,7 +22,7 @@ class TeamController extends Controller
             'name'         => $request->name,
             'description'  => $request->description,
             'creator_id'   => $user->_id,
-            'members'      => [$user->_id]
+            'members'      => [$user->_id] // Creator auto-member
         ]);
 
         return response()->json([
@@ -32,8 +32,8 @@ class TeamController extends Controller
         ], 201);
     }
 
-    // 2. Read Teams (CRUD standard)
-    public function read(Request $request)
+    // 2. List Teams
+    public function index(Request $request)
     {
         $teams = $request->teams ?? Team::where('workspace_id', $request->workspace_id)->get();
 
@@ -60,14 +60,18 @@ class TeamController extends Controller
         ], 200);
     }
 
-    // 4. Add Member to Team (Using member_ids from Middleware)
+    // 4. Add Member to Team (Updated for Multiple Emails/IDs)
     public function addMember(Request $request)
     {
         $team = $request->team ?? Team::find($request->team_id);
+        
+        // Middleware se aane wali array IDs
         $memberIds = $request->member_ids; 
 
+        // Har ID ko loop ke zariye members array mein add karna
         if (!empty($memberIds)) {
             foreach ($memberIds as $id) {
+                // 'true' parameter ensures uniqueness in MongoDB array
                 $team->push('members', $id, true);
             }
         }
@@ -78,25 +82,16 @@ class TeamController extends Controller
         ], 200);
     }
 
-    // 5. Remove Member from Team (Updated for Emails Array)
+    // 5. Remove Member from Team
     public function removeMember(Request $request)
     {
         $team = $request->team ?? Team::find($request->team_id);
-        $emails = $request->emails; // Request se emails array uthaya
 
-        if (!empty($emails)) {
-            foreach ($emails as $email) {
-                // Email se user find karke uski ID pull karna
-                $user = User::where('email', $email)->first();
-                if ($user) {
-                    $team->pull('members', strval($user->_id));
-                }
-            }
-        }
+        $team->pull('members', $request->member_id);
 
         return response()->json([
             'success' => true,
-            'message' => 'Specified members removed from team successfully'
+            'message' => 'Member removed from team successfully'
         ], 200);
     }
 
@@ -104,6 +99,7 @@ class TeamController extends Controller
     public function delete(Request $request)
     {
         $team = $request->team ?? Team::find($request->team_id);
+        
         $team->delete();
 
         return response()->json([
