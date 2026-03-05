@@ -19,27 +19,28 @@ class WorkspaceController extends Controller
         // Attach user as member
         $workspace->members()->attach($user->id);
 
-        return response()->json([
-            'message' => 'Workspace created successfully!',
-            'data' => [
-                'workspace' => WorkspaceResource::make($workspace)
-            ]
-        ]);
+        return response()->success([
+            'workspace' => WorkspaceResource::make($workspace)
+        ], 'Workspace created successfully!');
     }
 
-    public function get(Request $request)
+    public function read(Request $request, $id = null)
     {
-        $workspace = data_get($request, 'workspace');
-        $createdWorkspaces = data_get($request, 'createdWorkspaces');
-        $joinedWorkspaces = data_get($request, 'joinedWorkspaces');
+        $user = auth()->user();
+        
+        $workspaces = Workspace::where('creator_id', $user->_id)
+            ->orWhereHas('members', function ($query) use ($user) {
+                $query->where('user_id', $user->_id);
+            })
+            ->when($id, function ($query) use ($id) {
+                $query->where('_id', $id);
+            })
+            ->get();
 
-        return response()->success("Workspace(s) retrieved successfully!", [
-            'Workspaces' =>  $workspace ? WorkspaceResource::make($workspace) :
-                [
-                    'created_workspaces' => WorkspaceResource::collection($createdWorkspaces),
-                    'joined_workspaces' => WorkspaceResource::collection($joinedWorkspaces)
-                ]
-        ]);
+        return response()->success(
+            WorkspaceResource::collection($workspaces),
+            "Workspace(s) retrieved successfully!"
+        );
     }
 
 
@@ -48,19 +49,18 @@ class WorkspaceController extends Controller
         $workspace = Workspace::edit($request);
 
 
-        return response()->success('Workspace updated successfully!', [
+        return response()->success([
             'workspace' => WorkspaceResource::make($workspace)
-        ]);
+        ], 'Workspace updated successfully!');
     }
 
     public function delete(Request $request)
     {
         $workspace = data_get($request, 'workspace');
-        $workspace->teams()->delete(); // delete all teams in this workspace
         $workspace->members()->detach(); // detach all members
         $workspace->delete();
 
-        return response()->success('Workspace deleted successfully!');
+        return response()->success(null, 'Workspace deleted successfully!');
     }
 
     public function addMembers(Request $request)
@@ -76,9 +76,9 @@ class WorkspaceController extends Controller
         // Sync without detaching to add new members
         $workspace->members()->syncWithoutDetaching($userIds);
 
-        return response()->success('Members added successfully!', [
+        return response()->success([
             'workspace' => WorkspaceResource::make($workspace->load('members'))
-        ]);
+        ], 'Members added successfully!');
     }
 
     public function removeMembers(Request $request)
@@ -90,6 +90,6 @@ class WorkspaceController extends Controller
 
         $workspace->members()->detach($userIds);
 
-        return response()->success('Members removed successfully!');
+        return response()->success(null, 'Members removed successfully!');
     }
 }

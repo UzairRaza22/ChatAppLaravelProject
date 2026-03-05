@@ -14,36 +14,72 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
-            'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
-            'workspace.access' => \App\Http\Middleware\CheckWorkspaceAccess::class,
-            'workspace.ownership' => \App\Http\Middleware\CheckWorkspaceOwnership::class,
-            'team.access' => \App\Http\Middleware\CheckTeamAccess::class,
-            'team.ownership' => \App\Http\Middleware\CheckTeamOwnership::class,
-            'channel.access' => \App\Http\Middleware\CheckChannelAccess::class,
-            'channel.ownership' => \App\Http\Middleware\CheckChannelOwnership::class,
-            'api.token' => \App\Http\Middleware\ApiTokenAuth::class,
             'check.validation' => \App\Http\Middleware\CheckValidationMiddleware::class,
             'check.token' => \App\Http\Middleware\auth\CheckTokenMiddleware::class,
             'check.credentials' => \App\Http\Middleware\auth\CheckCredentialsMiddleware::class,
             'check.active' => \App\Http\Middleware\auth\CheckActiveMiddleware::class,
             'check.user.exists' => \App\Http\Middleware\auth\CheckUserExistMiddleware::class,
             'check.user.exists.forgot' => \App\Http\Middleware\auth\CheckUserExistForForgotMiddleware::class,
-            'workspace.unique.name' => \App\Http\Middleware\Workspace\CheckUniqueWorkspaceNameMiddleware::class,
-            'workspace.creator' => \App\Http\Middleware\Workspace\CheckWorkspaceCreatorMiddleware::class,
-            'workspace.exists' => \App\Http\Middleware\Workspace\CheckWorkspaceExistsMiddleware::class,
-            'workspaces.exist' => \App\Http\Middleware\Workspace\CheckWorkspacesExistMiddleware::class,
+            'check.workspace.unique.name' => \App\Http\Middleware\Workspace\CheckUniqueWorkspaceNameMiddleware::class,
+            'check.workspace.creator' => \App\Http\Middleware\Workspace\CheckWorkspaceCreatorMiddleware::class,
+            'check.workspace.exists' => \App\Http\Middleware\Workspace\CheckWorkspaceExistsMiddleware::class,
+            'check.workspaces.exist' => \App\Http\Middleware\Workspace\CheckWorkspacesExistMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->render(function (Throwable $e, Request $request) {
-            // Handle validation exceptions for API routes
-            if ($e instanceof \Illuminate\Validation\ValidationException && $request->is('api/*')) {
-                return response()->json([
-                    'message' => $e->getMessage(),
-                    'errors' => $e->errors()
-                ], $e->status);
+        // Handle ModelNotFoundException
+        $exceptions->render(function (\Illuminate\Database\Eloquent\ModelNotFoundException $e, Request $request) {
+            if ($request->is('api/*')) {
+                return response()->notFound('Resource not found.');
             }
-            
-            return null;
+        });
+
+        // Handle AuthenticationException
+        $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, Request $request) {
+            if ($request->is('api/*')) {
+                return response()->unauthorized('Unauthenticated. Please login to continue.');
+            }
+        });
+
+        // Handle AuthorizationException
+        $exceptions->render(function (\Illuminate\Auth\Access\AuthorizationException $e, Request $request) {
+            if ($request->is('api/*')) {
+                return response()->forbidden('You do not have permission to perform this action.');
+            }
+        });
+
+        // Handle ValidationException
+        $exceptions->render(function (\Illuminate\Validation\ValidationException $e, Request $request) {
+            if ($request->is('api/*')) {
+                return response()->validation($e->errors(), 'The given data was invalid.');
+            }
+        });
+
+        // Handle HttpException
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\HttpException $e, Request $request) {
+            if ($request->is('api/*')) {
+                $message = match($e->getStatusCode()) {
+                    404 => 'Resource not found.',
+                    403 => 'Forbidden.',
+                    401 => 'Unauthorized.',
+                    500 => 'Internal server error.',
+                    default => $e->getMessage() ?: 'An error occurred.'
+                };
+                
+                return response()->error($message, $e->getStatusCode());
+            }
+        });
+
+        // Handle any other Throwable
+        $exceptions->render(function (\Throwable $e, Request $request) {
+            if ($request->is('api/*')) {
+                // In production, you might want to log this and return a generic message
+                if (app()->environment('production')) {
+                    return response()->error('Internal server error.', 500);
+                }
+                
+                // In development, return more details
+                return response()->error($e->getMessage(), 500);
+            }
         });
     })->create();

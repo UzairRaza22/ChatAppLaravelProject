@@ -18,15 +18,11 @@ class CheckActiveMiddleware
         $user = $request->user();
         
         if (!$user) {
-            return response()->json([
-                'message' => 'User not found.'
-            ], 404);
+            return response()->notFound('User not found.');
         }
         
         if (!$user->is_active) {
-            return response()->json([
-                'message' => 'Activate your account!'
-            ], 403);
+            return response()->forbidden('Activate your account!');
         }
         
         return $next($request);

@@ -23,9 +23,7 @@ class CheckCredentialsMiddleware
         $user = User::where('email', $email)->first();
 
         if (!$user || !Hash::check($password, $user->password)) {
-            return response()->json([
-                'message' => 'Invalid credentials'
-            ], 401);
+            return response()->unauthorized('Invalid credentials');
         }
 
         $request->setUserResolver(function () use ($user) {

@@ -16,9 +16,7 @@ class CheckUserExistMiddleware
         $user = User::where('email', $email)->first();
         
         if ($user) {
-            return response()->json([
-                'message' => 'User already exists'
-            ], 409);
+            return response()->error('User already exists', 409);
         }
 
         return $next($request);

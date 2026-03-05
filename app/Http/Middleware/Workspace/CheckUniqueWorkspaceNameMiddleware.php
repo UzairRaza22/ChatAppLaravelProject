@@ -33,10 +33,7 @@ class CheckUniqueWorkspaceNameMiddleware
             $exists = $query->exists();
 
             if ($exists) {
-                return response()->json([
-                    'message' => 'This workspace name is already taken.',
-                    'errors' => ['name' => ['This workspace name is already taken.']]
-                ], 409);
+                return response()->validation(['name' => ['This workspace name is already taken.']], 'This workspace name is already taken.');
             }
         }
 

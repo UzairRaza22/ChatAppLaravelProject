@@ -37,15 +37,11 @@ class CheckTokenMiddleware
         $token = str_replace('Bearer ', '', $token);
         
         if (!$token) {
-            return response()->json([
-                'message' => 'Token is required.',
-            ], 401);
+            return response()->unauthorized('Token is required.');
         }
         
         if (!$tokenType) {
-            return response()->json([
-                'message' => 'Token type is required.',
-            ], 401);
+            return response()->unauthorized('Token type is required.');
         }
         
         // Use appropriate token model based on token type
@@ -54,37 +50,27 @@ class CheckTokenMiddleware
         } elseif ($tokenType === 'forgot_password_token') {
             $tokenRecord = ForgetToken::findValidToken($token, $tokenType);
         } else {
-            return response()->json([
-                'message' => 'Invalid token type.',
-            ], 401);
+            return response()->unauthorized('Invalid token type.');
         }
             
         if (!$tokenRecord) {
-            return response()->json([
-                'message' => 'Invalid or expired token.'
-            ], 401);
+            return response()->unauthorized('Invalid or expired token.');
         }
 
         // Debug: Check what we have in tokenRecord
         if (!is_object($tokenRecord)) {
-            return response()->json([
-                'message' => 'Invalid token record format.'
-            ], 401);
+            return response()->unauthorized('Invalid token record format.');
         }
 
         // Check if tokenRecord has user_id before accessing it
         if (!isset($tokenRecord->user_id) || empty($tokenRecord->user_id)) {
-            return response()->json([
-                'message' => 'Invalid token format.'
-            ], 401);
+            return response()->unauthorized('Invalid token format.');
         }
 
         $user = User::find((string) $tokenRecord->user_id);
         
         if (!$user) {
-            return response()->json([
-                'message' => 'User not found.'
-            ], 404);
+            return response()->notFound('User not found.');
         }
 
         $request->merge([

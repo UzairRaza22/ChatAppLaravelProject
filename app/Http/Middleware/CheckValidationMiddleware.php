@@ -46,16 +46,16 @@ class CheckValidationMiddleware
         }
         
         // Workspace validation requests (only for POST/PUT/PATCH)
-        if ($validation_type === 'CreateWorkspaceRequest') {
+        if ($validation_type === 'create_workspace_request') {
             $request->validate(app(CreateWorkspaceRequest::class)->rules());
         }
-        if ($validation_type === 'UpdateWorkspaceRequest') {
+        if ($validation_type === 'update_workspace_request') {
             $request->validate(app(UpdateWorkspaceRequest::class)->rules());
         }
-        if ($validation_type === 'AddWorkspaceMemberRequest') {
+        if ($validation_type === 'add_workspace_member_request') {
             $request->validate(app(AddWorkspaceMemberRequest::class)->rules());
         }
-        if ($validation_type === 'RemoveWorkspaceMemberRequest') {
+        if ($validation_type === 'remove_workspace_member_request') {
             $request->validate(app(RemoveWorkspaceMemberRequest::class)->rules());
         }
         
