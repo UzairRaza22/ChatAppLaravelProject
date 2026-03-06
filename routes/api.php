@@ -19,3 +19,5 @@ Route::get('/health', function () {
 // Load modular route files
 Route::prefix('auth')->group(base_path('routes/auth.php'));
 Route::prefix('workspaces')->group(base_path('routes/workspaces.php'));
+Route::prefix('messages')->group(base_path('routes/Messages.php'));
+require base_path('routes/Fcm.php');

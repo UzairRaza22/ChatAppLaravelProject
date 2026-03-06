@@ -24,6 +24,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'check.workspace.creator' => \App\Http\Middleware\Workspace\CheckWorkspaceCreatorMiddleware::class,
             'check.workspace.exists' => \App\Http\Middleware\Workspace\CheckWorkspaceExistsMiddleware::class,
             'check.workspaces.exist' => \App\Http\Middleware\Workspace\CheckWorkspacesExistMiddleware::class,
+            'message.workspace.member' => \App\Http\Middleware\Message\Checkworkspacemembermiddleware::class,
+            'message.receiver.check' => \App\Http\Middleware\Message\Checkreceiverinworkspacemiddleware::class,
+            'message.channel.check' => \App\Http\Middleware\Message\Checkchannelinworkspacemiddleware::class,
+            'message.exists' => \App\Http\Middleware\Message\Checkmessageexistsmiddleware::class,
+            'message.sender' => \App\Http\Middleware\Message\Checkmessagesendermiddleware::class,
+            'message.file.check' => \App\Http\Middleware\Message\Checkmessagefilemiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -65,7 +71,7 @@ return Application::configure(basePath: dirname(__DIR__))
                     500 => 'Internal server error.',
                     default => $e->getMessage() ?: 'An error occurred.'
                 };
-                
+
                 return response()->error($message, $e->getStatusCode());
             }
         });
@@ -77,7 +83,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 if (app()->environment('production')) {
                     return response()->error('Internal server error.', 500);
                 }
-                
+
                 // In development, return more details
                 return response()->error($e->getMessage(), 500);
             }
