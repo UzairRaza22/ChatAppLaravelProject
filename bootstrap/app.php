@@ -47,6 +47,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
+<<<<<<< HEAD
             // Auth & Validation middleware
             'check.validation' => CheckValidationMiddleware::class,
             'check.token' => CheckTokenMiddleware::class,
@@ -81,6 +82,24 @@ return Application::configure(basePath: dirname(__DIR__))
             'channel.exists' => ChannelExistMiddleware::class,
             'channel.admin' => ChannelAdminMiddleware::class,
             'channel.member' => MemberCheckMiddleware::class,
+=======
+            'check.validation' => \App\Http\Middleware\CheckValidationMiddleware::class,
+            'check.token' => \App\Http\Middleware\auth\CheckTokenMiddleware::class,
+            'check.credentials' => \App\Http\Middleware\auth\CheckCredentialsMiddleware::class,
+            'check.active' => \App\Http\Middleware\auth\CheckActiveMiddleware::class,
+            'check.user.exists' => \App\Http\Middleware\auth\CheckUserExistMiddleware::class,
+            'check.user.exists.forgot' => \App\Http\Middleware\auth\CheckUserExistForForgotMiddleware::class,
+            'check.workspace.unique.name' => \App\Http\Middleware\Workspace\CheckUniqueWorkspaceNameMiddleware::class,
+            'check.workspace.creator' => \App\Http\Middleware\Workspace\CheckWorkspaceCreatorMiddleware::class,
+            'check.workspace.exists' => \App\Http\Middleware\Workspace\CheckWorkspaceExistsMiddleware::class,
+            'check.workspaces.exist' => \App\Http\Middleware\Workspace\CheckWorkspacesExistMiddleware::class,
+            'message.workspace.member' => \App\Http\Middleware\Message\Checkworkspacemembermiddleware::class,
+            'message.receiver.check' => \App\Http\Middleware\Message\Checkreceiverinworkspacemiddleware::class,
+            'message.channel.check' => \App\Http\Middleware\Message\Checkchannelinworkspacemiddleware::class,
+            'message.exists' => \App\Http\Middleware\Message\Checkmessageexistsmiddleware::class,
+            'message.sender' => \App\Http\Middleware\Message\Checkmessagesendermiddleware::class,
+            'message.file.check' => \App\Http\Middleware\Message\Checkmessagefilemiddleware::class,
+>>>>>>> d811925ecffa04b2e6e5db20bc07a1a597ee98d4
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -122,7 +141,7 @@ return Application::configure(basePath: dirname(__DIR__))
                     500 => 'Internal server error.',
                     default => $e->getMessage() ?: 'An error occurred.'
                 };
-                
+
                 return response()->error($message, $e->getStatusCode());
             }
         });
@@ -134,7 +153,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 if (app()->environment('production')) {
                     return response()->error('Internal server error.', 500);
                 }
-                
+
                 // In development, return more details
                 return response()->error($e->getMessage(), 500);
             }
