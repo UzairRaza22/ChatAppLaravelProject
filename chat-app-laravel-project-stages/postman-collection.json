@@ -1,0 +1,1057 @@
+{
+	"info": {
+		"_postman_id": "whistle-it-api",
+		"name": "Whistle It Chat API",
+		"description": "Complete API collection for Whistle It chat application with workspaces, teams, channels, and messages",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8000/api",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "workspaceId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "teamId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "channelId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "messageId",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\",\n    \"password_confirmation\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('token', response.data.token);",
+									"}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('token', response.data.token);",
+									"}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/logout",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"logout"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Profile",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/profile",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"profile"
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Profile",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"John Updated\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/profile",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"profile"
+							]
+						}
+					}
+				},
+				{
+					"name": "Change Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"current_password\": \"password123\",\n    \"password\": \"newpassword123\",\n    \"password_confirmation\": \"newpassword123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/change-password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"change-password"
+							]
+						}
+					}
+				},
+				{
+					"name": "Refresh Token",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/refresh",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"refresh"
+							]
+						}
+					}
+				},
+				{
+					"name": "Send Email Verification",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/email/verification-notification",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"email",
+								"verification-notification"
+							]
+						}
+					}
+				},
+				{
+					"name": "Check Email Verification",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/email/verify",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"email",
+								"verify"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Workspaces",
+			"item": [
+				{
+					"name": "Get Workspaces",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/workspaces",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"workspaces"
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Workspace",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"My Workspace\",\n    \"description\": \"A sample workspace for testing\",\n    \"settings\": {\n        \"allow_invites\": true\n    }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/workspaces",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"workspaces"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('workspaceId', response.data._id);",
+									"}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Get Workspace",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/workspaces/{{workspaceId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspaceId}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Workspace",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Updated Workspace Name\",\n    \"description\": \"Updated description\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/workspaces/{{workspaceId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspaceId}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Workspace",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/workspaces/{{workspaceId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspaceId}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Add Member to Workspace",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"user_id\": \"USER_ID_HERE\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/workspaces/{{workspaceId}}/add-member",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspaceId}}",
+								"add-member"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Teams",
+			"item": [
+				{
+					"name": "Get Teams",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/workspaces/{{workspaceId}}/teams",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspaceId}}",
+								"teams"
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Team",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Development Team\",\n    \"description\": \"Team for developers\",\n    \"user_ids\": [],\n    \"settings\": {\n        \"allow_self_join\": false\n    }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/workspaces/{{workspaceId}}/teams",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspaceId}}",
+								"teams"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('teamId', response.data._id);",
+									"}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Get Team",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/workspaces/{{workspaceId}}/teams/{{teamId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspaceId}}",
+								"teams",
+								"{{teamId}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Team",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Updated Team Name\",\n    \"description\": \"Updated team description\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/workspaces/{{workspaceId}}/teams/{{teamId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspaceId}}",
+								"teams",
+								"{{teamId}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Team",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/workspaces/{{workspaceId}}/teams/{{teamId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspaceId}}",
+								"teams",
+								"{{teamId}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Add Member to Team",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"user_id\": \"USER_ID_HERE\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/workspaces/{{workspaceId}}/teams/{{teamId}}/add-member",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspaceId}}",
+								"teams",
+								"{{teamId}}",
+								"add-member"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Channels",
+			"item": [
+				{
+					"name": "Get Channels",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/workspaces/{{workspaceId}}/channels",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspaceId}}",
+								"channels"
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Public Channel",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"general\",\n    \"description\": \"General discussion channel\",\n    \"type\": \"public\",\n    \"team_id\": \"{{teamId}}\",\n    \"settings\": {\n        \"allow_file_sharing\": true\n    }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/workspaces/{{workspaceId}}/channels",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspaceId}}",
+								"channels"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('channelId', response.data._id);",
+									"}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Create Private Channel",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"private-team\",\n    \"description\": \"Private team channel\",\n    \"type\": \"private\",\n    \"team_id\": \"{{teamId}}\",\n    \"user_ids\": [],\n    \"settings\": {\n        \"allow_file_sharing\": true\n    }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/workspaces/{{workspaceId}}/channels",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspaceId}}",
+								"channels"
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Direct Channel",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Direct Message\",\n    \"description\": \"Direct message channel\",\n    \"type\": \"direct\",\n    \"user_ids\": [\"USER_ID_HERE\"],\n    \"settings\": {}\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/workspaces/{{workspaceId}}/channels",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspaceId}}",
+								"channels"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Channel",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/workspaces/{{workspaceId}}/channels/{{channelId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspaceId}}",
+								"channels",
+								"{{channelId}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Channel",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Updated Channel Name\",\n    \"description\": \"Updated channel description\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/workspaces/{{workspaceId}}/channels/{{channelId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspaceId}}",
+								"channels",
+								"{{channelId}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Channel",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/workspaces/{{workspaceId}}/channels/{{channelId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspaceId}}",
+								"channels",
+								"{{channelId}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Add Member to Channel",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"user_id\": \"USER_ID_HERE\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/workspaces/{{workspaceId}}/channels/{{channelId}}/add-member",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspaceId}}",
+								"channels",
+								"{{channelId}}",
+								"add-member"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Messages",
+			"item": [
+				{
+					"name": "Get Messages",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/workspaces/{{workspaceId}}/channels/{{channelId}}/messages?limit=50",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspaceId}}",
+								"channels",
+								"{{channelId}}",
+								"messages"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "50"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Send Text Message",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"content\": \"Hello, this is a test message!\",\n    \"message_type\": \"text\",\n    \"mentions\": []\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/workspaces/{{workspaceId}}/channels/{{channelId}}/messages",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspaceId}}",
+								"channels",
+								"{{channelId}}",
+								"messages"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('messageId', response.data._id);",
+									"}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Send File Message",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "content",
+									"value": "Check out this file!",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/workspaces/{{workspaceId}}/channels/{{channelId}}/messages",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspaceId}}",
+								"channels",
+								"{{channelId}}",
+								"messages"
+							]
+						}
+					}
+				},
+				{
+					"name": "Send Reply Message",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"content\": \"This is a reply to your message\",\n    \"message_type\": \"text\",\n    \"reply_to_id\": \"{{messageId}}\",\n    \"mentions\": []\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/workspaces/{{workspaceId}}/channels/{{channelId}}/messages",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspaceId}}",
+								"channels",
+								"{{channelId}}",
+								"messages"
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Message",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"content\": \"Updated message content\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/workspaces/{{workspaceId}}/channels/{{channelId}}/messages/{{messageId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspaceId}}",
+								"channels",
+								"{{channelId}}",
+								"messages",
+								"{{messageId}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Message",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/workspaces/{{workspaceId}}/channels/{{channelId}}/messages/{{messageId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"workspaces",
+								"{{workspaceId}}",
+								"channels",
+								"{{channelId}}",
+								"messages",
+								"{{messageId}}"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Files",
+			"item": [
+				{
+					"name": "Download File",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/files/{{messageId}}/download",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"files",
+								"{{messageId}}",
+								"download"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get File Metadata",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/files/{{messageId}}/metadata",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"files",
+								"{{messageId}}",
+								"metadata"
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete File",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/files/{{messageId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"files",
+								"{{messageId}}"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Utilities",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/health",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"health"
+							]
+						}
+					}
+				}
+			]
+		}
+	]
+}
