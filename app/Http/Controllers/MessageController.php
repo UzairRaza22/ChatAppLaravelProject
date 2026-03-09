@@ -43,13 +43,20 @@ class MessageController extends Controller
 
         $message = Message::add($messageData);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Message sent successfully!',
-            'data'    => [
+        // FCM INTEGRATION: dispatch push notification job
+        if ($request->input('receiver_id')) {
+            $preview = $request->input('content') ? substr($request->input('content'), 0, 100) : 'Sent a file';
+            \App\Jobs\SendMessagePushNotificationJob::dispatch(
+                (string) $request->input('receiver_id'),
+                'New message',
+                $preview,
+                ['type' => 'message', 'message_id' => (string)$message->id, 'sender_id' => (string)$user->_id]
+            );
+        }
+
+        return response()->success([
                 'message' => MessageResource::make($message->load(['sender', 'receiver', 'channel']))
-            ]
-        ], 201);
+            ], 'Message sent successfully!', 201);
     }
 
     /*
@@ -82,6 +89,7 @@ class MessageController extends Controller
                 ->orderBy('created_at', 'asc')
                 ->get();
 
+<<<<<<< HEAD
             return response()->json([
                 'success' => true,
                 'message' => 'Direct messages retrieved successfully!',
@@ -91,6 +99,21 @@ class MessageController extends Controller
                 ]
             ]);
         }
+=======
+        return response()->success([
+                'messages' => MessageResource::collection($messages)
+            ], 'Direct messages retrieved successfully!');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Get Channel Messages
+    |--------------------------------------------------------------------------
+    */
+    public function getChannelMessages(Request $request)
+    {
+        $channel = data_get($request, 'channel');
+>>>>>>> 171cca664853ef100f35468bb369b1848fd4e0c4
 
         // ── Channel Messages ──────────────────────────────────────────────
         $messages = Message::where('channel_id', $channel->_id)
@@ -98,14 +121,17 @@ class MessageController extends Controller
             ->orderBy('created_at', 'asc')
             ->get();
 
+<<<<<<< HEAD
         return response()->json([
             'success' => true,
             'message' => 'Channel messages retrieved successfully!',
             'data'    => [
                 'type'     => 'channel',
+=======
+        return response()->success([
+>>>>>>> 171cca664853ef100f35468bb369b1848fd4e0c4
                 'messages' => MessageResource::collection($messages)
-            ]
-        ]);
+            ], 'Channel messages retrieved successfully!');
     }
 
     /*
@@ -135,13 +161,9 @@ class MessageController extends Controller
 
         $message = Message::edit($updateData, $message);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Message updated successfully!',
-            'data'    => [
+        return response()->success([
                 'message' => MessageResource::make($message->load(['sender', 'receiver']))
-            ]
-        ]);
+            ], 'Message updated successfully!');
     }
 
     /*
@@ -154,10 +176,7 @@ class MessageController extends Controller
         $message = data_get($request, 'message');
         $message->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Message deleted successfully!'
-        ]);
+        return response()->success(null, 'Message deleted successfully!');
     }
 
     /*

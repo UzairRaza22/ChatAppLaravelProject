@@ -33,10 +33,17 @@ use App\Http\Requests\Channel\DeleteChannelRequest;
 
 // Message Requests
 use App\Http\Requests\Message\SendMessageRequest;
+<<<<<<< HEAD
 use App\Http\Requests\Message\GetMessagesRequest;
 use App\Http\Requests\Message\UpdateMessageRequest;
 use App\Http\Requests\Message\DeleteMessageRequest;
 
+=======
+use App\Http\Requests\Message\GetDirectMessagesRequest;
+use App\Http\Requests\Message\GetChannelMessagesRequest;
+use App\Http\Requests\Message\UpdateMessageRequest;
+use App\Http\Requests\Message\DeleteMessageRequest;
+>>>>>>> 171cca664853ef100f35468bb369b1848fd4e0c4
 use Illuminate\Http\Request;
 use Closure;
 use Symfony\Component\HttpFoundation\Response;
@@ -78,6 +85,7 @@ class CheckValidationMiddleware
         if ($validation_type === 'RemoveWorkspaceMemberRequest') {
             $request->validate(app(RemoveWorkspaceMemberRequest::class)->rules());
         }
+<<<<<<< HEAD
 
         // ── Team ──────────────────────────────────────────────────────────
         if ($validation_type === 'CreateTeamRequest') {
@@ -133,6 +141,66 @@ class CheckValidationMiddleware
             $request->validate(app(DeleteMessageRequest::class)->rules());
         }
 
+=======
+        
+        // Channel validation requests
+        if ($validation_type === 'create_channel_request') {
+            $request->validate(app(\App\Http\Requests\Channel\CreateChannelRequest::class)->rules());
+        }
+        if ($validation_type === 'read_channel_request') {
+            $request->validate(app(\App\Http\Requests\Channel\ReadChannelRequest::class)->rules());
+        }
+        if ($validation_type === 'update_channel_request') {
+            $request->validate(app(\App\Http\Requests\Channel\UpdateChannelRequest::class)->rules());
+        }
+        if ($validation_type === 'delete_channel_request') {
+            $request->validate(app(\App\Http\Requests\Channel\DeleteChannelRequest::class)->rules());
+        }
+        if ($validation_type === 'add_channel_member_request') {
+            $request->validate(app(\App\Http\Requests\Channel\AddMemberRequest::class)->rules());
+        }
+        if ($validation_type === 'remove_channel_member_request') {
+            $request->validate(app(\App\Http\Requests\Channel\RemoveMemberRequest::class)->rules());
+        }
+        
+        // Team validation requests
+        if ($validation_type === 'create_team_request') {
+            $request->validate(app(CreateTeamRequest::class)->rules());
+        }
+        if ($validation_type === 'update_team_request') {
+            $request->validate(app(UpdateTeamRequest::class)->rules());
+        }
+        if ($validation_type === 'add_team_member_request') {
+            $request->validate(app(AddTeamMemberRequest::class)->rules());
+        }
+        if ($validation_type === 'remove_team_member_request') {
+            $request->validate(app(RemoveTeamMemberRequest::class)->rules());
+        }
+        if ($validation_type === 'delete_team_request') {
+            $request->validate(app(DeleteTeamRequest::class)->rules());
+        }
+        if ($validation_type === 'list_team_request') {
+            $request->validate(app(ListTeamRequest::class)->rules());
+        }
+        
+        // Message validation requests
+        if ($validation_type === 'send_message_request') {
+            $request->validate(app(SendMessageRequest::class)->rules());
+        }
+        if ($validation_type === 'get_direct_messages_request') {
+            $request->validate(app(GetDirectMessagesRequest::class)->rules());
+        }
+        if ($validation_type === 'get_channel_messages_request') {
+            $request->validate(app(GetChannelMessagesRequest::class)->rules());
+        }
+        if ($validation_type === 'update_message_request') {
+            $request->validate(app(UpdateMessageRequest::class)->rules());
+        }
+        if ($validation_type === 'delete_message_request') {
+            $request->validate(app(DeleteMessageRequest::class)->rules());
+        }
+        
+>>>>>>> 171cca664853ef100f35468bb369b1848fd4e0c4
         return $next($request);
     }
 }

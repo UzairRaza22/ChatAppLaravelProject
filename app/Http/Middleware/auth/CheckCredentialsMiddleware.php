@@ -22,7 +22,11 @@ class CheckCredentialsMiddleware
 
         $user = User::where('email', $email)->first();
 
-        if (!$user || !Hash::check($password, $user->password)) {
+        if (!$user) {
+            return response()->notFound('Email not registered.');
+        }
+
+        if (!Hash::check($password, $user->password)) {
             return response()->unauthorized('Invalid credentials');
         }
 
