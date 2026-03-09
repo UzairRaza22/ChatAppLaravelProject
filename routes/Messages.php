@@ -3,47 +3,51 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MessageController;
 
+/*
+|--------------------------------------------------------------------------
+| Message Routes
+|--------------------------------------------------------------------------
+|
+| Single /send  → DM (receiver_id) or Channel (channel_id)
+| Single /messages → Get DM or Channel messages
+|
+| Workspace is resolved INSIDE middleware:
+|   DM      → CheckReceiverInWorkspaceMiddleware finds shared workspace
+|   Channel → CheckChannelInWorkspaceMiddleware loads channel + workspace
+|
+*/
+
 Route::middleware('check.token:login_token')->group(function () {
 
-    // ── Send a message (text | file | text + file) ────────────────────────
+    // ── Send Message (DM or Channel) ──────────────────────────────────────
     Route::post('/send', [MessageController::class, 'create'])->middleware([
         'check.validation:SendMessageRequest',
-        'message.workspace.member',
-        'message.receiver.check',
-        'message.channel.check',
+        'message.receiver.check',   // DM:      checks receiver + finds shared workspace
+        'message.channel.check',    // Channel: checks channel membership + loads workspace
     ]);
 
-    // ── Get Direct Messages between auth user and a receiver ──────────────
-    Route::get('/direct', [MessageController::class, 'getDirectMessages'])->middleware([
-        'check.validation:GetDirectMessagesRequest',
-        'message.workspace.member',
-        'message.receiver.check',
+    // ── Get Messages (DM or Channel) ──────────────────────────────────────
+    Route::get('/messages', [MessageController::class, 'getMessages'])->middleware([
+        'check.validation:GetMessagesRequest',
+        'message.receiver.check',   // DM:      checks receiver + finds shared workspace
+        'message.channel.check',    // Channel: checks channel membership + loads workspace
     ]);
 
-    // ── Get Channel Messages ──────────────────────────────────────────────
-    Route::get('/channel', [MessageController::class, 'getChannelMessages'])->middleware([
-        'check.validation:GetChannelMessagesRequest',
-        'message.workspace.member',
-        'message.channel.check',
-    ]);
-
-    // ── Update a message (sender only) ────────────────────────────────────
+    // ── Update Message (sender only) ──────────────────────────────────────
     Route::patch('/update', [MessageController::class, 'update'])->middleware([
         'check.validation:UpdateMessageRequest',
-        'message.workspace.member',
         'message.exists',
         'message.sender',
     ]);
 
-    // ── Delete a message — soft delete (sender only) ──────────────────────
+    // ── Delete Message (sender only) ──────────────────────────────────────
     Route::delete('/delete', [MessageController::class, 'delete'])->middleware([
         'check.validation:DeleteMessageRequest',
-        'message.workspace.member',
         'message.exists',
         'message.sender',
     ]);
 
-    // ── Download a file from a message ────────────────────────────────────
+    // ── Download File ─────────────────────────────────────────────────────
     Route::get('/download', [MessageController::class, 'download'])->middleware([
         'message.file.check',
     ]);

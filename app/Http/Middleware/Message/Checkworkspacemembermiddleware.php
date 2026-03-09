@@ -25,10 +25,9 @@ class CheckWorkspaceMemberMiddleware
                 'message' => 'Workspace not found.'
             ], 404);
         }
-
         $isMember = $workspace->members()
-            ->where('_id', $user->_id)
-            ->exists();
+            ->get()
+            ->contains('_id', $user->_id);
 
         if (!$isMember) {
             return response()->json([

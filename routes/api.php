@@ -19,3 +19,11 @@ Route::get('/health', function () {
 // Load modular route files
 Route::prefix('auth')->group(base_path('routes/auth.php'));
 Route::prefix('workspaces')->group(base_path('routes/workspaces.php'));
+
+
+
+Route::prefix('team')->group(base_path('routes/team.php'));
+
+Route::prefix('messages')->group(base_path('routes/Messages.php'));
+
+Route::prefix('channels')->group(base_path('routes/channel.php'));
