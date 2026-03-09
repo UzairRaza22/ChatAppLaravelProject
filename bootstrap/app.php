@@ -30,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'message.exists' => \App\Http\Middleware\Message\Checkmessageexistsmiddleware::class,
             'message.sender' => \App\Http\Middleware\Message\Checkmessagesendermiddleware::class,
             'message.file.check' => \App\Http\Middleware\Message\Checkmessagefilemiddleware::class,
+            'message.notification' => \App\Http\Middleware\Message\SendMessagePushNotificationMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

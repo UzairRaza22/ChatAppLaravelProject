@@ -11,6 +11,7 @@ Route::middleware('check.token:login_token')->group(function () {
         'message.workspace.member',
         'message.receiver.check',
         'message.channel.check',
+        'message.notification',
     ]);
 
     // ── Get Direct Messages between auth user and a receiver ──────────────

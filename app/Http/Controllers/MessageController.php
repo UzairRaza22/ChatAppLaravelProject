@@ -42,17 +42,6 @@ class MessageController extends Controller
 
         $message = Message::add($messageData);
 
-        // FCM INTEGRATION: dispatch push notification job
-        if ($request->input('receiver_id')) {
-            $preview = $request->input('content') ? substr($request->input('content'), 0, 100) : 'Sent a file';
-            \App\Jobs\SendMessagePushNotificationJob::dispatch(
-                (string) $request->input('receiver_id'),
-                'New message',
-                $preview,
-                ['type' => 'message', 'message_id' => (string)$message->id, 'sender_id' => (string)$user->_id]
-            );
-        }
-
         return response()->json([
             'success' => true,
             'message' => 'Message sent successfully!',

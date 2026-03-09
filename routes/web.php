@@ -8,3 +8,7 @@ Route::get('/', function () {
 Route::get('/profile',function() {
     return 'Profile View';
 });
+
+Route::get('/test-fcm', function () {
+    return view('test-fcm');
+});
