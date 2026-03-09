@@ -18,13 +18,13 @@ class ChannelController extends Controller
     {
         $data = $request->validated();
         $channel = $request->attributes->get('existing_direct_channel') ?? Channel::create($data);
-        return new ChannelResource($channel);
+        return response()->success(new ChannelResource($channel), 'Channel created successfully!');
     }
 
     // Read channel
     public function read(ReadChannelRequest $request, $id)
     {
-        return new ChannelResource($request->attributes->get('channel'));
+        return response()->success(new ChannelResource($request->attributes->get('channel')), 'Channel retrieved successfully!');
     }
 
     // Update channel (admin only)
@@ -32,7 +32,7 @@ class ChannelController extends Controller
     {
         $channel = $request->attributes->get('channel');
         $channel->update($request->validated());
-        return new ChannelResource($channel);
+        return response()->success(new ChannelResource($channel), 'Channel updated successfully!');
     }
 
     // Delete channel (admin only)
@@ -40,7 +40,7 @@ class ChannelController extends Controller
     {
         $channel = $request->attributes->get('channel');
         $channel->forceDelete();
-        return response()->json(['message' => 'Channel deleted successfully']);
+        return response()->success(null, 'Channel deleted successfully!');
     }
 
     // Add member 
@@ -50,7 +50,7 @@ class ChannelController extends Controller
         $channel->members = $request->validated()['members'];
         $channel->save();
 
-        return new ChannelResource($channel);
+        return response()->success(new ChannelResource($channel), 'Member added to channel successfully!');
     }
 
     // Remove member 
@@ -60,6 +60,6 @@ class ChannelController extends Controller
         $channel->members = $request->validated()['members'];
         $channel->save();
 
-        return new ChannelResource($channel);
+        return response()->success(new ChannelResource($channel), 'Member removed from channel successfully!');
     }
 }

@@ -26,10 +26,7 @@ class FcmTokenController extends Controller
             ]
         );
 
-        return response()->json([
-            'success' => true,
-            'message' => 'FCM token stored successfully.',
-        ]);
+        return response()->success(null, 'FCM token stored successfully.');
     }
 
     public function destroy(Request $request)
@@ -44,9 +41,6 @@ class FcmTokenController extends Controller
             ->where('user_id', $user->_id)
             ->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'FCM token removed successfully.',
-        ]);
+        return response()->success(null, 'FCM token removed successfully.');
     }
 }

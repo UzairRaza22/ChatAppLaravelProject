@@ -16,7 +16,7 @@ class ChannelExistMiddleware
         $channel = Channel::where('_id', $channelId)->first();
 
         if (!$channel) {
-            return response()->json(['error' => 'Channel not found'], 404);
+            return response()->notFound('Channel not found.');
         }
 
         // Attach the channel to the request for controllers

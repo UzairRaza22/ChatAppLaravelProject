@@ -136,8 +136,4 @@ return $message;
 
 }
 
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> d811925ecffa04b2e6e5db20bc07a1a597ee98d4

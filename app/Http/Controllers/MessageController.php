@@ -53,13 +53,9 @@ class MessageController extends Controller
             );
         }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Message sent successfully!',
-            'data'    => [
+        return response()->success([
                 'message' => MessageResource::make($message->load(['sender', 'receiver', 'channel']))
-            ]
-        ], 201);
+            ], 'Message sent successfully!', 201);
     }
 
     /*
@@ -87,13 +83,9 @@ class MessageController extends Controller
             ->orderBy('created_at', 'asc')
             ->get();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Direct messages retrieved successfully!',
-            'data'    => [
+        return response()->success([
                 'messages' => MessageResource::collection($messages)
-            ]
-        ]);
+            ], 'Direct messages retrieved successfully!');
     }
 
     /*
@@ -110,13 +102,9 @@ class MessageController extends Controller
             ->orderBy('created_at', 'asc')
             ->get();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Channel messages retrieved successfully!',
-            'data'    => [
+        return response()->success([
                 'messages' => MessageResource::collection($messages)
-            ]
-        ]);
+            ], 'Channel messages retrieved successfully!');
     }
 
     /*
@@ -148,13 +136,9 @@ class MessageController extends Controller
 
         $message = Message::edit($updateData, $message);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Message updated successfully!',
-            'data'    => [
+        return response()->success([
                 'message' => MessageResource::make($message->load(['sender', 'receiver']))
-            ]
-        ]);
+            ], 'Message updated successfully!');
     }
 
     /*
@@ -167,10 +151,7 @@ class MessageController extends Controller
         $message = data_get($request, 'message');
         $message->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Message deleted successfully!'
-        ]);
+        return response()->success(null, 'Message deleted successfully!');
     }
 
     /*

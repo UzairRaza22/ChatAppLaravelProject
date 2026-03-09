@@ -14,7 +14,7 @@ class TeamController extends Controller
         $user = $request->user();
 
         if (!$user) {
-            return response()->json(['message' => 'User not found'], 401);
+            return response()->unauthorized('User not found');
         }
 
         $team = Team::create([
@@ -25,11 +25,7 @@ class TeamController extends Controller
             'members'      => [$user->_id] // Creator auto-member
         ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Team created successfully',
-            'data'    => $team
-        ], 201);
+        return response()->success($team, 'Team created successfully', 201);
     }
 
     // 2. List Teams
@@ -37,10 +33,7 @@ class TeamController extends Controller
     {
         $teams = $request->teams ?? Team::where('workspace_id', $request->workspace_id)->get();
 
-        return response()->json([
-            'success' => true,
-            'data'    => $teams
-        ], 200);
+        return response()->success($teams, 'Teams retrieved successfully');
     }
 
     // 3. Update Team
@@ -53,11 +46,7 @@ class TeamController extends Controller
             'description' => $request->description
         ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Team updated successfully',
-            'data'    => $team
-        ], 200);
+        return response()->success($team, 'Team updated successfully');
     }
 
     // 4. Add Member to Team (Updated for Multiple Emails/IDs)
@@ -76,10 +65,7 @@ class TeamController extends Controller
             }
         }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Members added to team successfully'
-        ], 200);
+        return response()->success(null, 'Members added to team successfully');
     }
 
     // 5. Remove Member from Team
@@ -89,10 +75,7 @@ class TeamController extends Controller
 
         $team->pull('members', $request->member_id);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Member removed from team successfully'
-        ], 200);
+        return response()->success(null, 'Member removed from team successfully');
     }
 
     // 6. Delete Team
@@ -102,9 +85,6 @@ class TeamController extends Controller
         
         $team->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Team deleted successfully'
-        ], 200);
+        return response()->success(null, 'Team deleted successfully');
     }
 }

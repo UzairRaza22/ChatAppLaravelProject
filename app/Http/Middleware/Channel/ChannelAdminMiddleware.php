@@ -17,7 +17,7 @@ class ChannelAdminMiddleware
             ->contains(fn ($member) => (string) data_get($member, 'user_id') === $userId && data_get($member, 'role') === 'admin');
 
         if (!$isAdmin) {
-            return response()->json(['error' => 'Only admin can perform this action'], 403);
+            return response()->forbidden('Only admin can perform this action.');
         }
         return $next($request);
     }

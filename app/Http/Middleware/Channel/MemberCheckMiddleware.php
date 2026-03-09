@@ -20,12 +20,12 @@ class MemberCheckMiddleware
         $type = $request->type ?? data_get($request->channel, 'type');
 
         if (!$userId || !$workspaceId) {
-            return response()->json(['error' => 'workspace_id is required'], 422);
+            return response()->error('workspace_id is required', 422);
         }
 
         $workspace = Workspace::find($workspaceId);
         if (!$workspace) {
-            return response()->json(['error' => 'Workspace not found'], 404);
+            return response()->notFound('Workspace not found.');
         }
 
         $workspaceMemberIds = collect($workspace->members ?? [])
@@ -48,22 +48,22 @@ class MemberCheckMiddleware
 
         if ($type === 'direct') {
             if (!in_array($userId, $workspaceMemberIds, true)) {
-                return response()->json(['error' => 'User not part of workspace'], 403);
+                return response()->forbidden('User not part of workspace');
             }
             return $next($request);
         }
 
         if (!$teamId) {
-            return response()->json(['error' => 'team_id is required for public/private channels'], 422);
+            return response()->error('team_id is required for public/private channels', 422);
         }
 
         $team = Team::find($teamId);
         if (!$team) {
-            return response()->json(['error' => 'Team not found'], 404);
+            return response()->notFound('Team not found.');
         }
 
         if ((string) $team->workspace_id !== (string) $workspaceId) {
-            return response()->json(['error' => 'Team does not belong to the specified workspace'], 403);
+            return response()->forbidden('Team does not belong to the specified workspace');
         }
 
         $teamMemberIds = collect($team->members ?? [])
@@ -73,7 +73,7 @@ class MemberCheckMiddleware
         ->all();
 
         if (!in_array($userId, $workspaceMemberIds, true) || !in_array($userId, $teamMemberIds, true)) {
-            return response()->json(['error' => 'User not part of workspace or team'], 403);
+            return response()->forbidden('User not part of workspace or team');
         }
         return $next($request);
     }

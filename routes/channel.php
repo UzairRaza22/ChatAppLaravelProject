@@ -7,29 +7,29 @@ use App\Http\Middleware\ChannelAdminMiddleware;
 use App\Http\Middleware\MemberCheckMiddleware;
 
 // All routes protected by auth
-Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware(['check.token:login_token', 'check.active'])->group(function () {
 
-    // Create a new channel
-    Route::post('/channels/create', [ChannelController::class, 'create'])
-        ->middleware(MemberCheckMiddleware::class);
+Route::post('/channels/create', [ChannelController::class, 'create'])
+    ->middleware('check.validation:create_channel_request')
+    ->middleware('check.channel.member');
 
-    // Read channel
-    Route::get('/channels/{id}', [ChannelController::class, 'read'])
-        ->middleware(ChannelExistMiddleware::class);
+Route::get('/channels/{id}', [ChannelController::class, 'read'])
+    ->middleware('check.validation:read_channel_request')
+    ->middleware('check.channel.exists');
 
-    // Update channel (admin only)
-    Route::put('/channels/{id}', [ChannelController::class, 'update'])
-        ->middleware([ChannelExistMiddleware::class, ChannelAdminMiddleware::class]);
+Route::put('/channels/{id}', [ChannelController::class, 'update'])
+    ->middleware('check.validation:update_channel_request')
+    ->middleware(['check.channel.exists', 'check.channel.admin']);
 
-    // Delete channel (admin only)
-    Route::delete('/channels/{id}', [ChannelController::class, 'delete'])
-        ->middleware([ChannelExistMiddleware::class, ChannelAdminMiddleware::class]);
+Route::delete('/channels/{id}', [ChannelController::class, 'delete'])
+    ->middleware('check.validation:delete_channel_request')
+    ->middleware(['check.channel.exists', 'check.channel.admin']);
 
-    // Add member (admin only)
-    Route::post('/channels/{id}/add-member', [ChannelController::class, 'addMember'])
-        ->middleware([ChannelExistMiddleware::class, ChannelAdminMiddleware::class, MemberCheckMiddleware::class]);
+Route::post('/channels/{id}/add-member', [ChannelController::class, 'addMember'])
+    ->middleware('check.validation:add_channel_member_request')
+    ->middleware(['check.channel.exists', 'check.channel.admin', 'check.channel.member']);
 
-    // Remove member (admin only)
-    Route::post('/channels/{id}/remove-member', [ChannelController::class, 'removeMember'])
-        ->middleware([ChannelExistMiddleware::class, ChannelAdminMiddleware::class]);
+Route::post('/channels/{id}/remove-member', [ChannelController::class, 'removeMember'])
+    ->middleware('check.validation:remove_channel_member_request')
+    ->middleware(['check.channel.exists', 'check.channel.admin']);
 });
