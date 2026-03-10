@@ -11,6 +11,11 @@ class CheckTokenMiddleware
 {
     /**
      * Handle an incoming request.
+     * 
+     * Token can be provided in:
+     * 1. Route parameter: /api/auth/verify/{token}
+     * 2. Custom header: token (e.g., token: abc123)
+     * 3. Request body: token=abc123
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
@@ -22,19 +27,14 @@ class CheckTokenMiddleware
             $user = User::where('email', $email)->first();
             
             if (!$user) {
-                return response()->json([
-                    'message' => 'Email not registered.'
-                ], 404);
+                return response()->notFound('Email not registered.');
             }
         }
 
-        // Get token from route, header, or request body
+        // Get token from route, custom header, or request body
         $token = $request->route('token') ?? 
-                 $request->headers->get('authorization') ?? 
+                 $request->headers->get('token') ?? 
                  $request->input('token');
-        
-        // Remove 'Bearer ' prefix if present
-        $token = str_replace('Bearer ', '', $token);
         
         if (!$token) {
             return response()->unauthorized('Token is required.');

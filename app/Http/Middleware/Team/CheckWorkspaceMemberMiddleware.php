@@ -12,44 +12,64 @@ class CheckWorkspaceMemberMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $workspaceId = $request->workspace_id;
-        $emails = $request->emails; // Yeh array hai (Postman se 1 email ho ya zyada)
+ 
+    $workspaceId = data_get($request, 'workspace_id');
+        $userIds = data_get($request, 'user_ids'); 
 
-        $workspace = Workspace::find($workspaceId);
-
-        if (!$workspace) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Workspace not found.'
-            ], 404);
+        if (!is_array($userIds)) {
+            $userIds = $userIds ? [$userIds] : [];
         }
 
-        // --- Fix: Collection ko Array mein convert karna ---
-        $workspaceMembers = $workspace->members;
-        
+        $workspace = Workspace::find($workspaceId);
+        if (!$workspace) {
+            abort(404, 'Workspace not found.');
+        }
+
+        $workspaceMembers = data_get($workspace, 'members', []);
         if ($workspaceMembers instanceof \Illuminate\Support\Collection) {
             $workspaceMembers = $workspaceMembers->toArray();
-        } elseif (!is_array($workspaceMembers)) {
-            $workspaceMembers = [];
+        }
+
+        $safeWorkspaceMemberIds = [];
+        foreach ((array)$workspaceMembers as $member) {
+            
+            if (is_string($member) && str_starts_with($member, 'a:')) {
+                $unserialized = @unserialize($member);
+                $id = data_get($unserialized, 'id') ?? data_get($unserialized, '_id');
+                if ($id) {
+                    $safeWorkspaceMemberIds[] = (string)$id;
+                }
+            } 
+            elseif (is_string($member)) {
+                $safeWorkspaceMemberIds[] = $member;
+            } 
+            elseif (is_array($member) || is_object($member)) {
+                $id = data_get($member, 'id') 
+                      ?? data_get($member, '_id.$oid') 
+                      ?? data_get($member, '_id') 
+                      ?? data_get($member, '$oid');
+
+                if ($id) {
+                    $safeWorkspaceMemberIds[] = (string)$id;
+                }
+            }
         }
 
         $validUserIds = [];
+        foreach ($userIds as $userId) {
+            if (!is_string($userId)) continue;
 
-        // Loop har email ko check karega, chahe array mein 1 ho ya 5
-        foreach ($emails as $email) {
-            $user = User::where('email', $email)->first();
+            $user = User::find($userId);
 
-            if (!$user || !in_array($user->_id, $workspaceMembers)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => "The user with email {$email} is not a member of this workspace."
-                ], 403);
+            $currentUserId = (string) data_get($user, '_id');
+
+            if (!$user || !in_array($currentUserId, $safeWorkspaceMemberIds)) {
+                abort(403, "The user with ID " . $userId . " is not a member of this workspace.");
             }
 
-            $validUserIds[] = $user->_id;
+            $validUserIds[] = $currentUserId;
         }
 
-        // IDs ko merge kar dena taake Controller ko array milay
         $request->merge(['member_ids' => $validUserIds]);
 
         return $next($request);

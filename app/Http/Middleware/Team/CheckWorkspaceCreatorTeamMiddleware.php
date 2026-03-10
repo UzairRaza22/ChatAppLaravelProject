@@ -11,28 +11,31 @@ class CheckWorkspaceCreatorTeamMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        // Uzair ka tareeqa: User object request se nikaalna
         $user = $request->user(); 
 
         if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
+            abort(401, 'Unauthenticated. Please login to continue.');
         }
 
-        $workspaceId = $request->input('workspace_id'); 
+        $workspaceId = data_get($request, 'workspace_id'); 
 
-        // Workspace find karna
         $workspace = Workspace::where('_id', $workspaceId)->first();
 
         if (!$workspace) {
-            return response()->json(['message' => 'Workspace not found.'], 404);
+            abort(404, 'Workspace not found.');
         }
 
-        // Creator ID check karna (Uzair ke code mein dono strings ya ObjectIDs match honi chahiye)
-        if ($workspace->creator_id !== $user->_id) {
-            return response()->json(['message' => 'Unauthorized access to workspace.'], 403);
+        $creatorIdRaw = data_get($workspace, 'creator_id');
+        $creatorId = (string) (data_get($creatorIdRaw, '$oid') ?? $creatorIdRaw);
+
+        $userIdRaw = data_get($user, '_id');
+        $userId = (string) (data_get($userIdRaw, '$oid') ?? $userIdRaw);
+
+        // Creator ID check
+        if ($creatorId !== $userId) {
+            abort(403, 'Unauthorized access: You are not the creator of this workspace.');
         }
 
-        // Uzair 'merge' use karta hai attributes ki bajaye
         $request->merge([
             'workspace' => $workspace,
         ]);

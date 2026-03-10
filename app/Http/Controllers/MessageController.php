@@ -12,22 +12,23 @@ class MessageController extends Controller
     /*
     |--------------------------------------------------------------------------
     | Create Message  (text | file | text + file)
+    | workspace is resolved by middleware (receiver or channel check)
     |--------------------------------------------------------------------------
     */
     public function create(Request $request)
     {
-        $user        = $request->user();
-        $workspace   = data_get($request, 'workspace');
+        $user      = $request->user();
+        $workspace = data_get($request, 'workspace'); // set by receiver/channel middleware
+
         $messageData = [
             'workspace_id' => $workspace->_id,
             'sender_id'    => $user->_id,
-            'receiver_id'  => $request->input('receiver_id'),
-            'channel_id'   => $request->input('channel_id'),
+            'receiver_id'  => $request->input('receiver_id'), // null for channel
+            'channel_id'   => $request->input('channel_id'),  // null for DM
             'message_type' => $request->input('message_type', 'text'),
             'content'      => $request->input('content'),
         ];
 
-        // Handle file upload
         if ($request->hasFile('file')) {
             $file      = $request->file('file');
             $directory = "workspaces/{$workspace->_id}/messages";
@@ -42,47 +43,66 @@ class MessageController extends Controller
 
         $message = Message::add($messageData);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Message sent successfully!',
-            'data'    => [
+        // FCM INTEGRATION: dispatch push notification job
+        if ($request->input('receiver_id')) {
+            $preview = $request->input('content') ? substr($request->input('content'), 0, 100) : 'Sent a file';
+            \App\Jobs\SendMessagePushNotificationJob::dispatch(
+                (string) $request->input('receiver_id'),
+                'New message',
+                $preview,
+                ['type' => 'message', 'message_id' => (string)$message->id, 'sender_id' => (string)$user->_id]
+            );
+        }
+
+        return response()->success([
                 'message' => MessageResource::make($message->load(['sender', 'receiver', 'channel']))
-            ]
-        ], 201);
+            ], 'Message sent successfully!', 201);
     }
 
     /*
     |--------------------------------------------------------------------------
-    | Get Direct Messages between two users
+    | Get Messages — single route for DM and Channel
+    | DM      → receiver is set by CheckReceiverInWorkspaceMiddleware
+    | Channel → channel  is set by CheckChannelInWorkspaceMiddleware
     |--------------------------------------------------------------------------
     */
-    public function getDirectMessages(Request $request)
+    public function getMessages(Request $request)
     {
         $user      = $request->user();
-        $receiver  = data_get($request, 'receiver');
         $workspace = data_get($request, 'workspace');
+        $receiver  = data_get($request, 'receiver');
+        $channel   = data_get($request, 'channel');
 
-        $messages = Message::where('workspace_id', $workspace->_id)
-            ->where(function ($query) use ($user, $receiver) {
-                $query->where(function ($q) use ($user, $receiver) {
-                    $q->where('sender_id', $user->_id)
-                        ->where('receiver_id', $receiver->_id);
-                })->orWhere(function ($q) use ($user, $receiver) {
-                    $q->where('sender_id', $receiver->_id)
-                        ->where('receiver_id', $user->_id);
-                });
-            })
-            ->whereNull('channel_id')
-            ->orderBy('created_at', 'asc')
-            ->get();
+        if ($receiver) {
+            // ── Direct Messages ───────────────────────────────────────────
+            $messages = Message::where('workspace_id', $workspace->_id)
+                ->where(function ($query) use ($user, $receiver) {
+                    $query->where(function ($q) use ($user, $receiver) {
+                        $q->where('sender_id', $user->_id)
+                            ->where('receiver_id', $receiver->_id);
+                    })->orWhere(function ($q) use ($user, $receiver) {
+                        $q->where('sender_id', $receiver->_id)
+                            ->where('receiver_id', $user->_id);
+                    });
+                })
+                ->whereNull('channel_id')
+                ->orderBy('created_at', 'asc')
+                ->get();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Direct messages retrieved successfully!',
-            'data'    => [
+<<<<<<< HEAD
+            return response()->json([
+                'success' => true,
+                'message' => 'Direct messages retrieved successfully!',
+                'data'    => [
+                    'type'     => 'direct',
+                    'messages' => MessageResource::collection($messages)
+                ]
+            ]);
+        }
+=======
+        return response()->success([
                 'messages' => MessageResource::collection($messages)
-            ]
-        ]);
+            ], 'Direct messages retrieved successfully!');
     }
 
     /*
@@ -93,19 +113,25 @@ class MessageController extends Controller
     public function getChannelMessages(Request $request)
     {
         $channel = data_get($request, 'channel');
+>>>>>>> 171cca664853ef100f35468bb369b1848fd4e0c4
 
+        // ── Channel Messages ──────────────────────────────────────────────
         $messages = Message::where('channel_id', $channel->_id)
             ->whereNull('receiver_id')
             ->orderBy('created_at', 'asc')
             ->get();
 
+<<<<<<< HEAD
         return response()->json([
             'success' => true,
             'message' => 'Channel messages retrieved successfully!',
             'data'    => [
+                'type'     => 'channel',
+=======
+        return response()->success([
+>>>>>>> 171cca664853ef100f35468bb369b1848fd4e0c4
                 'messages' => MessageResource::collection($messages)
-            ]
-        ]);
+            ], 'Channel messages retrieved successfully!');
     }
 
     /*
@@ -119,11 +145,9 @@ class MessageController extends Controller
         $updateData = ['content' => $request->input('content')];
 
         if ($request->hasFile('file')) {
-            $workspace = data_get($request, 'workspace');
             $file      = $request->file('file');
-            $directory = "workspaces/{$workspace->_id}/messages";
+            $directory = "workspaces/{$message->workspace_id}/messages";
 
-            // Delete old file if present
             if ($message->file_path && Storage::disk('public')->exists($message->file_path)) {
                 Storage::disk('public')->delete($message->file_path);
             }
@@ -137,13 +161,9 @@ class MessageController extends Controller
 
         $message = Message::edit($updateData, $message);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Message updated successfully!',
-            'data'    => [
+        return response()->success([
                 'message' => MessageResource::make($message->load(['sender', 'receiver']))
-            ]
-        ]);
+            ], 'Message updated successfully!');
     }
 
     /*
@@ -156,16 +176,13 @@ class MessageController extends Controller
         $message = data_get($request, 'message');
         $message->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Message deleted successfully!'
-        ]);
+        return response()->success(null, 'Message deleted successfully!');
     }
 
     /*
     |--------------------------------------------------------------------------
     | Download File
-    | — all validation is handled by CheckMessageFileMiddleware
+    | — all validation handled by CheckMessageFileMiddleware
     |--------------------------------------------------------------------------
     */
     public function download(Request $request)

@@ -11,19 +11,16 @@ class CheckTeamsExistMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $workspaceId = $request->workspace_id;
+        $workspaceId = data_get($request, 'workspace_id');
 
+        // Teams fetch karna
         $teams = Team::where('workspace_id', $workspaceId)->get();
 
         if ($teams->isEmpty()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No teams found for this workspace.'
-            ], 404);
+            abort(404, 'No teams found for this workspace.');
         }
 
-        // Teams ko request mein save kar rahe hain taake controller mein dobara fetch na karni parain
-        $request->attributes->set('teams', $teams);
+        $request->merge(['teams' => $teams]);
 
         return $next($request);
     }

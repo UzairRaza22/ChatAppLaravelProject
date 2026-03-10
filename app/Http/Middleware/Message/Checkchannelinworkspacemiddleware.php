@@ -10,9 +10,11 @@ use Symfony\Component\HttpFoundation\Response;
 class CheckChannelInWorkspaceMiddleware
 {
     /**
-     * For Channel Messages: ensure the given channel belongs to the workspace.
-     * Must run AFTER CheckWorkspaceMemberMiddleware so 'workspace' is in request.
-     * Only runs when 'channel_id' is present in the request.
+     * For Channel Messages:
+     * 1. Check channel exists
+     * 2. Check sender is a member of that channel
+     *
+     * Skipped automatically if channel_id is not in the request.
      */
     public function handle(Request $request, Closure $next): Response
     {
@@ -23,19 +25,35 @@ class CheckChannelInWorkspaceMiddleware
             return $next($request);
         }
 
-        $workspace = data_get($request, 'workspace');
+        $sender = $request->user();
 
-        $channel = Channel::where('_id', $channelId)
-            ->where('workspace_id', $workspace->_id)
-            ->first();
+        // Check channel exists
+        $channel = Channel::where('_id', $channelId)->first();
 
         if (!$channel) {
             return response()->json([
-                'message' => 'Channel not found in this workspace.'
+                'success' => false,
+                'message' => 'Channel not found.'
             ], 404);
         }
 
-        $request->merge(['channel' => $channel]);
+        // Check sender is a member of the channel
+        $isMember = $channel->members()
+            ->get()
+            ->contains('_id', $sender->_id);
+
+        if (!$isMember) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You are not a member of this channel.'
+            ], 403);
+        }
+
+        // Merge channel and its workspace into request
+        $request->merge([
+            'channel'   => $channel,
+            'workspace' => $channel->workspace,
+        ]);
 
         return $next($request);
     }

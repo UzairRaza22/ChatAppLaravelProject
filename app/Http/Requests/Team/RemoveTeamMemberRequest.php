@@ -11,23 +11,25 @@ class RemoveTeamMemberRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'team_id'   => 'required|string',
-            'emails' => 'required|array',
-            'emails.*' => 'email|exists:users,email'
+            'workspace_id' => 'required|string',
+            'team_id'      => 'required|string',
+            'user_ids'     => 'required|array|min:1',
+            'user_ids.*'   => 'required|string', 
         ];
     }
 
     public function messages(): array
     {
         return [
-            'emails.*.exists' => 'The email :input is not registered.',
+            'user_ids.required' => 'Please provide at least one user ID to remove.',
+            'user_ids.*.string' => 'User ID must be a valid string.',
         ];
     }
 
     public function attributes(): array
     {
         return [
-            'emails.*' => 'email address',
+            'user_ids.*' => 'user ID',
         ];
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Team;
+use App\Http\Resources\TeamResource;
 use Illuminate\Http\Request;
 
 class TeamController extends Controller
@@ -10,101 +11,79 @@ class TeamController extends Controller
     // 1. Create Team
     public function create(Request $request)
     {
-        // Uzair's style: User request se nikalna
         $user = $request->user();
 
         if (!$user) {
-            return response()->json(['message' => 'User not found'], 401);
+            abort(401, 'User not found');
         }
 
         $team = Team::create([
-            'workspace_id' => $request->workspace_id,
-            'name'         => $request->name,
-            'description'  => $request->description,
-            'creator_id'   => $user->_id,
-            'members'      => [$user->_id] // Creator auto-member
+            'workspace_id' => data_get($request, 'workspace_id'),
+            'name'         => data_get($request, 'name'),
+            'description'  => data_get($request, 'description'),
+            'creator_id'   => data_get($user, '_id'),
+            'members'      => [(string) data_get($user, '_id')] 
         ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Team created successfully',
-            'data'    => $team
-        ], 201);
+        return response()->success(new TeamResource($team), 'Team created successfully', 201);
     }
 
-    // 2. List Teams
-    public function index(Request $request)
+    // 2. Read Teams 
+    public function read(Request $request)
     {
-        $teams = $request->teams ?? Team::where('workspace_id', $request->workspace_id)->get();
-
-        return response()->json([
-            'success' => true,
-            'data'    => $teams
-        ], 200);
+        $teams = data_get($request, 'teams'); 
+        
+        return response()->success(TeamResource::collection($teams), 'Teams retrieved successfully');
     }
 
     // 3. Update Team
     public function update(Request $request)
     {
-        $team = $request->team ?? Team::find($request->team_id);
+        $team = data_get($request, 'team');
 
         $team->update([
-            'name'        => $request->name,
-            'description' => $request->description
+            'name'         => data_get($request, 'name'),
+            'description'  => data_get($request, 'description')
         ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Team updated successfully',
-            'data'    => $team
-        ], 200);
+        return response()->success(new TeamResource($team), 'Team updated successfully');
     }
 
-    // 4. Add Member to Team (Updated for Multiple Emails/IDs)
+    // 4. Add Member to Team
     public function addMember(Request $request)
     {
-        $team = $request->team ?? Team::find($request->team_id);
-        
-        // Middleware se aane wali array IDs
-        $memberIds = $request->member_ids; 
+        $team = data_get($request, 'team');
+        $memberIds = data_get($request, 'member_ids'); 
 
-        // Har ID ko loop ke zariye members array mein add karna
         if (!empty($memberIds)) {
             foreach ($memberIds as $id) {
-                // 'true' parameter ensures uniqueness in MongoDB array
-                $team->push('members', $id, true);
+                $team->push('members', (string) $id, true);
             }
         }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Members added to team successfully'
-        ], 200);
+        return response()->success(new TeamResource($team), 'Members added to team successfully');
     }
 
     // 5. Remove Member from Team
     public function removeMember(Request $request)
     {
-        $team = $request->team ?? Team::find($request->team_id);
+        $team = data_get($request, 'team');  
+        $userIds = data_get($request, 'member_ids') ?? data_get($request, 'user_ids') ?? [];
 
-        $team->pull('members', $request->member_id);
+        foreach ($userIds as $id) {
+            $team->pull('members', (string) $id);
+        }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Member removed from team successfully'
-        ], 200);
+        return response()->success(new TeamResource($team), 'Members removed from team successfully');
     }
 
     // 6. Delete Team
     public function delete(Request $request)
     {
-        $team = $request->team ?? Team::find($request->team_id);
+        $team = data_get($request, 'team');
         
         $team->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Team deleted successfully'
-        ], 200);
+        return response()->success(null, 'Team deleted successfully');
     }
 }
