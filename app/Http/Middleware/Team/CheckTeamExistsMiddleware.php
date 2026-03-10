@@ -11,19 +11,15 @@ class CheckTeamExistsMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $teamId = $request->team_id;
+        $teamId = data_get($request, 'team_id') ?? $request->route('team_id');
 
         $team = Team::find($teamId);
 
         if (!$team) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Team not found.'
-            ], 404);
+            abort(404, 'Team not found.');
         }
 
-        // Team object ko request mein save kar dein taake controller mein query na karni paray
-        $request->attributes->set('team', $team);
+        $request->merge(['team' => $team]);
 
         return $next($request);
     }

@@ -9,6 +9,13 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CheckChannelInWorkspaceMiddleware
 {
+    /**
+     * For Channel Messages:
+     * 1. Check channel exists
+     * 2. Check sender is a member of that channel
+     *
+     * Skipped automatically if channel_id is not in the request.
+     */
     public function handle(Request $request, Closure $next): Response
     {
         $channelId = $request->input('channel_id');

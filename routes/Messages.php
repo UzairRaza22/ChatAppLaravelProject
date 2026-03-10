@@ -7,23 +7,31 @@ use App\Http\Controllers\MessageController;
 |--------------------------------------------------------------------------
 | Message Routes
 |--------------------------------------------------------------------------
+|
+| Single /send  → DM (receiver_id) or Channel (channel_id)
+| Single /messages → Get DM or Channel messages
+|
+| Workspace is resolved INSIDE middleware:
+|   DM      → CheckReceiverInWorkspaceMiddleware finds shared workspace
+|   Channel → CheckChannelInWorkspaceMiddleware loads channel + workspace
+|
 */
 
 Route::middleware('check.token:login_token')->group(function () {
 
     // ── Send Message (DM or Channel) ──────────────────────────────────────
     Route::post('/send', [MessageController::class, 'create'])->middleware([
-        'check.validation:SendMessageRequest',
+        'check.validation:send_message_request',
+        'check.message.workspace.member',
+        'check.message.receiver.check',
+        'check.message.channel.check',
+    ]);
 
-        'message.receiver.check',       // DM: checks receiver + finds shared workspace
-        'message.channel.check',        // Channel: checks membership + loads workspace
-        'message.file.upload',          // Handles GridFS upload if file present
-
-        'message.workspace.member',
-        'message.receiver.check',
-        'message.channel.check',
-        'message.notification',
-
+    // ── Get Direct Messages between auth user and a receiver ──────────────
+    Route::get('/direct', [MessageController::class, 'getDirectMessages'])->middleware([
+        'check.validation:get_direct_messages_request',
+        'check.message.workspace.member',
+        'check.message.receiver.check',
     ]);
 
     // ── Read Messages (DM or Channel) ─────────────────────────────────────
@@ -36,17 +44,18 @@ Route::middleware('check.token:login_token')->group(function () {
 
     // ── Update Message (sender only) ──────────────────────────────────────
     Route::patch('/update', [MessageController::class, 'update'])->middleware([
-        'check.validation:UpdateMessageRequest',
-        'message.exists',
-        'message.sender',
-        'message.file.upload',          // Handles GridFS replacement if file present
+        'check.validation:update_message_request',
+        'check.message.workspace.member',
+        'check.message.exists',
+        'check.message.sender.check',
     ]);
 
     // ── Delete Message (sender only) ──────────────────────────────────────
     Route::delete('/delete', [MessageController::class, 'delete'])->middleware([
-        'check.validation:DeleteMessageRequest',
-        'message.exists',
-        'message.sender',
+        'check.validation:delete_message_request',
+        'check.message.workspace.member',
+        'check.message.exists',
+        'check.message.sender.check',
     ]);
 
     // ── Download File ─────────────────────────────────────────────────────
