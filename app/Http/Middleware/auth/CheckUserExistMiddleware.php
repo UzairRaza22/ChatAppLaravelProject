@@ -11,7 +11,7 @@ class CheckUserExistMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $email = $request->email;
+        $email = data_get($request, 'email');
         
         $user = User::where('email', $email)->first();
         

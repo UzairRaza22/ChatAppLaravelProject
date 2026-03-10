@@ -3,48 +3,47 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MessageController;
 
-Route::middleware('check.token:login_token', 'check.active')->group(function () {
+/*
+|--------------------------------------------------------------------------
+| Message Routes
+|--------------------------------------------------------------------------
+*/
 
-    // ── Send a message (text | file | text + file) ────────────────────────
+Route::middleware('check.token:login_token')->group(function () {
+
+    // ── Send Message (DM or Channel) ──────────────────────────────────────
     Route::post('/send', [MessageController::class, 'create'])->middleware([
-        'check.validation:send_message_request',
-        'check.message.workspace.member',
-        'check.message.receiver.check',
-        'check.message.channel.check',
+        'check.validation:SendMessageRequest',
+        'message.receiver.check',       // DM: checks receiver + finds shared workspace
+        'message.channel.check',        // Channel: checks membership + loads workspace
+        'message.file.upload',          // Handles GridFS upload if file present
     ]);
 
-    // ── Get Direct Messages between auth user and a receiver ──────────────
-    Route::get('/direct', [MessageController::class, 'getDirectMessages'])->middleware([
-        'check.validation:get_direct_messages_request',
-        'check.message.workspace.member',
-        'check.message.receiver.check',
+    // ── Read Messages (DM or Channel) ─────────────────────────────────────
+    Route::get('/read', [MessageController::class, 'readMessages'])->middleware([
+        'check.validation:GetMessagesRequest',
+        'message.receiver.check',       // DM: checks receiver + finds shared workspace
+        'message.channel.check',        // Channel: checks membership + loads workspace
+        'message.read.resolve',         // Resolves and merges messages into request
     ]);
 
-    // ── Get Channel Messages ──────────────────────────────────────────────
-    Route::get('/channel', [MessageController::class, 'getChannelMessages'])->middleware([
-        'check.validation:get_channel_messages_request',
-        'check.message.workspace.member',
-        'check.message.channel.check',
-    ]);
-
-    // ── Update a message (sender only) ────────────────────────────────────
+    // ── Update Message (sender only) ──────────────────────────────────────
     Route::patch('/update', [MessageController::class, 'update'])->middleware([
-        'check.validation:update_message_request',
-        'check.message.workspace.member',
-        'check.message.exists',
-        'check.message.sender.check',
+        'check.validation:UpdateMessageRequest',
+        'message.exists',
+        'message.sender',
+        'message.file.upload',          // Handles GridFS replacement if file present
     ]);
 
-    // ── Delete a message — soft delete (sender only) ──────────────────────
+    // ── Delete Message (sender only) ──────────────────────────────────────
     Route::delete('/delete', [MessageController::class, 'delete'])->middleware([
-        'check.validation:delete_message_request',
-        'check.message.workspace.member',
-        'check.message.exists',
-        'check.message.sender.check',
+        'check.validation:DeleteMessageRequest',
+        'message.exists',
+        'message.sender',
     ]);
 
-    // ── Download a file from a message ────────────────────────────────────
+    // ── Download File ─────────────────────────────────────────────────────
     Route::get('/download', [MessageController::class, 'download'])->middleware([
-        'check.message.file.check',
+        'message.file.check',
     ]);
 });

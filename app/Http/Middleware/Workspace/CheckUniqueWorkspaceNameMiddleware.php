@@ -16,9 +16,9 @@ class CheckUniqueWorkspaceNameMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = $request->user();
+        $user = data_get($request, 'user');
         $userId = data_get($user, '_id');
-        $workspaceName = $request->input('name');
+        $workspaceName = data_get($request, 'name');
 
         if ($workspaceName) {
             $query = Workspace::where('creator_id', $userId)
@@ -26,7 +26,7 @@ class CheckUniqueWorkspaceNameMiddleware
 
             // For update, exclude current workspace
             if ($request->has('workspace_id')) {
-                $workspaceId = $request->input('workspace_id');
+                $workspaceId = data_get($request, 'workspace_id');
                 $query->where('_id', '!=', $workspaceId);
             }
 

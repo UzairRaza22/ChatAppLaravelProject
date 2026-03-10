@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\WorkspaceController;
-//use App\Http\Controllers\TeamController;
 
 Route::middleware('check.token:login_token')->group(function () {
 
@@ -13,14 +12,19 @@ Route::middleware('check.token:login_token')->group(function () {
     ]);
 
     //read workspaces
-    Route::get('/workspaces/{id?}', [WorkspaceController::class, 'read'])->middleware(
+    Route::get('/read', [WorkspaceController::class, 'read'])->middleware(
         'check.workspaces.exist'
     );
-
+    
+    //read specific workspace
+    Route::get('/read/{id}', [WorkspaceController::class, 'read'])->middleware(
+        'check.workspaces.exist'
+    );
 
     //update workspace
     Route::patch('/update', [WorkspaceController::class, 'update'])->middleware([
         'check.validation:update_workspace_request',
+        'check.workspaces.exist',
         'check.workspace.creator',
         'check.workspace.unique.name'
     ]);
@@ -36,14 +40,14 @@ Route::middleware('check.token:login_token')->group(function () {
         'check.validation:add_workspace_member_request',
         'check.workspace.exists',
         'check.workspace.creator'
-    
     ]);
 
     //remove members
     Route::delete('/remove-members', [WorkspaceController::class, 'removeMembers'])->middleware([
         'check.validation:remove_workspace_member_request',
         'check.workspace.exists',
-        'check.workspace.creator'
+        'check.workspace.creator',
+        'check.members.exist'
        
     ]);
 });

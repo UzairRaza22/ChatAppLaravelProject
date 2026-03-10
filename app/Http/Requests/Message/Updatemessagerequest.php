@@ -15,7 +15,7 @@ class UpdateMessageRequest extends FormRequest
     {
         return [
             'message_id' => 'required|string',
-            'workspace_id' => 'required|string',
+            // workspace_id NOT required — resolved from message itself
             'content'    => 'nullable|string|max:5000',
             'file'       => 'nullable|file|max:10240|mimes:jpg,jpeg,png,gif,webp,pdf,doc,docx,xls,xlsx,ppt,pptx,txt,zip,mp4,mp3',
         ];
@@ -32,10 +32,7 @@ class UpdateMessageRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
-            $hasContent = !empty($this->input('content'));
-            $hasFile    = $this->hasFile('file');
-
-            if (!$hasContent && !$hasFile) {
+            if (!$this->filled('content') && !$this->hasFile('file')) {
                 $validator->errors()->add('content', 'Update must include content or a new file.');
             }
         });

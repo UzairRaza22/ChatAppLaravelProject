@@ -14,8 +14,8 @@ class DeleteMessageRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'message_id'   => 'required|string',
-            'workspace_id' => 'required|string',
+            'message_id' => 'required|string',
+            // workspace_id NOT required — resolved from message itself
         ];
     }
 }

@@ -17,14 +17,13 @@ class CheckWorkspaceExistsMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $workspaceId = $request->input('workspace_id');
+        $workspaceId = data_get($request, 'workspace_id');
 
         $workspace = Workspace::where('_id', $workspaceId)->first();
 
         if (!$workspace) {
             return response()->notFound('Workspace not found.');
         }
-
 
         return $next($request);
     }

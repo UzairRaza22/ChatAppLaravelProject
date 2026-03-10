@@ -23,7 +23,7 @@ class CheckTokenMiddleware
     {
         // For signup verification, check if email exists first
         if ($tokenType === 'signup_verification_token') {
-            $email = $request->email;
+            $email = data_get($request, 'email');
             $user = User::where('email', $email)->first();
             
             if (!$user) {
@@ -32,9 +32,9 @@ class CheckTokenMiddleware
         }
 
         // Get token from route, custom header, or request body
-        $token = $request->route('token') ?? 
-                 $request->headers->get('token') ?? 
-                 $request->input('token');
+        $token = data_get($request, 'route.token') ?? 
+                 $request->header('token') ?? 
+                 data_get($request, 'token');
         
         if (!$token) {
             return response()->unauthorized('Token is required.');
@@ -62,28 +62,23 @@ class CheckTokenMiddleware
             return response()->unauthorized('Invalid token record format.');
         }
 
-        // Check if tokenRecord has user_id before accessing it
-        if (!isset($tokenRecord->user_id) || empty($tokenRecord->user_id)) {
-            return response()->unauthorized('Invalid token format.');
-        }
-
-        $user = User::find((string) $tokenRecord->user_id);
+        $user = User::find((string) data_get($tokenRecord, 'user_id'));
         
         if (!$user) {
             return response()->notFound('User not found.');
         }
 
+        // Add the real user to request and set user resolver
         $request->merge([
             'token_record' => $tokenRecord,
-            'verified_user' => $user
+            'verified_user' => $user,
+            'user' => $user
         ]);
 
-        // Only set user resolver if user is not already set
-        if (!$request->user()) {
-            $request->setUserResolver(function () use ($user) {
-                return $user;
-            });
-        }
+        // Set user resolver for framework methods
+        $request->setUserResolver(function () use ($user) {
+            return $user;
+        });
 
         return $next($request);
     }

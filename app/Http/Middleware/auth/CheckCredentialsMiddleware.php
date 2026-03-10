@@ -26,10 +26,13 @@ class CheckCredentialsMiddleware
             return response()->notFound('Email not registered.');
         }
 
-        if (!Hash::check($password, $user->password)) {
+        if (!Hash::check($password, data_get($user, 'password'))) {
             return response()->unauthorized('Invalid credentials');
         }
 
+        // Add user to request data for controller access
+        $request->merge(['user' => $user]);
+        
         $request->setUserResolver(function () use ($user) {
             return $user;
         });

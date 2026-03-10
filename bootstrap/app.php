@@ -16,6 +16,7 @@ use App\Http\Middleware\Workspace\CheckUniqueWorkspaceNameMiddleware;
 use App\Http\Middleware\Workspace\CheckWorkspaceCreatorMiddleware;
 use App\Http\Middleware\Workspace\CheckWorkspaceExistsMiddleware;
 use App\Http\Middleware\Workspace\CheckWorkspacesExistMiddleware;
+use App\Http\Middleware\Workspace\CheckMembersExistMiddleware;
 
 // Team middleware
 use App\Http\Middleware\Team\CheckTeamExistsMiddleware;
@@ -26,12 +27,15 @@ use App\Http\Middleware\Team\CheckWorkspaceCreatorTeamMiddleware;
 use App\Http\Middleware\Team\CheckWorkspaceMemberMiddleware;
 
 // Message middleware
-use App\Http\Middleware\Message\Checkchannelinworkspacemiddleware;
-use App\Http\Middleware\Message\Checkmessageexistsmiddleware;
-use App\Http\Middleware\Message\Checkmessagefilemiddleware;
-use App\Http\Middleware\Message\Checkmessagesendermiddleware;
-use App\Http\Middleware\Message\Checkreceiverinworkspacemiddleware;
-use App\Http\Middleware\Message\Checkworkspacemembermiddleware as CheckMessageWorkspaceMemberMiddleware;
+use App\Http\Middleware\Message\Checkworkspacemembermiddleware as CheckMessageWorkspaceMember;
+use App\Http\Middleware\Message\Checkreceiverinworkspacemiddleware as CheckReceiverInWorkspace;
+use App\Http\Middleware\Message\Checkchannelinworkspacemiddleware as CheckChannelInWorkspace;
+use App\Http\Middleware\Message\Checkmessageexistsmiddleware as CheckMessageExists;
+use App\Http\Middleware\Message\Checkmessagesendermiddleware as CheckMessageSender;
+use App\Http\Middleware\Message\Checkmessagefilemiddleware as CheckMessageFile;
+use App\Http\Middleware\Message\Checkmessagefileuploadmiddleware as CheckMessageFileUpload;  // ← NEW
+use App\Http\Middleware\Message\Checkreadmessagesmiddleware as CheckReadMessages;             // ← NEW
+
 
 // Channel middleware
 use App\Http\Middleware\ChannelExistMiddleware;
@@ -60,6 +64,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'check.workspace.creator' => CheckWorkspaceCreatorMiddleware::class,
             'check.workspace.exists' => CheckWorkspaceExistsMiddleware::class,
             'check.workspaces.exist' => CheckWorkspacesExistMiddleware::class,
+            'check.members.exist' => CheckMembersExistMiddleware::class,
             
             // Team middleware
             'check.team.exists' => CheckTeamExistsMiddleware::class,
@@ -70,12 +75,14 @@ return Application::configure(basePath: dirname(__DIR__))
             'check.workspace.member.team' => CheckWorkspaceMemberMiddleware::class,
             
             // Message middleware
-            'check.message.workspace.member' => Checkchannelinworkspacemiddleware::class,
-            'check.message.receiver.check' => Checkmessageexistsmiddleware::class,
-            'check.message.file.check' => Checkmessagefilemiddleware::class,
-            'check.message.sender.check' => Checkmessagesendermiddleware::class,
-            'check.message.channel.check' => Checkreceiverinworkspacemiddleware::class,
-            'check.message.exists' => CheckMessageWorkspaceMemberMiddleware::class,
+            'message.workspace.member' => CheckMessageWorkspaceMember::class,
+            'message.receiver.check'   => CheckReceiverInWorkspace::class,
+            'message.channel.check'    => CheckChannelInWorkspace::class,
+            'message.exists'           => CheckMessageExists::class,
+            'message.sender'           => CheckMessageSender::class,
+            'message.file.check'       => CheckMessageFile::class,
+            'message.file.upload'      => CheckMessageFileUpload::class,  // ← NEW
+            'message.read.resolve'     => CheckReadMessages::class,        // ← NEW
             
             // Channel middleware
             'check.channel.exists' => ChannelExistMiddleware::class,

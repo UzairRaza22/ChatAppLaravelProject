@@ -27,9 +27,7 @@ class CheckReceiverInWorkspaceMiddleware
         $receiver  = User::where('_id', $receiverId)->first();
 
         if (!$receiver) {
-            return response()->json([
-                'message' => 'Receiver not found.'
-            ], 404);
+            return response()->notFound('Receiver not found.');
         }
 
         // Check receiver is a member of the workspace
@@ -38,9 +36,7 @@ class CheckReceiverInWorkspaceMiddleware
             ->exists();
 
         if (!$isMember) {
-            return response()->json([
-                'message' => 'Receiver is not a member of this workspace.'
-            ], 403);
+            return response()->forbidden('Receiver is not a member of this workspace.');
         }
 
         $request->merge(['receiver' => $receiver]);

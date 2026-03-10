@@ -9,11 +9,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CheckChannelInWorkspaceMiddleware
 {
-    /**
-     * For Channel Messages: ensure the given channel belongs to the workspace.
-     * Must run AFTER CheckWorkspaceMemberMiddleware so 'workspace' is in request.
-     * Only runs when 'channel_id' is present in the request.
-     */
     public function handle(Request $request, Closure $next): Response
     {
         $channelId = $request->input('channel_id');
@@ -23,19 +18,23 @@ class CheckChannelInWorkspaceMiddleware
             return $next($request);
         }
 
-        $workspace = data_get($request, 'workspace');
-
-        $channel = Channel::where('_id', $channelId)
-            ->where('workspace_id', $workspace->_id)
-            ->first();
+        $sender  = $request->user();
+        $channel = Channel::where('_id', $channelId)->first();
 
         if (!$channel) {
-            return response()->json([
-                'message' => 'Channel not found in this workspace.'
-            ], 404);
+            return response()->notFound('Channel not found.');
         }
 
-        $request->merge(['channel' => $channel]);
+        $isMember = $channel->members()->get()->contains('_id', $sender->_id);
+
+        if (!$isMember) {
+            return response()->forbidden('You are not a member of this channel.');
+        }
+
+        $request->merge([
+            'channel'   => $channel,
+            'workspace' => $channel->workspace,
+        ]);
 
         return $next($request);
     }

@@ -15,13 +15,13 @@ class CheckActiveMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = $request->user();
+        $user = data_get($request, 'user');
         
         if (!$user) {
             return response()->notFound('User not found.');
         }
         
-        if (!$user->is_active) {
+        if (!data_get($user, 'is_active')) {
             return response()->forbidden('Activate your account!');
         }
         
