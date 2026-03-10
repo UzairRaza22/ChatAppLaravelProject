@@ -2,12 +2,12 @@
 
 namespace App\Http\Middleware\Channel;
 
+use App\Models\Team;
+use App\Models\User;
+use App\Models\Workspace;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use App\Models\Workspace;
-use App\Models\Team;
-use App\Models\User;
 
 class MemberCheckMiddleware
 {
@@ -20,12 +20,12 @@ class MemberCheckMiddleware
         $type = $request->type ?? data_get($request->channel, 'type');
 
         if (!$userId || !$workspaceId) {
-            return response()->error('workspace_id is required', 422);
+            return response()->json(['error' => 'workspace_id is required'], 422);
         }
 
         $workspace = Workspace::find($workspaceId);
         if (!$workspace) {
-            return response()->notFound('Workspace not found.');
+            return response()->json(['error' => 'Workspace not found'], 404);
         }
 
         $workspaceMemberIds = collect($workspace->members ?? [])
@@ -46,35 +46,49 @@ class MemberCheckMiddleware
             ->values()
             ->all();
 
+        $isWorkspaceMember = in_array($userId, $workspaceMemberIds, true)
+            || \DB::collection('workspace_members')
+                ->where('workspace_id', $workspaceId)
+                ->where('user_id', $userId)
+                ->exists();
+
         if ($type === 'direct') {
-            if (!in_array($userId, $workspaceMemberIds, true)) {
-                return response()->forbidden('User not part of workspace');
+            if (!$isWorkspaceMember) {
+                return response()->json(['error' => 'User not part of workspace'], 403);
             }
+
             return $next($request);
         }
 
         if (!$teamId) {
-            return response()->error('team_id is required for public/private channels', 422);
+            return response()->json(['error' => 'team_id is required for public/private channels'], 422);
         }
 
         $team = Team::find($teamId);
         if (!$team) {
-            return response()->notFound('Team not found.');
+            return response()->json(['error' => 'Team not found'], 404);    
         }
 
         if ((string) $team->workspace_id !== (string) $workspaceId) {
-            return response()->forbidden('Team does not belong to the specified workspace');
+            return response()->json(['error' => 'Team does not belong to the specified workspace'], 403);
         }
 
         $teamMemberIds = collect($team->members ?? [])
-        ->map(fn ($memberId) => (string) $memberId)
-        ->filter()
-        ->values()
-        ->all();
+            ->map(fn ($memberId) => (string) $memberId)
+            ->filter()
+            ->values()
+            ->all();
 
-        if (!in_array($userId, $workspaceMemberIds, true) || !in_array($userId, $teamMemberIds, true)) {
-            return response()->forbidden('User not part of workspace or team');
+        $isTeamMember = in_array($userId, $teamMemberIds, true)
+            || \DB::collection('team_members')
+                ->where('team_id', $teamId)
+                ->where('user_id', $userId)
+                ->exists();
+
+        if (!$isWorkspaceMember || !$isTeamMember) {
+            return response()->json(['error' => 'User not part of workspace or team'], 403);
         }
+
         return $next($request);
     }
 }

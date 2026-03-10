@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Illuminate\Support\Collection;
 use MongoDB\Laravel\Eloquent\Model;
 use MongoDB\Laravel\Eloquent\SoftDeletes;
 
@@ -10,51 +9,52 @@ class Channel extends Model
 {
     use SoftDeletes;
 
-    protected $connection = 'mongodb';
+<<<<<<< HEAD
     protected $collection = 'channels';
 
     protected $fillable = [
         'name',
+        'description',
+        'workspace_id',
+        'creator_id',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'deleted_at' => 'datetime',
+        ];
+    }
+
+    public function workspace()
+    {
+        return $this->belongsTo(Workspace::class, 'workspace_id', '_id');
+    }
+
+    public function messages()
+    {
+        return $this->hasMany(Message::class, 'channel_id', '_id');
+    }
+}
+=======
+    protected $connection = 'mongodb';
+    protected $collection = 'channels';
+
+    protected $fillable = [
+        'id',
+        'name',
         'workspace_id',
         'team_id',
         'type', // public/private/direct
-        'created_by',
+        'created_id',
+        'direct_id',
         'members', // array of {user_id, role}
+        'join_requests',
     ];
 
     protected $casts = [
         'members' => 'array',
+        'join_requests' => 'array',
     ];
-
-    public static function visibleForUserInWorkspace(string $userId, string $workspaceId): Collection
-    {
-        $teamIds = Team::where('workspace_id', $workspaceId)
-            ->get()
-            ->filter(function ($team) use ($userId) {
-                $memberIds = collect($team->members ?? [])
-                    ->map(fn ($id) => (string) $id)
-                    ->all();
-
-                return in_array($userId, $memberIds, true);
-            })
-            ->pluck('_id')
-            ->map(fn ($id) => (string) $id)
-            ->all();
-
-        return self::where('workspace_id', $workspaceId)
-            ->get()
-            ->filter(function ($channel) use ($userId, $teamIds) {
-                if ((string) $channel->type === 'direct') {
-                    $directMemberIds = collect($channel->members ?? [])
-                        ->map(fn ($member) => (string) data_get($member, 'user_id'))
-                        ->filter()
-                        ->all();
-
-                    return in_array($userId, $directMemberIds, true);
-                }
-
-                return in_array((string) $channel->team_id, $teamIds, true);
-            })
-            ->values();
-    }
 }
+>>>>>>> 171cca664853ef100f35468bb369b1848fd4e0c4
