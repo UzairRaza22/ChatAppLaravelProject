@@ -10,25 +10,19 @@ class AddTeamMemberRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
+       return [
             'team_id'      => 'required|string',
-            'workspace_id' => 'required|string', // Middleware ko workspace check ke liye chahiye
-            'emails' => 'required|array',
-            'emails.*' => 'email|exists:users,email'
+            'workspace_id' => 'required|string',
+            'user_ids'     => 'required|array|min:1',
+            'user_ids.*'   => 'required|string', 
         ];
     }
 
     public function messages(): array
     {
-        return [
-            'emails.*.exists' => 'The email :input is not registered.',
-        ];
-    }
-
-    public function attributes(): array
-    {
-        return [
-            'emails.*' => 'email address',
+       return [
+            'user_ids.required' => 'Please provide at least one user ID.',
+            'user_ids.*.string' => 'User ID must be a valid string.',
         ];
     }
 }
