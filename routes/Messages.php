@@ -14,9 +14,16 @@ Route::middleware('check.token:login_token')->group(function () {
     // ── Send Message (DM or Channel) ──────────────────────────────────────
     Route::post('/send', [MessageController::class, 'create'])->middleware([
         'check.validation:SendMessageRequest',
+
         'message.receiver.check',       // DM: checks receiver + finds shared workspace
         'message.channel.check',        // Channel: checks membership + loads workspace
         'message.file.upload',          // Handles GridFS upload if file present
+
+        'message.workspace.member',
+        'message.receiver.check',
+        'message.channel.check',
+        'message.notification',
+
     ]);
 
     // ── Read Messages (DM or Channel) ─────────────────────────────────────
