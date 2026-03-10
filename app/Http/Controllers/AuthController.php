@@ -54,7 +54,7 @@ class AuthController extends Controller
         $user = $request->user();
 
         $token = SessionToken::generate('login_token', $user);
-        
+
         // Store encrypted token in user model
         $user->update(['access_token' => hash('sha256', $token)]);
 
@@ -72,6 +72,9 @@ class AuthController extends Controller
         // Clear access_token from user model
         $user->update(['access_token' => null]);
 
+        // Delete associated FCM tokens on logout
+        \App\Models\FcmToken::where('user_id', $user->_id)->delete();
+
         $tokenRecord->delete();
 
         return response()->success(null, 'Logout successful!');
@@ -82,7 +85,7 @@ class AuthController extends Controller
         $user = $request->user;
 
         $token = ForgetToken::generate('forgot_password_token', $user);
-        
+
         Mail::to($user->email)->send(new \App\Mail\ResetPasswordEmail($user, $token));
 
         return response()->success([
