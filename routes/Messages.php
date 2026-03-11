@@ -13,7 +13,7 @@ Route::macro('update', function ($uri, $action) {
     return Route::patch($uri, $action);
 });
 
-Route::middleware(['check.token', 'check.active'])->group(function () {
+Route::middleware(['check.token:login_token', 'check.active'])->group(function () {
 
     // ── POST /messages/send ───────────────────────────────────────────────
     // Unified send for both directchannel and channelmessage

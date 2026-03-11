@@ -28,7 +28,7 @@ class CheckUniqueTeamNameMiddleware
         }
 
         if ($query->exists()) {
-            abort(409, 'A team with this name already exists in this workspace.');
+            return response()->error('A team with this name already exists in this workspace.');
         }
 
         return $next($request);

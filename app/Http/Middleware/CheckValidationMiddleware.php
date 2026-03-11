@@ -25,11 +25,12 @@ use App\Http\Requests\Team\ReadTeamRequest;
 
 // Channel Requests
 use App\Http\Requests\Channel\CreateChannelRequest;
+use App\Http\Requests\Channel\ReadChannelRequest;
 use App\Http\Requests\Channel\UpdateChannelRequest;
+use App\Http\Requests\Channel\DeleteChannelRequest;
 use App\Http\Requests\Channel\AddMemberRequest;
 use App\Http\Requests\Channel\RemoveMemberRequest;
-use App\Http\Requests\Channel\ReadChannelRequest;
-use App\Http\Requests\Channel\DeleteChannelRequest;
+use App\Http\Requests\Channel\ListUserChannelsRequest;
 
 // Message Requests
 use App\Http\Requests\Message\SendMessageRequest;
@@ -40,6 +41,8 @@ use App\Http\Requests\Message\DeleteMessageRequest;
 
 use Illuminate\Http\Request;
 use Closure;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 class CheckValidationMiddleware
@@ -69,6 +72,11 @@ class CheckValidationMiddleware
         if ($validation_type === 'delete_channel_request') $requestClass = DeleteChannelRequest::class;
         if ($validation_type === 'add_channel_member_request') $requestClass = AddMemberRequest::class;
         if ($validation_type === 'remove_channel_member_request') $requestClass = RemoveMemberRequest::class;
+        if ($validation_type === 'ListUserChannelsRequest') {
+
+            $request->validate(app(ListUserChannelsRequest::class)->rules());
+
+        }
 
         // Team
         if ($validation_type === 'create_team_request') $requestClass = CreateTeamRequest::class;

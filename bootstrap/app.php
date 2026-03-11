@@ -63,6 +63,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'check.workspace.creator'     => CheckWorkspaceCreatorMiddleware::class,
             'check.workspace.exists'      => CheckWorkspaceExistsMiddleware::class,
             'check.workspaces.exist'      => CheckWorkspacesExistMiddleware::class,
+            'check.members.exist'         => CheckMembersExistMiddleware::class,
 
             // ── Team ──────────────────────────────────────────────────────────
             'team.exists'            => CheckTeamExistsMiddleware::class,
@@ -84,6 +85,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'channel.exists' => ChannelExistMiddleware::class,
             'channel.admin'  => ChannelAdminMiddleware::class,
             'channel.member' => MemberCheckMiddleware::class,
+            'channel.create' => \App\Http\Middleware\Channel\ChannelCreateMiddleware::class,
+            'channel.add.member' => \App\Http\Middleware\Channel\ChannelAddMemberMiddleware::class,
+            'channel.remove.member' => \App\Http\Middleware\Channel\ChannelRemoveMemberMiddleware::class,
 
         ]);
     })

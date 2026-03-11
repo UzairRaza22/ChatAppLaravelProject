@@ -26,22 +26,30 @@ class CheckMembersExistMiddleware
             return response()->notFound('Workspace not found.');
         }
 
-        // Get existing member IDs
-        $existingMemberIds = $workspace->members()->pluck('_id')->toArray();
-
+        // Get existing member IDs from both members relationship and user_ids field
+        $memberIds = [];
+        
+        // From members relationship (pivot table)
+        $memberIds = array_merge($memberIds, $workspace->members()->pluck('_id')->toArray());
+        
+        // From user_ids field (if it exists)
+        if ($workspace->user_ids) {
+            $memberIds = array_merge($memberIds, (array) $workspace->user_ids);
+        }
+        
         // Convert all IDs to strings for proper comparison
-        $existingMemberIds = array_map('strval', $existingMemberIds);
+        $existingMemberIds = array_map('strval', $memberIds);
         $userIds = array_map('strval', $userIds);
-
+        
+        // Remove duplicates and re-index
+        $existingMemberIds = array_values(array_unique($existingMemberIds));
+        
         // Find users that are NOT members
         $nonExistingMembers = array_diff($userIds, $existingMemberIds);
 
         if (!empty($nonExistingMembers)) {
             $nonExistingMemberIds = implode(', ', $nonExistingMembers);
-            return response()->json([
-                'success' => false,
-                'message' => 'User is not a member of this workspace.'
-            ], 400);
+            return response()->forbidden('User is not a member of this workspace.');
         }
 
         // Set workspace in request for other middleware/controller
