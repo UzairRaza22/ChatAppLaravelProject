@@ -19,21 +19,9 @@ Route::get('/health', function () {
 // Load modular route files
 Route::prefix('auth')->group(base_path('routes/auth.php'));
 Route::prefix('workspaces')->group(base_path('routes/workspaces.php'));
-
-<<<<<<< HEAD
-
-
-Route::prefix('team')->group(base_path('routes/team.php'));
-
-Route::prefix('messages')->group(base_path('routes/Messages.php'));
-
-Route::prefix('channels')->group(base_path('routes/channel.php'));
-=======
 Route::prefix('team')->group(base_path('routes/team.php'));
 Route::prefix('messages')->group(base_path('routes/Messages.php'));
 Route::prefix('channels')->group(base_path('routes/channel.php'));
 
-Route::prefix('messages')->group(base_path('routes/Messages.php'));
+// FCM (Push Notifications) Routes
 require base_path('routes/Fcm.php');
-
->>>>>>> 171cca664853ef100f35468bb369b1848fd4e0c4
