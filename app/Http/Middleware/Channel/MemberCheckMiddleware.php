@@ -15,29 +15,29 @@ class MemberCheckMiddleware
     {
         $user = $request->user() ?? $request->input('verified_user');
         $userId = (string) (data_get($user, '_id') ?? data_get($user, 'id') ?? auth()->id());
-        $workspaceId = $request->workspace_id ?? $request->channel->workspace_id ?? null;
-        $teamId = $request->team_id ?? $request->channel->team_id ?? null;
-        $type = $request->type ?? data_get($request->channel, 'type');
+        $workspaceId = data_get($request, 'workspace_id') ?? data_get($request, 'channel.workspace_id');
+        $teamId = data_get($request, 'team_id') ?? data_get($request, 'channel.team_id');
+        $type = data_get($request, 'type') ?? data_get($request, 'channel.type');
 
         if (!$userId || !$workspaceId) {
-            return response()->json(['error' => 'workspace_id is required'], 422);
+            return response()->error('workspace_id is required');
         }
 
         $workspace = Workspace::find($workspaceId);
         if (!$workspace) {
-            return response()->json(['error' => 'Workspace not found'], 404);
+            return response()->notFound('Workspace not found.');
         }
 
-        $workspaceMemberIds = collect($workspace->members ?? [])
+        $workspaceMemberIds = collect(data_get($workspace, 'members', []))
             ->map(function ($member) {
                 if ($member instanceof User) {
-                    return (string) $member->_id;
+                    return (string) (data_get($member, '_id') ?? data_get($member, 'id'));
                 }
                 if (is_array($member)) {
                     return (string) ($member['_id'] ?? $member['id'] ?? '');
                 }
-                if (is_object($member) && isset($member->_id)) {
-                    return (string) $member->_id;
+                if (is_object($member) && (data_get($member, '_id') || data_get($member, 'id'))) {
+                    return (string) (data_get($member, '_id') ?? data_get($member, 'id'));
                 }
 
                 return (string) $member;
@@ -54,26 +54,26 @@ class MemberCheckMiddleware
 
         if ($type === 'direct') {
             if (!$isWorkspaceMember) {
-                return response()->json(['error' => 'User not part of workspace'], 403);
+                return response()->forbidden('User not part of workspace');
             }
 
             return $next($request);
         }
 
         if (!$teamId) {
-            return response()->json(['error' => 'team_id is required for public/private channels'], 422);
+            return response()->error('team_id is required for public/private channels');
         }
 
         $team = Team::find($teamId);
         if (!$team) {
-            return response()->json(['error' => 'Team not found'], 404);    
+            return response()->notFound('Team not found.');
         }
 
-        if ((string) $team->workspace_id !== (string) $workspaceId) {
-            return response()->json(['error' => 'Team does not belong to the specified workspace'], 403);
+        if ((string) data_get($team, 'workspace_id') !== (string) $workspaceId) {
+            return response()->forbidden('Team does not belong to the specified workspace');
         }
 
-        $teamMemberIds = collect($team->members ?? [])
+        $teamMemberIds = collect(data_get($team, 'members', []))
             ->map(fn ($memberId) => (string) $memberId)
             ->filter()
             ->values()
@@ -86,7 +86,7 @@ class MemberCheckMiddleware
                 ->exists();
 
         if (!$isWorkspaceMember || !$isTeamMember) {
-            return response()->json(['error' => 'User not part of workspace or team'], 403);
+            return response()->forbidden('User not part of workspace or team');
         }
 
         return $next($request);

@@ -5,22 +5,15 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 
-<<<<<<< HEAD
 // Auth middleware
-=======
-// Import all middleware classes
->>>>>>> 171cca664853ef100f35468bb369b1848fd4e0c4
 use App\Http\Middleware\CheckValidationMiddleware;
 use App\Http\Middleware\auth\CheckTokenMiddleware;
 use App\Http\Middleware\auth\CheckCredentialsMiddleware;
 use App\Http\Middleware\auth\CheckActiveMiddleware;
 use App\Http\Middleware\auth\CheckUserExistMiddleware;
 use App\Http\Middleware\auth\CheckUserExistForForgotMiddleware;
-<<<<<<< HEAD
 
 // Workspace middleware
-=======
->>>>>>> 171cca664853ef100f35468bb369b1848fd4e0c4
 use App\Http\Middleware\Workspace\CheckUniqueWorkspaceNameMiddleware;
 use App\Http\Middleware\Workspace\CheckWorkspaceCreatorMiddleware;
 use App\Http\Middleware\Workspace\CheckWorkspaceExistsMiddleware;
@@ -42,12 +35,6 @@ use App\Http\Middleware\Message\Checkchannelinworkspacemiddleware as CheckChanne
 use App\Http\Middleware\Message\Checkmessageexistsmiddleware as CheckMessageExists;
 use App\Http\Middleware\Message\Checkmessagesendermiddleware as CheckMessageSender;
 use App\Http\Middleware\Message\Checkmessagefilemiddleware as CheckMessageFile;
-use App\Http\Middleware\Message\Checkworkspacemembermiddleware as CheckMessageWorkspaceMember;
-use App\Http\Middleware\Message\Checkreceiverinworkspacemiddleware as CheckReceiverInWorkspace;
-use App\Http\Middleware\Message\Checkchannelinworkspacemiddleware as CheckChannelInWorkspace;
-use App\Http\Middleware\Message\Checkmessageexistsmiddleware as CheckMessageExists;
-use App\Http\Middleware\Message\Checkmessagesendermiddleware as CheckMessageSender;
-use App\Http\Middleware\Message\Checkmessagefilemiddleware as CheckMessageFile;
 use App\Http\Middleware\Message\Checkmessagefileuploadmiddleware as CheckMessageFileUpload;  // ← NEW
 use App\Http\Middleware\Message\Checkreadmessagesmiddleware as CheckReadMessages;             // ← NEW
 
@@ -56,6 +43,9 @@ use App\Http\Middleware\Message\Checkreadmessagesmiddleware as CheckReadMessages
 use App\Http\Middleware\ChannelExistMiddleware;
 use App\Http\Middleware\ChannelAdminMiddleware;
 use App\Http\Middleware\MemberCheckMiddleware;
+use App\Http\Middleware\Channel\ChannelCreateMiddleware;
+use App\Http\Middleware\Channel\ChannelAddMemberMiddleware;
+use App\Http\Middleware\Channel\ChannelRemoveMemberMiddleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -66,44 +56,6 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
-<<<<<<< HEAD
-
-            // ── Auth & Validation ─────────────────────────────────────────────
-            'check.validation'         => CheckValidationMiddleware::class,
-            'check.token'              => CheckTokenMiddleware::class,
-            'check.credentials'        => CheckCredentialsMiddleware::class,
-            'check.active'             => CheckActiveMiddleware::class,
-            'check.user.exists'        => CheckUserExistMiddleware::class,
-            'check.user.exists.forgot' => CheckUserExistForForgotMiddleware::class,
-
-            // ── Workspace ─────────────────────────────────────────────────────
-            'check.workspace.unique.name' => CheckUniqueWorkspaceNameMiddleware::class,
-            'check.workspace.creator'     => CheckWorkspaceCreatorMiddleware::class,
-            'check.workspace.exists'      => CheckWorkspaceExistsMiddleware::class,
-            'check.workspaces.exist'      => CheckWorkspacesExistMiddleware::class,
-
-            // ── Team ──────────────────────────────────────────────────────────
-            'team.exists'          => CheckTeamExistsMiddleware::class,
-            'team.member.exists'   => CheckTeamMemberExistsMiddleware::class,
-            'teams.exist'          => CheckTeamsExistMiddleware::class,
-            'team.unique.name'     => CheckUniqueTeamNameMiddleware::class,
-            'workspace.creator.team' => CheckWorkspaceCreatorTeamMiddleware::class,
-            'workspace.member.team'  => CheckWorkspaceMemberMiddleware::class,
-
-            // ── Message ───────────────────────────────────────────────────────
-            'message.workspace.member' => CheckMessageWorkspaceMember::class,
-            'message.receiver.check'   => CheckReceiverInWorkspace::class,
-            'message.channel.check'    => CheckChannelInWorkspace::class,
-            'message.exists'           => CheckMessageExists::class,
-            'message.sender'           => CheckMessageSender::class,
-            'message.file.check'       => CheckMessageFile::class,
-
-            // ── Channel ───────────────────────────────────────────────────────
-            'channel.exists' => ChannelExistMiddleware::class,
-            'channel.admin'  => ChannelAdminMiddleware::class,
-            'channel.member' => MemberCheckMiddleware::class,
-
-=======
 
             // Auth & Validation middleware
             'check.validation' => CheckValidationMiddleware::class,
@@ -119,6 +71,14 @@ return Application::configure(basePath: dirname(__DIR__))
             'check.workspace.exists' => CheckWorkspaceExistsMiddleware::class,
             'check.workspaces.exist' => CheckWorkspacesExistMiddleware::class,
             'check.members.exist' => CheckMembersExistMiddleware::class,
+            
+            // Channel middleware
+            'check.channel.exists' => ChannelExistMiddleware::class,
+            'check.channel.admin' => ChannelAdminMiddleware::class,
+            'check.channel.member' => MemberCheckMiddleware::class,
+            'channel.create' => \App\Http\Middleware\Channel\ChannelCreateMiddleware::class,
+            'channel.add.member' => \App\Http\Middleware\Channel\ChannelAddMemberMiddleware::class,
+            'channel.remove.member' => \App\Http\Middleware\Channel\ChannelRemoveMemberMiddleware::class,
             
             // Team middleware
             'check.team.exists' => CheckTeamExistsMiddleware::class,
@@ -138,10 +98,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'message.file.upload'      => CheckMessageFileUpload::class,  // ← NEW
             'message.read.resolve'     => CheckReadMessages::class,        // ← NEW
             
-            // Channel middleware
-            'check.channel.exists' => ChannelExistMiddleware::class,
-            'check.channel.admin' => ChannelAdminMiddleware::class,
-            'check.channel.member' => MemberCheckMiddleware::class,
+           
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -184,10 +141,6 @@ return Application::configure(basePath: dirname(__DIR__))
                     500 => 'Internal server error.',
                     default => $e->getMessage() ?: 'An error occurred.'
                 };
-<<<<<<< HEAD
-=======
-
->>>>>>> 171cca664853ef100f35468bb369b1848fd4e0c4
                 return response()->error($message, $e->getStatusCode());
             }
         });
@@ -198,11 +151,6 @@ return Application::configure(basePath: dirname(__DIR__))
                 if (app()->environment('production')) {
                     return response()->error('Internal server error.', 500);
                 }
-<<<<<<< HEAD
-=======
-
-                // In development, return more details
->>>>>>> 171cca664853ef100f35468bb369b1848fd4e0c4
                 return response()->error($e->getMessage(), 500);
             }
         });

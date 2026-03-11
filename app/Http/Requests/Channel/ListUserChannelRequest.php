@@ -4,7 +4,7 @@ namespace App\Http\Requests\Channel;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class DeleteChannelRequest extends FormRequest
+class ListUserChannelsRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -14,7 +14,7 @@ class DeleteChannelRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'channel_id' => 'required',
+            'user_id' => 'required',
         ];
     }
 }
