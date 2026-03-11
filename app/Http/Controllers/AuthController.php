@@ -21,10 +21,9 @@ class AuthController extends Controller
 
         $workspace->members()->attach($user->id);
 
-
         $token = SessionToken::generate('signup_verification_token', $user);
 
-        Mail::to($request->email)->send(new SignupVerificationEmail($user,$token));
+        Mail::to(data_get($request, 'email'))->send(new SignupVerificationEmail($user,$token));
 
         return response()->success([
             'user' => UserResource::make($user)
@@ -33,8 +32,8 @@ class AuthController extends Controller
 
     public function verifySignup(Request $request)
     {
-        $user = $request->verified_user;
-        $tokenRecord = $request->token_record;
+        $user = data_get($request, 'verified_user');
+        $tokenRecord = data_get($request, 'token_record');
 
         // Activate the user
         $user->update([
@@ -51,10 +50,10 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $user = $request->user();
+        $user = data_get($request, 'user');
 
         $token = SessionToken::generate('login_token', $user);
-        
+
         // Store encrypted token in user model
         $user->update(['access_token' => hash('sha256', $token)]);
 
@@ -67,10 +66,13 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         $tokenRecord = data_get($request, 'token_record');
-        $user = $request->user();
+        $user = data_get($request, 'user');
 
         // Clear access_token from user model
         $user->update(['access_token' => null]);
+
+        // Delete associated FCM tokens on logout
+        \App\Models\FcmToken::where('user_id', $user->_id)->delete();
 
         $tokenRecord->delete();
 
@@ -79,11 +81,16 @@ class AuthController extends Controller
 
     public function forgotPassword(Request $request)
     {
-        $user = $request->user;
+        $user = data_get($request, 'user');
 
         $token = ForgetToken::generate('forgot_password_token', $user);
+
         
+        Mail::to(data_get($user, 'email'))->send(new \App\Mail\ResetPasswordEmail($user, $token));
+
+
         Mail::to($user->email)->send(new \App\Mail\ResetPasswordEmail($user, $token));
+
 
         return response()->success([
             'forgot_password_token' => $token
@@ -97,7 +104,7 @@ class AuthController extends Controller
         $user = User::find($tokenRecord->user_id);
 
         $user->update([
-            'password' => $request->password
+            'password' => data_get($request, 'password')
         ]);
 
         $tokenRecord->delete();

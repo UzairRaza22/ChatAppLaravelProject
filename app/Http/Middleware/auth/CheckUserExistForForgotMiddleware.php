@@ -5,13 +5,14 @@ namespace App\Http\Middleware\auth;
 use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Symfony\Component\HttpFoundation\Response;
 
 class CheckUserExistForForgotMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $email = $request->email;
+        $email = data_get($request, 'email');
         
         $user = User::where('email', $email)->first();
         

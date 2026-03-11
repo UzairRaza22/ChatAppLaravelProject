@@ -25,31 +25,19 @@ class CheckChannelInWorkspaceMiddleware
             return $next($request);
         }
 
-        $sender = $request->user();
-
-        // Check channel exists
+        $sender  = $request->user();
         $channel = Channel::where('_id', $channelId)->first();
 
         if (!$channel) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Channel not found.'
-            ], 404);
+            return response()->notFound('Channel not found.');
         }
 
-        // Check sender is a member of the channel
-        $isMember = $channel->members()
-            ->get()
-            ->contains('_id', $sender->_id);
+        $isMember = $channel->members()->get()->contains('_id', $sender->_id);
 
         if (!$isMember) {
-            return response()->json([
-                'success' => false,
-                'message' => 'You are not a member of this channel.'
-            ], 403);
+            return response()->forbidden('You are not a member of this channel.');
         }
 
-        // Merge channel and its workspace into request
         $request->merge([
             'channel'   => $channel,
             'workspace' => $channel->workspace,

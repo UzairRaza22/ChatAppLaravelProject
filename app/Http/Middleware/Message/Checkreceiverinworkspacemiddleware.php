@@ -33,18 +33,16 @@ class CheckReceiverInWorkspaceMiddleware
         $receiver = User::where('_id', $receiverId)->first();
 
         if (!$receiver) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Receiver not found.'
-            ], 404);
+            return response()->notFound('Receiver not found.');
         }
 
-        // Prevent messaging yourself
-        if ((string) $sender->_id === (string) $receiver->_id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'You cannot send a message to yourself.'
-            ], 403);
+        // Check receiver is a member of the workspace
+        $isMember = $workspace->members()
+            ->where('_id', $receiver->_id)
+            ->exists();
+
+        if (!$isMember) {
+            return response()->forbidden('Receiver is not a member of this workspace.');
         }
 
         // Get all workspaces and find one where both users are members

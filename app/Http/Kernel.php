@@ -56,5 +56,8 @@ class Kernel extends HttpKernel
         'auth' => \App\Http\Middleware\Authenticate::class,
         'auth.session' => \Illuminate\Session\Middleware\AuthenticateSession::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+        'channel.create' => \App\Http\Middleware\Channel\ChannelCreateMiddleware::class,
+        'channel.add.member' => \App\Http\Middleware\Channel\ChannelAddMemberMiddleware::class,
+        'channel.remove.member' => \App\Http\Middleware\Channel\ChannelRemoveMemberMiddleware::class,
     ];
 }

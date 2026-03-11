@@ -21,18 +21,14 @@ class CheckWorkspaceMemberMiddleware
         $workspace = Workspace::where('_id', $workspaceId)->first();
 
         if (!$workspace) {
-            return response()->json([
-                'message' => 'Workspace not found.'
-            ], 404);
+            return response()->notFound('Workspace not found.');
         }
         $isMember = $workspace->members()
             ->get()
             ->contains('_id', $user->_id);
 
         if (!$isMember) {
-            return response()->json([
-                'message' => 'You are not a member of this workspace.'
-            ], 403);
+            return response()->forbidden('You are not a member of this workspace.');
         }
 
         $request->merge(['workspace' => $workspace]);

@@ -18,6 +18,7 @@ use App\Http\Middleware\Workspace\CheckUniqueWorkspaceNameMiddleware;
 use App\Http\Middleware\Workspace\CheckWorkspaceCreatorMiddleware;
 use App\Http\Middleware\Workspace\CheckWorkspaceExistsMiddleware;
 use App\Http\Middleware\Workspace\CheckWorkspacesExistMiddleware;
+use App\Http\Middleware\Workspace\CheckMembersExistMiddleware;
 
 // Team middleware
 use App\Http\Middleware\Team\CheckTeamExistsMiddleware;

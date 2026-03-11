@@ -18,7 +18,6 @@ class ChannelResource extends JsonResource
             'direct_id' => $this->direct_id ? (string) $this->direct_id : null,
             'created_id' => $this->created_id ? (string) $this->created_id : (string) $this->created_by,
             'members' => $this->members ?? [],
-            'join_requests' => $this->join_requests ?? [],
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

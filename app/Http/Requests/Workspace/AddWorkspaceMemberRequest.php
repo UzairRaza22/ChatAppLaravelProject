@@ -23,22 +23,22 @@ class AddWorkspaceMemberRequest extends FormRequest
     {
         return [
             'workspace_id'=>'required|exists:workspaces,id',
-            'emails' => 'required|array',
-            'emails.*' => 'email|exists:users,email'
+            'user_ids' => 'required|array',
+            'user_ids.*' => 'exists:users,_id'
         ];
     }
 
     public function messages(): array
     {
         return [
-            'emails.*.exists' => 'The email :input is not registered.',
+            'user_ids.*.exists' => 'The user ID :input is not registered.',
         ];
     }
 
     public function attributes(): array
     {
         return [
-            'emails.*' => 'email address',
+            'user_ids.*' => 'user ID',
         ];
     }
 }

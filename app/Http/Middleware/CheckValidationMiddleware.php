@@ -40,8 +40,6 @@ use App\Http\Requests\Message\DeleteMessageRequest;
 
 use Illuminate\Http\Request;
 use Closure;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 class CheckValidationMiddleware

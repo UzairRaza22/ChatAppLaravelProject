@@ -17,20 +17,20 @@ class CheckWorkspaceCreatorMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = $request->user();
+        $user = data_get($request, 'user');
         if(!$user){
              return response()->unauthorized('Unauthorized');
         }
 
         // workspace ID is passed as a input named 'workspace'
-        $workspaceId = $request->input('workspace_id'); 
+        $workspaceId = data_get($request, 'workspace_id'); 
         $workspace = Workspace::where('_id', $workspaceId)->first();
       
         if(!$workspace){
             return response()->notFound('Workspace not found.');
         }
 
-        if($workspace->creator_id !== $user->_id){
+        if(data_get($workspace, 'creator_id') !== data_get($user, '_id')){
             return response()->unauthorized('Unauthorized access to workspace.');
         }
         $request->merge([

@@ -8,10 +8,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CheckMessageSenderMiddleware
 {
-    /**
-     * Ensure the authenticated user is the original sender of the message.
-     * Must run AFTER CheckMessageExistsMiddleware.
-     */
     public function handle(Request $request, Closure $next): Response
     {
         $user    = $request->user();

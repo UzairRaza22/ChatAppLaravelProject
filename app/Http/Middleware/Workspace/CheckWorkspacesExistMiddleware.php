@@ -17,31 +17,38 @@ class CheckWorkspacesExistMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $workspaceId = $request->input('workspace_id');
-
+        $user = data_get($request, 'user');
+        
+        // Check if user is authenticated
+        if (!$user) {
+            return response()->unauthorized('User not authenticated.');
+        }
+        
+        // Check if workspace_id is provided in request body or route parameter
+        $workspaceId = data_get($request, 'workspace_id') ?: data_get($request, 'route.id');
+        
         if ($workspaceId) {
-            $workspace = Workspace::where('_id', $workspaceId)->first();
-
-            if (!$workspace) {
-                return response()->notFound('Workspace not found.');
+            // Get specific workspace
+            $workspaces = Workspace::where('_id', $workspaceId)
+                ->where('user_ids', data_get($user, '_id'))
+                ->get();
+                
+            // If no workspace found with that ID, return empty collection
+            if ($workspaces->isEmpty()) {
+                return response()->notFound('Workspace not found or access denied.');
             }
-
-            $request->merge(['workspace' => $workspace]);
+            
+            // Set both workspace and workspaces for flexibility
+            $request->merge([
+                'workspace' => $workspaces->first(),
+                'workspaces' => $workspaces
+            ]);
         } else {
-            // Fetch all workspaces of the logged-in user
-            $user = $request->user();
-            if ($user) {
-                // Get all workspaces user has created
-                $createdWorkspaces = $user->createdWorkspaces()->get();
-
-                // Get all workspaces user is a member of
-                $joinedWorkspaces = $user->workspaces()->get();
-
-                $request->merge([
-                    'createdWorkspaces' => $createdWorkspaces,
-                    'joinedWorkspaces' => $joinedWorkspaces,
-                ]);
-            }
+            // Get all workspaces for user using user_ids field
+            $workspaces = Workspace::where('user_ids', data_get($user, '_id'))->get();
+            
+            // Set only workspaces for all workspaces (no workspace property)
+            $request->merge(['workspaces' => $workspaces]);
         }
 
         return $next($request);

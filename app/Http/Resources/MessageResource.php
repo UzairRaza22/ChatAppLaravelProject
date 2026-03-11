@@ -8,11 +8,6 @@ use Illuminate\Support\Facades\Storage;
 
 class MessageResource extends JsonResource
 {
-    /**
-     * Transform the resource into an array.
-     *
-     * @return array<string, mixed>
-     */
     public function toArray(Request $request): array
     {
         return [
@@ -26,27 +21,25 @@ class MessageResource extends JsonResource
             'file_path'    => $this->file_path,
             'file_name'    => $this->file_name,
             'file_mime'    => $this->file_mime,
-            'file_url'     => $this->file_path
-                ? Storage::disk('public')->url($this->file_path)
+            'file_download_url' => $this->file_path
+                ? url('api/messages/download?path=' . urlencode($this->file_path))
                 : null,
-            'sender'       => $this->whenLoaded(
+            'sender'   => $this->whenLoaded(
                 'sender',
                 fn() => UserResource::make($this->sender)
             ),
-            'receiver'     => $this->whenLoaded(
+            'receiver' => $this->whenLoaded(
                 'receiver',
-                fn() => $this->receiver
-                    ? UserResource::make($this->receiver)
-                    : null
+                fn() => $this->receiver ? UserResource::make($this->receiver) : null
             ),
-            'channel'      => $this->whenLoaded(
+            'channel'  => $this->whenLoaded(
                 'channel',
                 fn() => $this->channel
                     ? ['id' => $this->channel->id, 'name' => $this->channel->name]
                     : null
             ),
-            'created_at'   => $this->created_at,
-            'updated_at'   => $this->updated_at,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

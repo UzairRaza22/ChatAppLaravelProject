@@ -11,19 +11,32 @@ class ChannelExistMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $channelId = (string) $request->route('id');
+        $channelId = (string) ($request->route('id') ?? $request->input('channel_id') ?? $request->input('channelId'));
+        $userId = (string) $request->input('user_id');
 
-        $channel = Channel::where('_id', $channelId)
-            ->orWhere('id', $channelId)
-            ->first();
+        if ($channelId !== '') {
+            $channel = Channel::where('_id', $channelId)
+                ->orWhere('id', $channelId)
+                ->first();
 
-        if (!$channel) {
-            return response()->json(['error' => 'Channel not found'], 404);
+            if (!$channel) {
+                return response()->notFound('Channel not found.');
+            }
+
+            data_set($request, 'channel', $channel);
+            $request->attributes->set('channel', $channel);
+
+            return $next($request);
         }
 
-        $request->channel = $channel;
-        $request->attributes->set('channel', $channel);
+        if ($userId !== '') {
+            $channels = Channel::forUserId($userId)->get();
+            data_set($request, 'channels', $channels);
+            $request->attributes->set('channels', $channels);
 
-        return $next($request);
+            return $next($request);
+        }
+
+        return response()->error('channel_id or user_id is required');
     }
 }
