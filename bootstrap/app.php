@@ -20,7 +20,6 @@ use App\Http\Middleware\Workspace\CheckWorkspaceExistsMiddleware;
 use App\Http\Middleware\Workspace\CheckWorkspacesExistMiddleware;
 use App\Http\Middleware\Workspace\CheckMembersExistMiddleware;
 
-// Team middleware
 use App\Http\Middleware\Team\CheckTeamExistsMiddleware;
 use App\Http\Middleware\Team\CheckTeamMemberExistsMiddleware;
 use App\Http\Middleware\Team\CheckTeamsExistMiddleware;
