@@ -3,48 +3,55 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MessageController;
 
-Route::middleware('check.token:login_token', 'check.active')->group(function () {
+// Register Route::read as a GET macro
+Route::macro('read', function ($uri, $action) {
+    return Route::get($uri, $action);
+});
 
-    // ── Send Message (DM or Channel) ──────────────────────────────────────
+// Register Route::update as a PATCH macro
+Route::macro('update', function ($uri, $action) {
+    return Route::patch($uri, $action);
+});
+
+Route::middleware(['check.token', 'check.active'])->group(function () {
+
+    // ── POST /messages/send ───────────────────────────────────────────────
+    // Unified send for both directchannel and channelmessage
+    // Payload: channel_id, message, file (optional)
     Route::post('/send', [MessageController::class, 'create'])->middleware([
-        'check.validation:send_message_request',
-        'check.message.workspace.member',
-        'check.message.receiver.check',
-        'check.message.channel.check',
+        'message.channel.check',    // validates channel + membership (direct & public/private)
+        'message.file.upload',      // handles GridFS upload if file present
     ]);
 
-    // ── Get Direct Messages between auth user and a receiver ──────────────
-    Route::get('/direct', [MessageController::class, 'getDirectMessages'])->middleware([
-        'check.validation:get_direct_messages_request',
-        'check.message.workspace.member',
-        'check.message.receiver.check',
+    // ── GET /messages/read ────────────────────────────────────────────────
+    // Unified read for both directchannel and channelmessage
+    // Payload: channel_id
+    // Returns: paginated 20 messages, newest first
+    Route::read('/read', [MessageController::class, 'readMessages'])->middleware([
+        'message.read.resolve',     // validates channel membership + paginates messages
     ]);
 
-    // ── Get Channel Messages ──────────────────────────────────────────────
-    Route::get('/channel', [MessageController::class, 'getChannelMessages'])->middleware([
-        'check.validation:get_channel_messages_request',
-        'check.message.workspace.member',
-        'check.message.channel.check',
+    // ── PATCH /messages/update ────────────────────────────────────────────
+    // Update a message (sender only)
+    // Payload: channel_id, message_id, message, file (optional)
+    Route::update('/update', [MessageController::class, 'update'])->middleware([
+        'message.exists',           // resolves message by message_id + channel_id
+        'message.sender',           // checks auth user is the sender
+        'message.file.upload',      // handles GridFS upload if file present
     ]);
 
-    // ── Update a message (sender only) ────────────────────────────────────
-    Route::patch('/update', [MessageController::class, 'update'])->middleware([
-        'check.validation:update_message_request',
-        'check.message.workspace.member',
-        'check.message.exists',
-        'check.message.sender.check',
-    ]);
-
-    // ── Delete Message (sender only) ──────────────────────────────────────
+    // ── DELETE /messages/delete ───────────────────────────────────────────
+    // Soft delete a message (sender only)
+    // Payload: channel_id, message_id
     Route::delete('/delete', [MessageController::class, 'delete'])->middleware([
-        'check.validation:delete_message_request',
-        'check.message.workspace.member',
-        'check.message.exists',
-        'check.message.sender.check',
+        'message.exists',           // resolves message by message_id + channel_id
+        'message.sender',           // checks auth user is the sender
     ]);
 
-    // ── Download File ─────────────────────────────────────────────────────
+    // ── GET /messages/download ────────────────────────────────────────────
+    // Download file from GridFS
+    // Query param: ?path=workspaces/{workspace_id}/messages/{filename}
     Route::get('/download', [MessageController::class, 'download'])->middleware([
-        'check.message.file.check',
+        'message.file.check',       // validates file exists in GridFS
     ]);
 });

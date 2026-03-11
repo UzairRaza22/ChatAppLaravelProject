@@ -15,18 +15,14 @@ class CheckMessageSenderMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         $user    = $request->user();
-        $message = data_get($request, 'message');
+        $message = $request->attributes->get('message');
 
         if (!$message) {
-            return response()->json([
-                'message' => 'Message not found.'
-            ], 404);
+            return response()->notFound('Message not found.');
         }
 
         if ((string) $message->sender_id !== (string) $user->_id) {
-            return response()->json([
-                'message' => 'Unauthorized. Only the sender can perform this action.'
-            ], 403);
+            return response()->forbidden('Only the sender can perform this action.');
         }
 
         return $next($request);

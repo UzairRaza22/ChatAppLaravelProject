@@ -14,25 +14,14 @@ class GetMessagesRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // workspace_id NOT required — resolved from receiver or channel
-            'receiver_id' => 'nullable|string',
-            'channel_id'  => 'nullable|string',
+            'channel_id' => 'required|string',
         ];
     }
 
-    public function withValidator($validator): void
+    public function messages(): array
     {
-        $validator->after(function ($validator) {
-            $hasReceiver = $this->filled('receiver_id');
-            $hasChannel  = $this->filled('channel_id');
-
-            if (!$hasReceiver && !$hasChannel) {
-                $validator->errors()->add('receiver_id', 'Either receiver_id or channel_id is required.');
-            }
-
-            if ($hasReceiver && $hasChannel) {
-                $validator->errors()->add('receiver_id', 'Provide either receiver_id or channel_id, not both.');
-            }
-        });
+        return [
+            'channel_id.required' => 'channel_id is required.',
+        ];
     }
 }

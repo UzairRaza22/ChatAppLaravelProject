@@ -11,151 +11,101 @@ class MessageController extends Controller
 {
     /*
     |--------------------------------------------------------------------------
-    | Create Message  (text | file | text + file)
-    | workspace is resolved by middleware (receiver or channel check)
+    | Create Message  (directchannel | channelmessage)
+    | channel   → resolved + validated by CheckChannelMessageMiddleware
+    | Both use the same endpoint — unified route POST /send
+    | Payload: channel_id, message (content and/or file)
+    | file_path, file_name, file_mime, message_type → set by CheckMessageFileUploadMiddleware
     |--------------------------------------------------------------------------
     */
     public function create(Request $request)
     {
-        $user      = $request->user();
-        $workspace = data_get($request, 'workspace'); // set by receiver/channel middleware
+        $user    = $request->user();
+        $channel = $request->attributes->get('channel');
 
-        $messageData = [
-            'workspace_id' => $workspace->_id,
-            'sender_id'    => $user->_id,
-            'receiver_id'  => $request->input('receiver_id'), // null for channel
-            'channel_id'   => $request->input('channel_id'),  // null for DM
-            'message_type' => $request->input('message_type', 'text'),
-            'content'      => $request->input('content'),
-        ];
+        $message = Message::add([
+            'workspace_id' => (string) $channel->workspace_id,
+            'sender_id'    => (string) $user->_id,
+            'channel_id'   => (string) $channel->_id,
+            'message_type' => $request->attributes->get('resolved_message_type', 'text'),
+            'content'      => $request->input('message'),
+            'file_path'    => $request->attributes->get('file_path'),
+            'file_name'    => $request->attributes->get('file_name'),
+            'file_mime'    => $request->attributes->get('file_mime'),
+        ]);
 
-        if ($request->hasFile('file')) {
-            $file      = $request->file('file');
-            $directory = "workspaces/{$workspace->_id}/messages";
-            $path      = $file->store($directory, 'public');
-
-            $messageData['file_path'] = $path;
-            $messageData['file_name'] = $file->getClientOriginalName();
-            $messageData['file_mime'] = $file->getMimeType();
-
-            $messageData['message_type'] = $request->input('content') ? 'text' : 'file';
-        }
-
-        $message = Message::add($messageData);
-
-        // FCM INTEGRATION: dispatch push notification job
-        if ($request->input('receiver_id')) {
-            $preview = $request->input('content') ? substr($request->input('content'), 0, 100) : 'Sent a file';
-            \App\Jobs\SendMessagePushNotificationJob::dispatch(
-                (string) $request->input('receiver_id'),
-                'New message',
-                $preview,
-                ['type' => 'message', 'message_id' => (string)$message->id, 'sender_id' => (string)$user->_id]
-            );
-        }
-
-        return response()->success([
-            'message' => MessageResource::make($message->load(['sender', 'receiver', 'channel']))
-        ], 'Message sent successfully!', 201);
+        return response()->success(
+            ['message' => MessageResource::make($message->load(['sender', 'channel']))],
+            'Message sent successfully!',
+            201
+        );
     }
 
     /*
     |--------------------------------------------------------------------------
-    | Get Messages — single route for DM and Channel
-    | DM      → receiver is set by CheckReceiverInWorkspaceMiddleware
-    | Channel → channel  is set by CheckChannelInWorkspaceMiddleware
+    | Read Direct Channel Messages  (directchannel)
+    | Payload: channel_id
+    | resolved_messages → set by CheckReadMessagesMiddleware (paginated, newest first)
     |--------------------------------------------------------------------------
     */
-    public function getMessages(Request $request)
+    public function readMessages(Request $request)
     {
-        $user      = $request->user();
-        $workspace = data_get($request, 'workspace');
-        $receiver  = data_get($request, 'receiver');
-        $channel   = data_get($request, 'channel');
-
-        if ($receiver) {
-            // ── Direct Messages ───────────────────────────────────────────
-            $messages = Message::where('workspace_id', $workspace->_id)
-                ->where(function ($query) use ($user, $receiver) {
-                    $query->where(function ($q) use ($user, $receiver) {
-                        $q->where('sender_id', $user->_id)
-                            ->where('receiver_id', $receiver->_id);
-                    })->orWhere(function ($q) use ($user, $receiver) {
-                        $q->where('sender_id', $receiver->_id)
-                            ->where('receiver_id', $user->_id);
-                    });
-                })
-                ->whereNull('channel_id')
-                ->orderBy('created_at', 'asc')
-                ->get();
-        }
-
-        return response()->success([
-            'messages' => MessageResource::collection($messages)
-        ], 'Direct messages retrieved successfully!');
+        return response()->success(
+            ['messages' => $request->attributes->get('resolved_messages')],
+            'Direct channel messages retrieved successfully!'
+        );
     }
 
     /*
     |--------------------------------------------------------------------------
-    | Get Channel Messages
+    | Read Channel Messages  (channelmessage)
+    | Payload: channel_id
+    | resolved_messages → set by CheckReadMessagesMiddleware (paginated, newest first)
     |--------------------------------------------------------------------------
     */
-    public function getChannelMessages(Request $request)
+    public function readChannelMessages(Request $request)
     {
-        $channel = data_get($request, 'channel');
-
-        // ── Channel Messages ──────────────────────────────────────────────
-        $messages = Message::where('channel_id', $channel->_id)
-            ->whereNull('receiver_id')
-            ->orderBy('created_at', 'asc')
-            ->get();
-
-        return response()->success([
-            'messages' => MessageResource::collection($messages)
-        ], 'Channel messages retrieved successfully!');
+        return response()->success(
+            ['messages' => $request->attributes->get('resolved_messages')],
+            'Channel messages retrieved successfully!'
+        );
     }
 
     /*
     |--------------------------------------------------------------------------
-    | Update Message  (only sender)
+    | Update Message  (sender only)
+    | Payload: channel_id, message_id, message (content and/or file)
+    | message   → resolved by CheckMessageExistsMiddleware
+    | file data → resolved by CheckMessageFileUploadMiddleware
     |--------------------------------------------------------------------------
     */
     public function update(Request $request)
     {
-        $message    = data_get($request, 'message');
-        $updateData = ['content' => $request->input('content')];
+        $message = $request->attributes->get('message');
 
-        if ($request->hasFile('file')) {
-            $file      = $request->file('file');
-            $directory = "workspaces/{$message->workspace_id}/messages";
+        $updated = Message::edit([
+            'content'   => $request->input('message'),
+            'file_path' => $request->attributes->get('file_path'),
+            'file_name' => $request->attributes->get('file_name'),
+            'file_mime' => $request->attributes->get('file_mime'),
+        ], $message);
 
-            if ($message->file_path && Storage::disk('public')->exists($message->file_path)) {
-                Storage::disk('public')->delete($message->file_path);
-            }
-
-            $path = $file->store($directory, 'public');
-
-            $updateData['file_path'] = $path;
-            $updateData['file_name'] = $file->getClientOriginalName();
-            $updateData['file_mime'] = $file->getMimeType();
-        }
-
-        $message = Message::edit($updateData, $message);
-
-        return response()->success([
-            'message' => MessageResource::make($message->load(['sender', 'receiver']))
-        ], 'Message updated successfully!');
+        return response()->success(
+            ['message' => MessageResource::make($updated->load(['sender', 'channel']))],
+            'Message updated successfully!'
+        );
     }
 
     /*
     |--------------------------------------------------------------------------
-    | Delete Message  (soft delete, only sender)
+    | Delete Message  (soft delete, sender only)
+    | Payload: channel_id, message_id
+    | message → resolved by CheckMessageExistsMiddleware
     |--------------------------------------------------------------------------
     */
     public function delete(Request $request)
     {
-        $message = data_get($request, 'message');
-        $message->delete();
+        $request->attributes->get('message')->delete();
 
         return response()->success(null, 'Message deleted successfully!');
     }
@@ -163,14 +113,19 @@ class MessageController extends Controller
     /*
     |--------------------------------------------------------------------------
     | Download File
-    | — all validation handled by CheckMessageFileMiddleware
+    | file_path, file_name → set by CheckMessageFileMiddleware
+    | Streams file directly from GridFS
     |--------------------------------------------------------------------------
     */
     public function download(Request $request)
     {
-        $fullPath = data_get($request, 'full_path');
-        $fileName = data_get($request, 'file_name');
+        $filePath = $request->attributes->get('file_path');
+        $fileName = $request->attributes->get('file_name');
 
-        return response()->download($fullPath, $fileName);
+        $fileContents = Storage::disk('gridfs')->get($filePath);
+
+        return response($fileContents, 200)
+            ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"')
+            ->header('Content-Type', Storage::disk('gridfs')->mimeType($filePath) ?? 'application/octet-stream');
     }
 }

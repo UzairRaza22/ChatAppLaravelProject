@@ -14,8 +14,16 @@ class DeleteMessageRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'message_id'   => 'required|string',
-            'workspace_id' => 'required|string',
+            'channel_id' => 'required|string',
+            'message_id' => 'required|string',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'channel_id.required' => 'channel_id is required.',
+            'message_id.required' => 'message_id is required.',
         ];
     }
 }
