@@ -36,7 +36,7 @@ class ChannelCreateMiddleware
         $workspaceUserIds = $this->extractWorkspaceUserIds($workspace);
 
         $isWorkspaceMember = in_array($userId, $workspaceUserIds, true)
-            || \DB::collection('workspace_members')
+            || \DB::connection('mongodb')->table('workspace_members')
                 ->where('workspace_id', $workspaceId)
                 ->where('user_id', $userId)
                 ->exists();
@@ -65,7 +65,7 @@ class ChannelCreateMiddleware
                 ->all();
 
             $isTeamMember = in_array($userId, $teamMemberIds, true)
-                || \DB::collection('team_members')
+                || \DB::connection('mongodb')->table('team_members')
                     ->where('team_id', $teamId)
                     ->where('user_id', $userId)
                     ->exists();
@@ -99,7 +99,7 @@ class ChannelCreateMiddleware
         }
 
         $isDirectUserInWorkspace = in_array($directUserId, $workspaceUserIds, true)
-            || \DB::collection('workspace_members')
+            || \DB::connection('mongodb')->table('workspace_members')
                 ->where('workspace_id', $workspaceId)
                 ->where('user_id', $directUserId)
                 ->exists();
