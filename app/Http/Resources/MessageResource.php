@@ -40,6 +40,28 @@ class MessageResource extends JsonResource
             ),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+
+            // ── Read Receipts ─────────────────────────────────────────────────
+            'read_by_count'  => count($this->read_by ?? []),
+            'is_read_by_me'  => in_array(
+                (string) auth()->id(),
+                array_map('strval', $this->read_by ?? [])
+            ),
+
+            // ── Reactions ─────────────────────────────────────────────────────
+            'reactions_summary' => collect($this->reactions ?? [])
+                ->map(function ($users, $emoji) {
+                    $me          = (string) auth()->id();
+                    $userIds     = array_map('strval', (array) $users);
+                    return [
+                        'emoji'          => $emoji,
+                        'count'          => count($userIds),
+                        'reacted_by_me'  => in_array($me, $userIds),
+                        'reacted_by'     => $userIds,   // full list of user IDs who reacted
+                    ];
+                })
+                ->values()
+                ->toArray(),
         ];
     }
 }

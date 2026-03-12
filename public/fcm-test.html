@@ -46,7 +46,7 @@
         </p>
 
         <div class="form-group">
-            <label>Your Bearer Token (from login):</label>
+            <label>Your Login Token (from login response):</label>
             <input
                 type="text"
                 id="bearerToken"
@@ -153,10 +153,10 @@
                                 method: "POST",
                                 headers: {
                                     "Content-Type": "application/json",
-                                    Authorization: "Bearer " + bearerToken,
+                                    "token": bearerToken,
                                 },
                                 body: JSON.stringify({
-                                    token: currentFcmToken,
+                                    fcm_token: currentFcmToken,
                                     platform: "web",
                                 }),
                             },

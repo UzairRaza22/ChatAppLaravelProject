@@ -21,6 +21,7 @@ Route::middleware(['check.token:login_token', 'check.active'])->group(function (
     Route::post('/send', [MessageController::class, 'create'])->middleware([
         'message.channel.check',    // validates channel + membership (direct & public/private)
         'message.file.upload',      // handles GridFS upload if file present
+        'message.notification',     // dispatches FCM push notification to receiver
     ]);
 
     // ── GET /messages/read ────────────────────────────────────────────────
@@ -53,5 +54,21 @@ Route::middleware(['check.token:login_token', 'check.active'])->group(function (
     // Query param: ?path=workspaces/{workspace_id}/messages/{filename}
     Route::get('/download', [MessageController::class, 'download'])->middleware([
         'message.file.check',       // validates file exists in GridFS
+    ]);
+
+    // ── POST /messages/read-by ────────────────────────────────────────────
+    // Bulk mark messages as read by the authenticated user
+    // Payload: channel_id, message_ids[]
+    Route::post('/read-by', [MessageController::class, 'markReadBy'])->middleware([
+        'message.channel.check',    // resolves channel + validates membership
+        'message.readby',           // validates message_ids, calls Message::markReadBy
+    ]);
+
+    // ── POST /messages/react ──────────────────────────────────────────────
+    // Toggle an emoji reaction on a message (add if not present, remove if present)
+    // Payload: channel_id, message_ids[], emoji
+    Route::post('/react', [MessageController::class, 'react'])->middleware([
+        'message.channel.check',    // resolves channel + validates membership
+        'message.react',            // validates emoji, resolves message from message_ids[0]
     ]);
 });

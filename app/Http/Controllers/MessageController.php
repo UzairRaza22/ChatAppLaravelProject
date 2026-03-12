@@ -128,4 +128,44 @@ class MessageController extends Controller
             ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"')
             ->header('Content-Type', Storage::disk('gridfs')->mimeType($filePath) ?? 'application/octet-stream');
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Mark Messages as Read  (read receipts)
+    | Payload: channel_id, message_ids[]
+    | resolved_read_count → set by CheckReadByMiddleware
+    |--------------------------------------------------------------------------
+    */
+    public function markReadBy(Request $request)
+    {
+        $count = $request->attributes->get('resolved_read_count', 0);
+
+        return response()->success(
+            ['updated' => $count],
+            'Messages marked as read successfully!'
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Toggle Emoji Reaction  (add or remove)
+    | Payload: channel_id, message_id, emoji
+    | message       → resolved by CheckMessageExistsMiddleware
+    | resolved_emoji → resolved/trimmed by CheckMessageReactionMiddleware
+    |--------------------------------------------------------------------------
+    */
+    public function react(Request $request)
+    {
+        $message = $request->attributes->get('message');
+        $emoji   = $request->attributes->get('resolved_emoji');
+        $user    = $request->user();
+        $userId  = (string) $user->getKey();
+
+        $fresh = Message::toggleReaction($message, $userId, $emoji);
+
+        return response()->success(
+            ['message' => MessageResource::make($fresh->load(['sender', 'channel']))],
+            'Reaction updated successfully!'
+        );
+    }
 }
