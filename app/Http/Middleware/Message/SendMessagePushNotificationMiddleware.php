@@ -25,8 +25,8 @@ class SendMessagePushNotificationMiddleware
             $user = $request->user();
 
             if ($message) {
-                $preview = $request->input('content')
-                    ? substr($request->input('content'), 0, 100)
+                $preview = $request->input('message')
+                    ? substr($request->input('message'), 0, 100)
                     : 'Sent a file';
 
                 SendMessagePushNotificationJob::dispatch(

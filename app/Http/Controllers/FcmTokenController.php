@@ -11,17 +11,17 @@ class FcmTokenController extends Controller
     public function create(Request $request)
     {
         $request->validate([
-            'token' => 'required|string',
+            'fcm_token' => 'required|string',
             'platform' => 'nullable|in:web,android,ios',
         ]);
 
         $user = $request->user();
 
         $fcmToken = FcmToken::updateOrCreate(
-            ['token' => data_get($request, 'token')],
+            ['token' => $request->input('fcm_token')],
             [
-                'user_id' => data_get($user, '_id'),
-                'platform' => data_get($request, 'platform', 'web'),
+                'user_id' => (string) data_get($user, '_id'),
+                'platform' => $request->input('platform', 'web'),
                 'last_seen_at' => Carbon::now(),
             ]
         );
@@ -32,13 +32,13 @@ class FcmTokenController extends Controller
     public function delete(Request $request)
     {
         $request->validate([
-            'token' => 'required|string',
+            'fcm_token' => 'required|string',
         ]);
 
         $user = $request->user();
 
-        FcmToken::where('token', data_get($request, 'token'))
-            ->where('user_id', data_get($user, '_id'))
+        FcmToken::where('token', $request->input('fcm_token'))
+            ->where('user_id', (string) data_get($user, '_id'))
             ->delete();
 
         return response()->success(null, 'FCM token removed successfully.');

@@ -21,6 +21,8 @@ class Message extends Model
         'file_path',
         'file_name',
         'file_mime',
+        'read_by',
+        'reactions',
     ];
 
     protected function casts(): array
@@ -84,5 +86,56 @@ class Message extends Model
         $message->update($updateData);
 
         return $message;
+    }
+
+    /**
+     * Atomically add $userId to the read_by array of the given messages.
+     * Only updates messages that belong to $channelId.
+     * Uses $addToSet to avoid duplicates (idempotent).
+     *
+     * @return int Number of modified documents.
+     */
+    public static function markReadBy(string $channelId, array $messageIds, string $userId): int
+    {
+        $result = self::whereIn('_id', $messageIds)
+            ->where('channel_id', $channelId)
+            ->push('read_by', $userId, true); // true = addToSet (unique)
+
+        return $result;
+    }
+
+    /**
+     * Toggle an emoji reaction for a user on a message.
+     * Uses $addToSet / $pull for atomic concurrency safety.
+     * After a pull, if the emoji array is empty, the key is unset.
+     *
+     * @return self Fresh message instance.
+     */
+    public static function toggleReaction(self $message, string $userId, string $emoji): self
+    {
+        $reactions  = $message->reactions ?? [];
+        $emojiUsers = $reactions[$emoji] ?? [];
+
+        if (in_array($userId, $emojiUsers)) {
+            // Remove user from the emoji array
+            $message->pull("reactions.{$emoji}", $userId);
+
+            // Re-fetch to check if array is now empty
+            $message->refresh();
+            $fresh     = $message;
+            $refreshed = $fresh->reactions ?? [];
+
+            if (isset($refreshed[$emoji]) && empty($refreshed[$emoji])) {
+                // Remove the now-empty emoji key entirely
+                $fresh->unset("reactions.{$emoji}");
+                $fresh->refresh();
+            }
+        } else {
+            // Add user to the emoji array
+            $message->push("reactions.{$emoji}", $userId, true); // true = addToSet
+            $message->refresh();
+        }
+
+        return $message->fresh();
     }
 }

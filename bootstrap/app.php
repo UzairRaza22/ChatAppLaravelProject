@@ -34,6 +34,9 @@ use App\Http\Middleware\Message\CheckMessageSenderMiddleware;
 use App\Http\Middleware\Message\CheckMessageFileMiddleware;
 use App\Http\Middleware\Message\CheckMessageFileUploadMiddleware;
 use App\Http\Middleware\Message\CheckReadMessagesMiddleware;
+use App\Http\Middleware\Message\CheckReadByMiddleware;
+use App\Http\Middleware\Message\CheckMessageReactionMiddleware;
+use App\Http\Middleware\Message\SendMessagePushNotificationMiddleware;
 
 // Channel middleware
 use App\Http\Middleware\Channel\ChannelExistMiddleware;
@@ -80,6 +83,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'message.file.check'     => CheckMessageFileMiddleware::class,
             'message.file.upload'    => CheckMessageFileUploadMiddleware::class,
             'message.read.resolve'   => CheckReadMessagesMiddleware::class,
+            'message.readby'         => CheckReadByMiddleware::class,
+            'message.react'          => CheckMessageReactionMiddleware::class,
+            'message.notification'   => SendMessagePushNotificationMiddleware::class,
 
             // ── Channel ───────────────────────────────────────────────────────
             'channel.exists' => ChannelExistMiddleware::class,
