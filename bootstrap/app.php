@@ -40,6 +40,8 @@ use App\Http\Middleware\Channel\ChannelExistMiddleware;
 use App\Http\Middleware\Channel\ChannelAdminMiddleware;
 use App\Http\Middleware\Channel\MemberCheckMiddleware;
 
+use App\Http\Middleware\GlobalActivityLoggerMiddleware;
+
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__ . '/../routes/web.php',
@@ -48,6 +50,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->prepend([
+            GlobalActivityLoggerMiddleware::class,
+        ]);
+
         $middleware->alias([
 
             // ── Auth & Validation ─────────────────────────────────────────────

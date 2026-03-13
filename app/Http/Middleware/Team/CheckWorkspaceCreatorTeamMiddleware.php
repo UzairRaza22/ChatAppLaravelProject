@@ -16,8 +16,8 @@ class CheckWorkspaceCreatorTeamMiddleware
         if (!$user) {
             abort(401, 'Unauthenticated. Please login to continue.');
         }
-
-        $workspaceId = data_get($request, 'workspace_id'); 
+     $team = data_get($request, 'team'); // Pehle variable ko pakrein (chahay wo null hi kyun na ho)
+     $workspaceId = $team ? $team->workspace_id : data_get($request, 'workspace_id');
 
         $workspace = Workspace::where('_id', $workspaceId)->first();
 
