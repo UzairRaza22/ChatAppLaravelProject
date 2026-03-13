@@ -5,6 +5,10 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
+
 // Auth middleware
 use App\Http\Middleware\CheckValidationMiddleware;
 use App\Http\Middleware\auth\CheckTokenMiddleware;
@@ -52,8 +56,6 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
-
-            // ── Auth & Validation ─────────────────────────────────────────────
             'check.validation'         => CheckValidationMiddleware::class,
             'check.token'              => CheckTokenMiddleware::class,
             'check.credentials'        => CheckCredentialsMiddleware::class,
@@ -61,14 +63,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'check.user.exists'        => CheckUserExistMiddleware::class,
             'check.user.exists.forgot' => CheckUserExistForForgotMiddleware::class,
 
-            // ── Workspace ─────────────────────────────────────────────────────
             'check.workspace.unique.name' => CheckUniqueWorkspaceNameMiddleware::class,
             'check.workspace.creator'     => CheckWorkspaceCreatorMiddleware::class,
             'check.workspace.exists'      => CheckWorkspaceExistsMiddleware::class,
             'check.workspaces.exist'      => CheckWorkspacesExistMiddleware::class,
             'check.members.exist'         => CheckMembersExistMiddleware::class,
 
-            // ── Team ──────────────────────────────────────────────────────────
             'team.exists'            => CheckTeamExistsMiddleware::class,
             'team.member.exists'     => CheckTeamMemberExistsMiddleware::class,
             'teams.exist'            => CheckTeamsExistMiddleware::class,
@@ -76,7 +76,6 @@ return Application::configure(basePath: dirname(__DIR__))
             'workspace.creator.team' => CheckWorkspaceCreatorTeamMiddleware::class,
             'workspace.member.team'  => CheckWorkspaceMemberMiddleware::class,
 
-            // ── Message ───────────────────────────────────────────────────────
             'message.channel.check'  => CheckChannelMessageMiddleware::class,
             'message.exists'         => CheckMessageExistsMiddleware::class,
             'message.sender'         => CheckMessageSenderMiddleware::class,
@@ -87,17 +86,85 @@ return Application::configure(basePath: dirname(__DIR__))
             'message.react'          => CheckMessageReactionMiddleware::class,
             'message.notification'   => SendMessagePushNotificationMiddleware::class,
 
-            // ── Channel ───────────────────────────────────────────────────────
             'channel.exists' => ChannelExistMiddleware::class,
             'channel.admin'  => ChannelAdminMiddleware::class,
             'channel.member' => MemberCheckMiddleware::class,
             'channel.create' => \App\Http\Middleware\Channel\ChannelCreateMiddleware::class,
             'channel.add.member' => \App\Http\Middleware\Channel\ChannelAddMemberMiddleware::class,
             'channel.remove.member' => \App\Http\Middleware\Channel\ChannelRemoveMemberMiddleware::class,
-
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+
+        /*
+        |--------------------------------------------------------------------------
+        | WEBHOOK ALERTING (GLOBAL) — App Errors Only (NO LOGGING)
+        |--------------------------------------------------------------------------
+        | ENV:
+        |   ALERT_WEBHOOK_URL=https://your-webhook-endpoint
+        |--------------------------------------------------------------------------
+        */
+        $exceptions->reportable(function (\Throwable $e) {
+
+            // Only staging/production
+            if (!app()->environment(['staging', 'production'])) {
+                return;
+            }
+
+            // Skip common user-caused errors
+            if ($e instanceof \Illuminate\Validation\ValidationException) return;            // 422
+            if ($e instanceof \Illuminate\Auth\AuthenticationException) return;              // 401
+            if ($e instanceof \Illuminate\Auth\Access\AuthorizationException) return;         // 403
+            if ($e instanceof \Illuminate\Database\Eloquent\ModelNotFoundException) return;  // 404-ish
+
+            // Skip HTTP exceptions with status < 500 (404/401/403/405/429 etc.)
+            if ($e instanceof HttpExceptionInterface) {
+                if ($e->getStatusCode() < 500) return;
+            }
+
+            // Dedupe alerts (3 minutes)
+            $dedupeKey = 'webhook_alert_dedupe:' . md5(
+                get_class($e) . '|' . $e->getMessage() . '|' . $e->getFile() . ':' . $e->getLine()
+            );
+
+            if (Cache::has($dedupeKey)) {
+                return;
+            }
+            Cache::put($dedupeKey, true, 180);
+
+            $webhookUrl = env('ALERT_WEBHOOK_URL');
+            if (!$webhookUrl) {
+                return;
+            }
+
+            $req = request();
+
+            $payload = [
+                'app'       => config('app.name'),
+                'env'       => app()->environment(),
+                'exception' => get_class($e),
+                'message'   => $e->getMessage(),
+                'time'      => now()->toIso8601String(),
+                'request'   => [
+                    'method' => $req?->method(),
+                    'url'    => $req?->fullUrl(),
+                    'ip'     => $req?->ip(),
+                ],
+                'user_id' => optional($req?->user())->_id ?? optional($req?->user())->id ?? null,
+                'trace'   => array_slice(explode("\n", $e->getTraceAsString()), 0, 10),
+            ];
+
+            // Never throw from here (silent failure)
+            try {
+                Http::timeout(3)->post($webhookUrl, $payload);
+            } catch (\Throwable $ignored) {
+                // intentionally no logging
+            }
+        });
+
+        // ─────────────────────────────────────────────────────────────────────
+        // Existing Render Handlers (unchanged)
+        // ─────────────────────────────────────────────────────────────────────
 
         $exceptions->render(function (\Illuminate\Database\Eloquent\ModelNotFoundException $e, Request $request) {
             if ($request->is('api/*')) {
