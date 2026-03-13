@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use App\Models\{SessionToken, ForgetToken, User};
-use App\Mail\SignupVerificationEmail;
-use Illuminate\Support\Facades\Mail;
+use App\Notifications\ResetPasswordNotification;
+use App\Notifications\SignupVerificationNotification;
 
 class AuthController extends Controller
 {
@@ -23,9 +23,9 @@ class AuthController extends Controller
 
         $token = SessionToken::generate('signup_verification_token', $user);
 
-        Mail::to(data_get($request, 'email'))->send(new SignupVerificationEmail($user,$token));
+        $user->notify(new SignupVerificationNotification($user, $token));
 
-        return response()->success([
+        return response()->success([                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
             'user' => UserResource::make($user)
         ], 'Signup successfull!. Please check your email for verification link.');
     }
@@ -86,10 +86,10 @@ class AuthController extends Controller
         $token = ForgetToken::generate('forgot_password_token', $user);
 
         
-        Mail::to(data_get($user, 'email'))->send(new \App\Mail\ResetPasswordEmail($user, $token));
+        $user->notify(new ResetPasswordNotification($user, $token));
 
 
-        Mail::to($user->email)->send(new \App\Mail\ResetPasswordEmail($user, $token));
+        $user->notify(new ResetPasswordNotification($user, $token));
 
 
         return response()->success([
