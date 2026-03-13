@@ -1,0 +1,7 @@
+public/storage
+node_modules
+.git
+.env.example
+*.log
+/vendor
+mongodb-data

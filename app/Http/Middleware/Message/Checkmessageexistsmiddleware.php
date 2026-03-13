@@ -17,8 +17,10 @@ class CheckMessageExistsMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $messageId = $request->input('message_id');
-        $channelId = $request->input('channel_id');
+
+        $data = $request->all();
+        $messageId = $data['message_id'] ?? null;
+        $channelId = $data['channel_id'] ?? null;
 
         $message = Message::where('_id', $messageId)
             ->where('channel_id', $channelId)

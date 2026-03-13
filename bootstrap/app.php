@@ -48,6 +48,9 @@ use App\Http\Middleware\Channel\ChannelAdminMiddleware;
 use App\Http\Middleware\Channel\MemberCheckMiddleware;
 
 return Application::configure(basePath: dirname(__DIR__))
+    ->withProviders([
+        App\Providers\AttachmentServiceProvider::class,
+    ])
     ->withRouting(
         web: __DIR__ . '/../routes/web.php',
         api: __DIR__ . '/../routes/api.php',

@@ -1,0 +1,40 @@
+services:
+  app:
+    container_name: laravel_nginx_chat_app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:80"
+    volumes:
+      - ./:/var/www/backend
+    depends_on:
+      - mongodb
+      - mailhog
+    networks:
+      - app-network
+
+  mongodb:
+    container_name: mongodb_chat_app
+    image: mongo:8.0
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: whistle_it
+    volumes:
+      - ./mongodb-data:/data/db
+    networks:
+      - app-network
+
+  mailhog:
+    container_name: mailhog_chat_app
+    image: mailhog/mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

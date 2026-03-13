@@ -28,3 +28,52 @@ Homestead.json
 .env.production
 .phpactor.json
 auth.json
+
+# Laravel specific cache and temporary files
+/bootstrap/cache/*
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/framework/testing/*
+/storage/logs/*
+/storage/app/public/*
+/node_modules/
+/public/hot
+/public/storage
+/public/build
+/public/css
+/public/js
+/public/mix-manifest.json
+
+# MongoDB data
+/mongodb-data/
+/mongod.lock
+*.db
+
+# IDE and system files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Environment and configuration
+.env.*
+!.env.example
+
+# Testing and coverage
+.phpunit.result.cache
+coverage/
+.nyc_output
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+/public/storage
+/storage/logs
+/storage/framework
+/bootstrap/cache
