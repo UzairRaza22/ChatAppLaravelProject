@@ -60,9 +60,25 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+<<<<<<< Updated upstream
         $middleware->prepend([
             GlobalActivityLoggerMiddleware::class,
         ]);
+=======
+
+        /*
+        |--------------------------------------------------------------------------
+        | Global API Throttle — 120 requests per minute
+        |--------------------------------------------------------------------------
+        | Applied to every route in routes/api.php automatically.
+        | Key = authenticated user ID when logged in, IP address when guest.
+        | Exceeding the limit → HTTP 429, handled in withExceptions() below.
+        |--------------------------------------------------------------------------
+        */
+        $middleware->throttleApi(120);
+
+        $middleware->alias([
+>>>>>>> Stashed changes
 
         $middleware->alias([
             'check.validation'         => CheckValidationMiddleware::class,
@@ -95,11 +111,20 @@ return Application::configure(basePath: dirname(__DIR__))
             'message.react'          => CheckMessageReactionMiddleware::class,
             'message.notification'   => SendMessagePushNotificationMiddleware::class,
 
+<<<<<<< Updated upstream
             'channel.exists' => ChannelExistMiddleware::class,
             'channel.admin'  => ChannelAdminMiddleware::class,
             'channel.member' => MemberCheckMiddleware::class,
             'channel.create' => \App\Http\Middleware\Channel\ChannelCreateMiddleware::class,
             'channel.add.member' => \App\Http\Middleware\Channel\ChannelAddMemberMiddleware::class,
+=======
+            // ── Channel ───────────────────────────────────────────────────────
+            'channel.exists'        => ChannelExistMiddleware::class,
+            'channel.admin'         => ChannelAdminMiddleware::class,
+            'channel.member'        => MemberCheckMiddleware::class,
+            'channel.create'        => \App\Http\Middleware\Channel\ChannelCreateMiddleware::class,
+            'channel.add.member'    => \App\Http\Middleware\Channel\ChannelAddMemberMiddleware::class,
+>>>>>>> Stashed changes
             'channel.remove.member' => \App\Http\Middleware\Channel\ChannelRemoveMemberMiddleware::class,
         ]);
     })
@@ -199,12 +224,31 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
 
+        /*
+        |--------------------------------------------------------------------------
+        | Throttle Exception — HTTP 429
+        |--------------------------------------------------------------------------
+        | Caught before the generic HttpException handler so we can read
+        | Retry-After from the exception headers and include it in the message.
+        |--------------------------------------------------------------------------
+        */
+        $exceptions->render(function (\Illuminate\Http\Exceptions\ThrottleRequestsException $e, Request $request) {
+            if ($request->is('api/*')) {
+                $retryAfter = $e->getHeaders()['Retry-After'] ?? 60;
+                return response()->error(
+                    'Too many requests. Please try again in ' . $retryAfter . ' seconds.',
+                    429
+                );
+            }
+        });
+
         $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\HttpException $e, Request $request) {
             if ($request->is('api/*')) {
                 $message = match ($e->getStatusCode()) {
                     404 => 'Resource not found.',
                     403 => 'Forbidden.',
                     401 => 'Unauthorized.',
+                    429 => 'Too many requests. Please try again later.',
                     500 => 'Internal server error.',
                     default => $e->getMessage() ?: 'An error occurred.'
                 };
