@@ -28,7 +28,7 @@ Route::middleware(['check.token:login_token', 'check.active'])->group(function (
     // Unified read for both directchannel and channelmessage
     // Payload: channel_id
     // Returns: paginated 20 messages, newest first
-    Route::read('/read', [MessageController::class, 'readMessages'])->middleware([
+    Route::read('/read', [MessageController::class, 'read'])->middleware([
         'message.read.resolve',     // validates channel membership + paginates messages
     ]);
 
