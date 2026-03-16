@@ -82,27 +82,32 @@ return [
             'prefix_indexes' => true,
         ],
 
-        // 'mongodb' => [
-        //     'driver'   => 'mongodb',
-        //     'host'     => env('MONGO_HOST', '127.0.0.1'),
-        //     'port'     => (int) env('MONGO_PORT', 27017),
-        //     'database' => env('MONGO_DATABASE', 'whistle_it'),
-        //     'options'  => [
-        //         'ssl' => false,
-        //     ],
-        // ],
-
-        'mongodb' => [
+'mongodb' => [
     'driver'   => 'mongodb',
-    'host'     => env('DB_HOST', '127.0.0.1'),
-    'port'     => env('DB_PORT', 27017),
-    'database' => env('DB_DATABASE', 'whistle_it'),
-    'username' => env('DB_USERNAME', ''),
-    'password' => env('DB_PASSWORD', ''),
+    'host'     => env('MONGO_HOST', '127.0.0.1'),
+    'port'     => (int) env('MONGO_PORT', 27017),
+    'database' => env('MONGO_DATABASE', 'whistle_it'),
+    'username' => env('MONGO_USERNAME', ''),
+    'password' => env('MONGO_PASSWORD', ''),
     'options'  => [
-        'database' => env('DB_AUTHENTICATION_DATABASE', 'admin'),
+        'ssl' => false,
+        'serverSelectionTimeoutMS' => 3000,
+        'connectTimeoutMS' => 3000,
+        'socketTimeoutMS' => 3000,
     ],
 ],
+
+//         'mongodb' => [
+//     'driver'   => 'mongodb',
+//     'host'     => env('DB_HOST', '127.0.0.1'),
+//     'port'     => env('DB_PORT', 27017),
+//     'database' => env('DB_DATABASE', 'whistle_it'),
+//     'username' => env('DB_USERNAME', ''),
+//     'password' => env('DB_PASSWORD', ''),
+//     'options'  => [
+//         'database' => env('DB_AUTHENTICATION_DATABASE', 'admin'),
+//     ],
+// ],
     ],
 
     'migrations' => [
@@ -111,7 +116,7 @@ return [
     ],
 
     'redis' => [
-        'client' => env('REDIS_CLIENT', 'phpredis'),
+        'client' => env('REDIS_CLIENT', 'predis'),
 
         'options' => [
             'cluster' => env('REDIS_CLUSTER', 'redis'),

@@ -60,11 +60,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-<<<<<<< Updated upstream
         $middleware->prepend([
             GlobalActivityLoggerMiddleware::class,
         ]);
-=======
 
         /*
         |--------------------------------------------------------------------------
@@ -76,9 +74,6 @@ return Application::configure(basePath: dirname(__DIR__))
         |--------------------------------------------------------------------------
         */
         $middleware->throttleApi(120);
-
-        $middleware->alias([
->>>>>>> Stashed changes
 
         $middleware->alias([
             'check.validation'         => CheckValidationMiddleware::class,
@@ -111,20 +106,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'message.react'          => CheckMessageReactionMiddleware::class,
             'message.notification'   => SendMessagePushNotificationMiddleware::class,
 
-<<<<<<< Updated upstream
             'channel.exists' => ChannelExistMiddleware::class,
             'channel.admin'  => ChannelAdminMiddleware::class,
             'channel.member' => MemberCheckMiddleware::class,
             'channel.create' => \App\Http\Middleware\Channel\ChannelCreateMiddleware::class,
             'channel.add.member' => \App\Http\Middleware\Channel\ChannelAddMemberMiddleware::class,
-=======
-            // ── Channel ───────────────────────────────────────────────────────
-            'channel.exists'        => ChannelExistMiddleware::class,
-            'channel.admin'         => ChannelAdminMiddleware::class,
-            'channel.member'        => MemberCheckMiddleware::class,
-            'channel.create'        => \App\Http\Middleware\Channel\ChannelCreateMiddleware::class,
-            'channel.add.member'    => \App\Http\Middleware\Channel\ChannelAddMemberMiddleware::class,
->>>>>>> Stashed changes
             'channel.remove.member' => \App\Http\Middleware\Channel\ChannelRemoveMemberMiddleware::class,
         ]);
     })
