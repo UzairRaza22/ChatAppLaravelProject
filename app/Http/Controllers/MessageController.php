@@ -66,12 +66,9 @@ class MessageController extends Controller
     | Read Messages — unified for directchannel and channelmessage
     | Payload: channel_id (same for both — middleware resolves channel type)
     | resolved_messages → set by CheckReadMessagesMiddleware (paginated, newest first)
-    |
-    | readMessages and readChannelMessages merged into one — both operate
-    | on channel_id only with identical controller logic.
     |--------------------------------------------------------------------------
     */
-    public function readMessages(Request $request)
+    public function read(Request $request)
     {
         return response()->success(
             ['messages' => $request->attributes->get('resolved_messages')],
@@ -96,7 +93,7 @@ class MessageController extends Controller
         $message = $request->attributes->get('message');
 
         $fileData = $request->hasFile('file')
-            ? $this->_replaceFile($message, $request)
+            ? $this->replaceFile($message, $request)
             : ['file_path' => $message->file_path, 'file_name' => $message->file_name, 'file_mime' => $message->file_mime];
 
         $updated = Message::edit([
@@ -170,7 +167,7 @@ class MessageController extends Controller
     |--------------------------------------------------------------------------
     | Toggle Emoji Reaction  (add or remove)
     | Payload: channel_id, message_id, emoji
-    | message       → resolved by CheckMessageExistsMiddleware
+    | message        → resolved by CheckMessageExistsMiddleware
     | resolved_emoji → resolved/trimmed by CheckMessageReactionMiddleware
     |--------------------------------------------------------------------------
     */
@@ -189,13 +186,14 @@ class MessageController extends Controller
         );
     }
 
-/*
+    /*
+    |--------------------------------------------------------------------------
     | Private: Replace File on Update
     | Deletes the old GridFS file then uploads the new one.
-    | Extracted to keep update() if-free while grouping related service calls.
+    | Extracted to keep update() clean while grouping related service calls.
     |--------------------------------------------------------------------------
-*/
-    private function _replaceFile($message, Request $request): array
+    */
+    private function replaceFile($message, Request $request): array
     {
         $message->file_path && $this->attachmentService->delete($message->file_path);
 
