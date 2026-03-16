@@ -57,20 +57,7 @@ return Application::configure(basePath: dirname(__DIR__))
         web: __DIR__ . '/../routes/web.php',
         commands: __DIR__ . '/../routes/console.php',
         health: '/up',
-    )
-    ->withMiddleware(function (Middleware $middleware) {
-        $middleware->prepend([
-            GlobalActivityLoggerMiddleware::class,
-        ]);
 
-        /*
-        |--------------------------------------------------------------------------
-        | API Routes — registered via then: callback
-        |--------------------------------------------------------------------------
-        | All API route files are grouped here with throttle:120,1 applied globally.
-        | throttle:120,1 → 120 requests per 1 minute, keyed by user ID or IP.
-        |--------------------------------------------------------------------------
-        */
         then: function () {
             Route::middleware(['api', 'throttle:120,1'])
                 ->prefix('api')
@@ -86,15 +73,11 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware) {
-
-        /*
-        |--------------------------------------------------------------------------
-        | Global Activity Logger — prepended to run first on every request
-        |--------------------------------------------------------------------------
-        */
         $middleware->prepend([
             GlobalActivityLoggerMiddleware::class,
-        ]);
+    ]);
+
+
 
         $middleware->alias([
 
