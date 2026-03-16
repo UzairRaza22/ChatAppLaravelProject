@@ -6,11 +6,12 @@ use MongoDB\Laravel\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use MongoDB\Laravel\Auth\User as Authenticatable;
 
-class User extends Model
+class User extends Authenticatable // Hum Authenticatable use karenge taake Auth::login() kaam kare
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, SoftDeletes;
+
     protected $collection = 'users';
 
     /**
@@ -18,7 +19,6 @@ class User extends Model
      *
      * @var list<string>
      */
-
     protected $attributes = [
         'is_active' => false,
         'workspace_ids' => [],
@@ -31,7 +31,9 @@ class User extends Model
         'password',
         'is_active',
         'workspace_ids',
-        'access_token',
+        'access_token', // Aapka custom token field
+        'google_id', 
+        'avatar',   
     ];
 
     /**
@@ -59,6 +61,8 @@ class User extends Model
         ];
     }
 
+    // --- Relationships (Safe & Untouched) ---
+
     public function createdWorkspaces()
     {
         return $this->hasMany(Workspace::class, 'creator_id', '_id');
@@ -79,6 +83,7 @@ class User extends Model
         return $this->belongsToMany(Task::class, null, 'task_ids', 'assignee_ids');
     }
 
+    // --- Static Methods ---
 
     public static function add($data)
     {
