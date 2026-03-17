@@ -26,14 +26,11 @@ class Message extends Model
         'reactions',
     ];
 
-    protected $casts(): array
-    {
-        return [
-            'deleted_at' => 'datetime',
-            'read_by' => 'array',
-            'reactions' => 'array',
-        ];
-    }
+    protected $casts = [
+        'deleted_at' => 'datetime',
+        'read_by' => 'array',
+        'reactions' => 'array',
+    ];
 
     /*
     |--------------------------------------------------------------------------
@@ -142,9 +139,9 @@ class Message extends Model
         }
 
         if (isset($data['file_path'])) {
-            $updateData['file_path']  = $data['file_path'];
-            $updateData['file_name']  = $data['file_name']  ?? null;
-            $updateData['file_mime']  = $data['file_mime']  ?? null;
+            $updateData['file_path'] = $data['file_path'];
+            $updateData['file_name'] = $data['file_name'] ?? null;
+            $updateData['file_mime'] = $data['file_mime'] ?? null;
         }
 
         $message->update($updateData);
@@ -177,7 +174,7 @@ class Message extends Model
      */
     public static function toggleReaction(self $message, string $userId, string $emoji): self
     {
-        $reactions  = $message->reactions ?? [];
+        $reactions = $message->reactions ?? [];
         $emojiUsers = $reactions[$emoji] ?? [];
 
         if (in_array($userId, $emojiUsers)) {
@@ -186,13 +183,12 @@ class Message extends Model
 
             // Re-fetch to check if array is now empty
             $message->refresh();
-            $fresh     = $message;
-            $refreshed = $fresh->reactions ?? [];
+            $refreshed = $message->reactions ?? [];
 
             if (isset($refreshed[$emoji]) && empty($refreshed[$emoji])) {
                 // Remove the now-empty emoji key entirely
-                $fresh->unset("reactions.{$emoji}");
-                $fresh->refresh();
+                $message->unset("reactions.{$emoji}");
+                $message->refresh();
             }
         } else {
             // Add user to the emoji array
