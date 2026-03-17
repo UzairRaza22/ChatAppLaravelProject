@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Message\SendMessageRequest;
 use App\Http\Resources\MessageResource;
+use App\Http\Resources\SearchResource;
+use App\Http\Requests\Message\MessageSearchRequest;
 use App\Models\Message;
 use App\Services\AttachmentService;
 use Illuminate\Http\Request;
@@ -176,7 +179,7 @@ class MessageController extends Controller
         $message = $request->attributes->get('message');
         $emoji   = $request->attributes->get('resolved_emoji');
         $user    = $request->user();
-        $userId  = (string) $user->getKey();
+        $userId  = (string) $user->_id;
 
         $fresh = Message::toggleReaction($message, $userId, $emoji);
 
@@ -188,6 +191,22 @@ class MessageController extends Controller
 
     /*
     |--------------------------------------------------------------------------
+    | Search Messages
+    |--------------------------------------------------------------------------
+    */
+    public function search(MessageSearchRequest $request)
+    {
+        // Get search results from middleware
+        $searchResults = $request->get('search_results');
+        $searchParams = $request->get('search_params');
+
+        return response()->success(
+            \App\Http\Resources\SearchResource::collection($searchResults),
+            'Messages retrieved successfully!'
+        );
+    }
+
+/*
     | Private: Replace File on Update
     | Deletes the old GridFS file then uploads the new one.
     | Extracted to keep update() clean while grouping related service calls.

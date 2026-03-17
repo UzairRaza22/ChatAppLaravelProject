@@ -1,0 +1,71 @@
+<?php
+
+namespace App\Http\Middleware\Message;
+
+use Closure;
+use Illuminate\Http\Request;
+
+class CheckSearchMessageMiddleware
+{
+    /**
+     * Handle an incoming request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Closure(\Illuminate\Http\Request): (\Illuminate\Http\Response|\Illuminate\Http\RedirectResponse)  $next
+     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
+     */
+    public function handle(Request $request, Closure $next)
+    {
+        // Validate search parameters
+        $validator = validator($request->all(), [
+            'query' => ['required', 'string', 'min:1', 'max:255'],
+            'channel_id' => ['nullable', 'string', 'regex:/^[a-f\d]{24}$/i'],
+            'workspace_id' => ['nullable', 'string', 'regex:/^[a-f\d]{24}$/i'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'page' => ['nullable', 'integer', 'min:1'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Get validated parameters
+        $params = [
+            'query' => $request->get('query'),
+            'channel_id' => $request->get('channel_id'),
+            'workspace_id' => $request->get('workspace_id'),
+            'per_page' => $request->get('per_page', 20),
+            'page' => $request->get('page', 1),
+        ];
+
+        // Perform search using Scout
+        $searchQuery = \App\Models\Message::search($params['query']);
+
+        // Apply filters if provided
+        if (!empty($params['channel_id'])) {
+            $searchQuery->where('channel_id', $params['channel_id']);
+        }
+
+        if (!empty($params['workspace_id'])) {
+            $searchQuery->where('workspace_id', $params['workspace_id']);
+        }
+
+        // Execute search with pagination
+        $searchResults = $searchQuery->paginate($params['per_page'], 'page', $params['page']);
+
+        // Load relationships for better response
+        $searchResults->load(['sender', 'channel']);
+
+        // Add search results to request for controller to use
+        $request->merge([
+            'search_results' => $searchResults,
+            'search_params' => $params
+        ]);
+
+        return $next($request);
+    }
+}

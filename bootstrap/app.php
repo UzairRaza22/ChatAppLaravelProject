@@ -75,12 +75,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->prepend([
             GlobalActivityLoggerMiddleware::class,
-    ]);
-
+        ]);
 
 
         $middleware->alias([
-
             // ── Auth & Validation ─────────────────────────────────────────────
             'check.validation'         => CheckValidationMiddleware::class,
             'check.token'              => CheckTokenMiddleware::class,
@@ -115,11 +113,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'message.react'          => CheckMessageReactionMiddleware::class,
             'message.notification'   => SendMessagePushNotificationMiddleware::class,
 
-            'channel.exists' => ChannelExistMiddleware::class,
-            'channel.admin'  => ChannelAdminMiddleware::class,
-            'channel.member' => MemberCheckMiddleware::class,
-            'channel.create' => \App\Http\Middleware\Channel\ChannelCreateMiddleware::class,
-            'channel.add.member' => \App\Http\Middleware\Channel\ChannelAddMemberMiddleware::class,
+            // ── Channel ───────────────────────────────────────────────────────
+            'channel.exists'        => ChannelExistMiddleware::class,
+            'channel.admin'         => ChannelAdminMiddleware::class,
+            'channel.member'        => MemberCheckMiddleware::class,
+            'channel.create'        => \App\Http\Middleware\Channel\ChannelCreateMiddleware::class,
+            'channel.add.member'    => \App\Http\Middleware\Channel\ChannelAddMemberMiddleware::class,
             'channel.remove.member' => \App\Http\Middleware\Channel\ChannelRemoveMemberMiddleware::class,
 
         ]);
