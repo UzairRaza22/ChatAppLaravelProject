@@ -1,6 +1,9 @@
-FROM php:8.2-fpm
+FROM ubuntu:22.04
 
-# Install system dependencies + Redis server
+# Prevent interactive prompts during install
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install system dependencies + Nginx + Redis
 RUN apt-get update && apt-get install -y \
     nginx \
     redis-server \
@@ -9,20 +12,23 @@ RUN apt-get update && apt-get install -y \
     unzip \
     nano \
     procps \
-    libssl-dev \
-    pkg-config \
-    libzip-dev \
-    libpng-dev \
+    software-properties-common \
     && rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions needed for Laravel
-RUN docker-php-ext-install pcntl bcmath zip gd
+# Add PHP 8.2 repository
+RUN add-apt-repository ppa:ondrej/php -y && apt-get update
 
-# Install MongoDB PHP extension
-RUN pecl install mongodb && docker-php-ext-enable mongodb
-
-# Install Redis PHP extension
-RUN pecl install redis && docker-php-ext-enable redis
+# Install PHP 8.2 with only required extensions
+RUN apt-get install -y \
+    php8.2-fpm \
+    php8.2-cli \
+    php8.2-mongodb \
+    php8.2-xml \
+    php8.2-mbstring \
+    php8.2-zip \
+    php8.2-curl \
+    php8.2-redis \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | php -- \
@@ -39,8 +45,11 @@ RUN mkdir -p /etc/nginx/sites-enabled && \
     ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 
 # Copy PHP ini config
-COPY php-uploads.ini /usr/local/etc/php/conf.d/99-uploads.ini
-COPY php-fpm-custom.conf /usr/local/etc/php-fpm.d/custom.conf
+COPY php-uploads.ini /etc/php/8.2/fpm/conf.d/99-uploads.ini
+COPY php-uploads.ini /etc/php/8.2/cli/conf.d/99-uploads.ini
+
+# Copy PHP-FPM custom config
+COPY php-fpm-custom.conf /etc/php/8.2/fpm/pool.d/custom.conf
 
 # Copy all project files
 COPY . /var/www/backend/
@@ -49,11 +58,6 @@ COPY . /var/www/backend/
 RUN chown -R www-data:www-data /var/www/backend/storage /var/www/backend/bootstrap/cache \
     && chmod -R 775 /var/www/backend/storage /var/www/backend/bootstrap/cache
 
-# Copy and set permissions for startup script
-COPY start.sh /start.sh
-RUN sed -i 's/\r//' /start.sh \
-    && chmod +x /start.sh
-
 EXPOSE 80
 
-CMD ["/start.sh"]
+CMD /etc/init.d/php8.2-fpm start && /etc/init.d/redis-server start && nginx -g "daemon off;"
