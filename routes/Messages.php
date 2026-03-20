@@ -35,7 +35,8 @@ Route::middleware(['check.token:login_token', 'check.active'])->group(function (
     // ── PATCH /messages/update ────────────────────────────────────────────
     // Update a message (sender only)
     // Payload: channel_id, message_id, message, file (optional)
-    Route::update('/update', [MessageController::class, 'update'])->middleware([
+Route::match(['PATCH', 'POST'], '/update', [MessageController::class, 'update'])->middleware([
+        'message.channel.check',
         'message.exists',           // resolves message by message_id + channel_id
         'message.sender',           // checks auth user is the sender
         'message.file.upload',      // handles GridFS upload if file present
