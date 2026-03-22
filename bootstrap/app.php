@@ -104,6 +104,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
             // ── Message ───────────────────────────────────────────────────────
             'message.channel.check'  => CheckChannelMessageMiddleware::class,
+            'message.search'         => \App\Http\Middleware\Message\SearchMessageMiddleware::class,
             'message.exists'         => CheckMessageExistsMiddleware::class,
             'message.sender'         => CheckMessageSenderMiddleware::class,
             'message.file.check'     => CheckMessageFileMiddleware::class,

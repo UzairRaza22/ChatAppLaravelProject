@@ -76,6 +76,8 @@ Route::middleware(['check.token:login_token', 'check.active'])->group(function (
     // Search messages in database with filters
     // Query params: query (required), channel_id (optional), page (optional), per_page (optional)
     Route::get('/search', [MessageController::class, 'search'])->middleware([
-        \App\Http\Middleware\Message\CheckSearchMessageMiddleware::class,
+        'check.token:login_token',    // requires authentication
+        'check.active',            // requires active user
+        'message.search',            // validates search params, performs search
     ]);
 });

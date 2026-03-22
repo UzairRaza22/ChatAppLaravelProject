@@ -11,7 +11,7 @@ class MessageSearchRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return auth()->check();
+        return true; // Authentication is handled by middleware
     }
 
     /**

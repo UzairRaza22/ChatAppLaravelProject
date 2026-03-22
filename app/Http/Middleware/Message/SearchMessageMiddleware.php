@@ -5,7 +5,7 @@ namespace App\Http\Middleware\Message;
 use Closure;
 use Illuminate\Http\Request;
 
-class CheckSearchMessageMiddleware
+class SearchMessageMiddleware
 {
     /**
      * Handle an incoming request.
@@ -41,6 +41,40 @@ class CheckSearchMessageMiddleware
             'per_page' => $request->get('per_page', 20),
             'page' => $request->get('page', 1),
         ];
+
+        // If channel_id is provided, validate user membership
+        if (!empty($params['channel_id'])) {
+            $channel = \App\Models\Channel::where('_id', $params['channel_id'])->first();
+            
+            if (!$channel) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Channel not found.',
+                    'errors' => null,
+                    'data' => null
+                ], 404);
+            }
+
+            $user = $request->user();
+            $userId = (string) $user->_id;
+            $members = collect($channel->members ?? []);
+
+            $senderIsMember = $members->contains(
+                fn($m) => (string) ($m['user_id'] ?? '') === $userId
+            );
+
+            if (!$senderIsMember) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You are not a member of this channel.',
+                    'errors' => null,
+                    'data' => null
+                ], 403);
+            }
+
+            // Add channel to request for filtering
+            $request->attributes->set('channel', $channel);
+        }
 
         // Perform search using Scout
         $searchQuery = \App\Models\Message::search($params['query']);
