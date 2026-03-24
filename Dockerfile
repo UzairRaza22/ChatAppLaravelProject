@@ -36,23 +36,15 @@ RUN apt-get update && apt-get install -y \
 
 RUN add-apt-repository ppa:ondrej/php -y && apt-get update
 
-<<<<<<< HEAD
 
 
 # Install PHP 8.2 with required extensions (excluding mongodb)
 
-=======
-# Install PHP 8.2 with required extensions (excluding mongodb)
->>>>>>> 17daed8c084fd2b92852bcedc61e0e99c02926f4
 RUN apt-get install -y \
 
     php8.2-fpm \
 
     php8.2-cli \
-<<<<<<< HEAD
-
-=======
->>>>>>> 17daed8c084fd2b92852bcedc61e0e99c02926f4
     php8.2-xml \
 
     php8.2-mbstring \
@@ -62,7 +54,6 @@ RUN apt-get install -y \
     php8.2-curl \
 
     php8.2-redis \
-<<<<<<< HEAD
 
     php-pear \
 
@@ -82,17 +73,6 @@ RUN pecl install mongodb \
 
 
 
-=======
-    php-pear \
-    php8.2-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install MongoDB extension via PECL
-RUN pecl install mongodb \
-    && echo "extension=mongodb.so" > /etc/php/8.2/mods-available/mongodb.ini \
-    && phpenmod mongodb
-
->>>>>>> 17daed8c084fd2b92852bcedc61e0e99c02926f4
 # Install Composer
 
 RUN curl -sS https://getcomposer.org/installer | php -- \
