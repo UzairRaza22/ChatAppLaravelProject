@@ -4,10 +4,11 @@ namespace App\Models;
 
 use MongoDB\Laravel\Eloquent\Model;
 use MongoDB\Laravel\Eloquent\SoftDeletes;
+use Laravel\Scout\Searchable;
 
 class Message extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, Searchable;
 
     protected $collection = 'messages';
 
@@ -25,11 +26,71 @@ class Message extends Model
         'reactions',
     ];
 
-    protected function casts(): array
+    protected $casts = [
+        'deleted_at' => 'datetime',
+        'read_by' => 'array',
+        'reactions' => 'array',
+    ];
+
+    /*
+    |--------------------------------------------------------------------------
+    | Laravel Scout Configuration
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Get the indexable data array for the model.
+     *
+     * @return array<string, mixed>
+     */
+    public function toSearchableArray(): array
     {
-        return [
-            'deleted_at' => 'datetime',
+        $searchable = [
+            'id' => (string) $this->_id,
+            'content' => $this->content,
+            'message_type' => $this->message_type,
+            'workspace_id' => (string) $this->workspace_id,
+            'channel_id' => (string) $this->channel_id,
+            'sender_id' => (string) $this->sender_id,
+            'created_at' => $this->created_at?->timestamp,
         ];
+
+        // Include sender name if relationship is loaded
+        if ($this->relationLoaded('sender') && $this->sender) {
+            $searchable['sender_name'] = $this->sender->name;
+        }
+
+        // Include channel name if relationship is loaded
+        if ($this->relationLoaded('channel') && $this->channel) {
+            $searchable['channel_name'] = $this->channel->name;
+        }
+
+        return $searchable;
+    }
+
+    /**
+     * Get the Scout index name for the model.
+     */
+    public function searchableAs(): string
+    {
+        return 'messages_index';
+    }
+
+    /**
+     * Modify the query used to retrieve models when making all of the models searchable.
+     */
+    protected function makeAllSearchableUsing($query)
+    {
+        return $query->with(['sender', 'channel']);
+    }
+
+    /**
+     * Determine if the model should be searchable.
+     */
+    public function shouldBeSearchable(): bool
+    {
+        // Only index non-deleted messages with content
+        return !$this->trashed() && !empty($this->content);
     }
 
     /*
@@ -78,9 +139,9 @@ class Message extends Model
         }
 
         if (isset($data['file_path'])) {
-            $updateData['file_path']  = $data['file_path'];
-            $updateData['file_name']  = $data['file_name']  ?? null;
-            $updateData['file_mime']  = $data['file_mime']  ?? null;
+            $updateData['file_path'] = $data['file_path'];
+            $updateData['file_name'] = $data['file_name'] ?? null;
+            $updateData['file_mime'] = $data['file_mime'] ?? null;
         }
 
         $message->update($updateData);
@@ -113,7 +174,7 @@ class Message extends Model
      */
     public static function toggleReaction(self $message, string $userId, string $emoji): self
     {
-        $reactions  = $message->reactions ?? [];
+        $reactions = $message->reactions ?? [];
         $emojiUsers = $reactions[$emoji] ?? [];
 
         if (in_array($userId, $emojiUsers)) {
@@ -122,13 +183,12 @@ class Message extends Model
 
             // Re-fetch to check if array is now empty
             $message->refresh();
-            $fresh     = $message;
-            $refreshed = $fresh->reactions ?? [];
+            $refreshed = $message->reactions ?? [];
 
             if (isset($refreshed[$emoji]) && empty($refreshed[$emoji])) {
                 // Remove the now-empty emoji key entirely
-                $fresh->unset("reactions.{$emoji}");
-                $fresh->refresh();
+                $message->unset("reactions.{$emoji}");
+                $message->refresh();
             }
         } else {
             // Add user to the emoji array
