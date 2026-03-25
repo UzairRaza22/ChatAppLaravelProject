@@ -54,17 +54,20 @@ class Kernel extends HttpKernel
         'log.activity' => \App\Http\Middleware\GlobalActivityLogger::class,
 
         // ── Message ───────────────────────────────────────────────────────
-        'message.channel.check'  => \App\Http\Middleware\Message\CheckChannelMessageMiddleware::class,
-        'message.search'         => \App\Http\Middleware\Message\SearchMessageMiddleware::class,
-        'message.exists'         => \App\Http\Middleware\Message\CheckMessageExistsMiddleware::class,
-        'message.readby'         => \App\Http\Middleware\Message\CheckReadByMiddleware::class,
-        'message.react'          => \App\Http\Middleware\Message\CheckMessageReactionMiddleware::class,
-        'message.sender'          => \App\Http\Middleware\Message\Checkmessagesendermiddleware::class,
-        'message.file.check'     => \App\Http\Middleware\Message\Checkmessagefilemiddleware::class,
-        'message.file.upload'    => \App\Http\Middleware\Message\Checkmessagefileuploadmiddleware::class,
-        'message.read'           => \App\Http\Middleware\Message\Checkreadmessagesmiddleware::class,
-        'message.notification'   => \App\Http\Middleware\Message\Checkmessagenotificationmiddleware::class,
-        'message.validation'     => \App\Http\Middleware\Message\CheckMessageValidationMiddleware::class,
+
+'message.channel.check'  => \App\Http\Middleware\Message\CheckChannelMessageMiddleware::class,
+'message.search'         => \App\Http\Middleware\Message\SearchMessageMiddleware::class,
+'message.exists'         => \App\Http\Middleware\Message\CheckMessageExistsMiddleware::class,
+'message.readby'         => \App\Http\Middleware\Message\CheckReadByMiddleware::class,
+'message.react'          => \App\Http\Middleware\Message\CheckMessageReactionMiddleware::class,
+
+'message.sender'         => \App\Http\Middleware\Message\CheckMessageSenderMiddleware::class,
+'message.file.check'     => \App\Http\Middleware\Message\CheckMessageFileMiddleware::class,
+'message.file.upload'    => \App\Http\Middleware\Message\CheckMessageFileUploadMiddleware::class,
+'message.read'           => \App\Http\Middleware\Message\CheckReadMessagesMiddleware::class,
+
+'message.notification'   => \App\Http\Middleware\Message\CheckMessageNotificationMiddleware::class,
+'message.validation'     => \App\Http\Middleware\Message\CheckMessageValidationMiddleware::class,
     
     ];
 }
