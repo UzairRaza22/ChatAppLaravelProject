@@ -29,16 +29,25 @@ class SendMessagePushNotificationMiddleware
                     ? substr($request->input('message'), 0, 100)
                     : 'Sent a file';
 
-                SendMessagePushNotificationJob::dispatch(
-                    (string) $request->input('receiver_id'),
-                    'New message',
-                    $preview,
-                    [
-                        'type' => 'message',
-                        'message_id' => (string)$message['id'],
-                        'sender_id' => (string)$user->_id
-                    ]
-                );
+                try {
+                    SendMessagePushNotificationJob::dispatch(
+                        (string) $request->input('receiver_id'),
+                        'New message',
+                        $preview,
+                        [
+                            'type'       => 'message',
+                            'message_id' => (string) $message['id'],
+                            'sender_id'  => (string) $user->_id,
+                        ]
+                    );
+                } catch (\Throwable $e) {
+                    // FCM / push notification failure must never break the API response.
+                    // Log for debugging but return the successful message response regardless.
+                    logger()->error('Push notification dispatch failed: ' . $e->getMessage(), [
+                        'receiver_id' => $request->input('receiver_id'),
+                        'message_id'  => $message['id'] ?? null,
+                    ]);
+                }
             }
         }
 
