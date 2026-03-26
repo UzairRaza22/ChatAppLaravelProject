@@ -21,7 +21,6 @@ Route::middleware(['check.token:login_token', 'check.active'])->group(function (
     Route::post('/create', [MessageController::class, 'create'])->middleware([
         'message.channel.check',    // validates channel + membership (direct & public/private)
         'message.file.upload',      // handles GridFS upload if file present
-        'message.notification',     // dispatches FCM push notification to receiver
     ]);
 
     // ── GET /messages/read ────────────────────────────────────────────────
