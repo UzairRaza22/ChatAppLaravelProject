@@ -12,42 +12,53 @@ class SendMessagePushNotificationMiddleware
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * Dispatches the push notification AFTER the response is sent to the client
+     * using afterResponse(). This guarantees that any Firebase/FCM misconfiguration
+     * (e.g. missing appId) can NEVER cause a 500 error on the message API response.
      */
     public function handle(Request $request, Closure $next): Response
     {
         $response = $next($request);
 
-        // Check if message was successfully created (status 201)
+        // Only fire for successful message creation (201) with a receiver
         if ($response->getStatusCode() === 201 && $request->input('receiver_id')) {
             $responseData = json_decode($response->getContent(), true);
-            $message = data_get($responseData, 'data.message');
-            $user = $request->user();
+            $message      = data_get($responseData, 'data.message');
+            $user         = $request->user();
 
             if ($message) {
                 $preview = $request->input('message')
                     ? substr($request->input('message'), 0, 100)
                     : 'Sent a file';
 
-                try {
-                    SendMessagePushNotificationJob::dispatch(
-                        (string) $request->input('receiver_id'),
-                        'New message',
-                        $preview,
-                        [
-                            'type'       => 'message',
-                            'message_id' => (string) $message['id'],
-                            'sender_id'  => (string) $user->_id,
-                        ]
-                    );
-                } catch (\Throwable $e) {
-                    // FCM / push notification failure must never break the API response.
-                    // Log for debugging but return the successful message response regardless.
-                    logger()->error('Push notification dispatch failed: ' . $e->getMessage(), [
-                        'receiver_id' => $request->input('receiver_id'),
-                        'message_id'  => $message['id'] ?? null,
-                    ]);
-                }
+                $receiverId = (string) $request->input('receiver_id');
+                $messageId  = (string) ($message['id'] ?? '');
+                $senderId   = (string) ($user->_id ?? '');
+
+                // afterResponse() fires AFTER the HTTP response is delivered to the client.
+                // This means even on SYNC queue driver, any Firebase/FCM exception
+                // cannot affect the API response — it is already sent.
+                app()->terminating(function () use ($receiverId, $preview, $messageId, $senderId) {
+                    try {
+                        SendMessagePushNotificationJob::dispatch(
+                            $receiverId,
+                            'New message',
+                            $preview,
+                            [
+                                'type'       => 'message',
+                                'message_id' => $messageId,
+                                'sender_id'  => $senderId,
+                            ]
+                        );
+                    } catch (\Throwable $e) {
+                        // FCM failure must never affect any API response.
+                        // Log for debugging only.
+                        logger()->error('Push notification dispatch failed: ' . $e->getMessage(), [
+                            'receiver_id' => $receiverId,
+                            'message_id'  => $messageId,
+                        ]);
+                    }
+                });
             }
         }
 
