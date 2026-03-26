@@ -2,7 +2,7 @@
 
 ## Base URL
 ```
-http://localhost:8000/api/admin
+http://178.104.58.236:81/api/admin
 ```
 
 ## Authentication

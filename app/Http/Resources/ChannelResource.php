@@ -8,6 +8,16 @@ class ChannelResource extends JsonResource
 {
     public function toArray($request)
     {
+        // Extract user IDs from members array
+        $memberIds = [];
+        if (isset($this->members) && is_array($this->members)) {
+            foreach ($this->members as $member) {
+                if (isset($member['user_id'])) {
+                    $memberIds[] = $member['user_id'];
+                }
+            }
+        }
+
         return [
             'id' => (string) ($this->id ?? $this->_id),
             '_id' => (string) $this->_id,
@@ -17,8 +27,7 @@ class ChannelResource extends JsonResource
             'type' => $this->type,
             'direct_id' => $this->direct_id ? (string) $this->direct_id : null,
             'created_id' => $this->created_id ? (string) $this->created_id : (string) $this->created_by,
-            // Transform members to an array of user IDs
-            'members' => $this->members ? collect($this->members)->pluck('user_id')->map(fn($id) => (string) $id)->toArray() : [],
+            'members' => $memberIds,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];
