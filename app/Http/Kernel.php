@@ -66,7 +66,7 @@ class Kernel extends HttpKernel
 'message.file.upload'    => \App\Http\Middleware\Message\CheckMessageFileUploadMiddleware::class,
 'message.read'           => \App\Http\Middleware\Message\CheckReadMessagesMiddleware::class,
 
-'message.notification'   => \App\Http\Middleware\Message\CheckMessageNotificationMiddleware::class,
+//'message.notification'   => \App\Http\Middleware\Message\CheckMessageNotificationMiddleware::class,
 'message.validation'     => \App\Http\Middleware\Message\CheckMessageValidationMiddleware::class,
     
     ];
