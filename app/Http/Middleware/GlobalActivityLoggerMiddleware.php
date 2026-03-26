@@ -34,16 +34,25 @@ class GlobalActivityLoggerMiddleware
         $routeName = $request->route() ? $request->route()->getName() : $request->path();
 
         // 3. Activity Create (Clean & Direct)
-        Activity::create([
-            'user_id'         => Auth::id() ?? 'Guest',
-            'ip_address'      => $request->ip(),
-            'url'             => $request->fullUrl(),
-            'method'          => $request->method(),
-            'action'          => $routeName,
-            'request_payload' => $payload,
-            'status_code'     => $response->getStatusCode(),
-            'user_agent'      => $request->userAgent(),
-            'created_at'      => now(),
-        ]);
+        try {
+            Activity::create([
+                'user_id'         => Auth::id() ?? 'Guest',
+                'ip_address'      => $request->ip(),
+                'url'             => $request->fullUrl(),
+                'method'          => $request->method(),
+                'action'          => $routeName,
+                'request_payload' => $payload,
+                'status_code'     => $response->getStatusCode(),
+                'user_agent'      => $request->userAgent(),
+                'created_at'      => now(),
+            ]);
+        } catch (\Throwable $exception) {
+            // Prevent logging infrastructure issues (e.g., MongoDB not primary, connectivity) from breaking the user flow
+            logger()->warning('Activity logging failed: '.$exception->getMessage(), [
+                'exception' => $exception,
+                'url' => $request->fullUrl(),
+                'method' => $request->method(),
+            ]);
+        }
     }
 }

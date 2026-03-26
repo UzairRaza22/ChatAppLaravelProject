@@ -72,4 +72,13 @@ Route::middleware(['check.token:login_token', 'check.active'])->group(function (
         'message.channel.check',    // resolves channel + validates membership
         'message.react',            // validates emoji, resolves message from message_ids[0]
     ]);
+
+    // ── GET /messages/search ───────────────────────────────────────────────
+    // Search messages in database with filters
+    // Query params: query (required), channel_id (optional), page (optional), per_page (optional)
+    Route::get('/search', [MessageController::class, 'search'])->middleware([
+        'check.token:login_token',    // requires authentication
+        'check.active',            // requires active user
+        'message.search',            // validates search params, performs search
+    ]);
 });

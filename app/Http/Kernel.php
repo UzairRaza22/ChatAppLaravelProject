@@ -51,8 +51,23 @@ class Kernel extends HttpKernel
         'channel.create' => \App\Http\Middleware\Channel\ChannelCreateMiddleware::class,
         'channel.add.member' => \App\Http\Middleware\Channel\ChannelAddMemberMiddleware::class,
         'channel.remove.member' => \App\Http\Middleware\Channel\ChannelRemoveMemberMiddleware::class,
-    
         'log.activity' => \App\Http\Middleware\GlobalActivityLogger::class,
+
+        // ── Message ───────────────────────────────────────────────────────
+
+'message.channel.check'  => \App\Http\Middleware\Message\CheckChannelMessageMiddleware::class,
+'message.search'         => \App\Http\Middleware\Message\SearchMessageMiddleware::class,
+'message.exists'         => \App\Http\Middleware\Message\CheckMessageExistsMiddleware::class,
+'message.readby'         => \App\Http\Middleware\Message\CheckReadByMiddleware::class,
+'message.react'          => \App\Http\Middleware\Message\CheckMessageReactionMiddleware::class,
+
+'message.sender'         => \App\Http\Middleware\Message\CheckMessageSenderMiddleware::class,
+'message.file.check'     => \App\Http\Middleware\Message\CheckMessageFileMiddleware::class,
+'message.file.upload'    => \App\Http\Middleware\Message\CheckMessageFileUploadMiddleware::class,
+'message.read'           => \App\Http\Middleware\Message\CheckReadMessagesMiddleware::class,
+
+'message.notification'   => \App\Http\Middleware\Message\CheckMessageNotificationMiddleware::class,
+'message.validation'     => \App\Http\Middleware\Message\CheckMessageValidationMiddleware::class,
     
-        ];
+    ];
 }
