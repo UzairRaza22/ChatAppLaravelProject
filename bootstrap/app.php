@@ -59,7 +59,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
 
         then: function () {
-            Route::middleware(['api', 'throttle:120,1'])
+            Route::middleware(['api', 'throttle:3,1'])
                 ->prefix('api')
                 ->name('api.')
                 ->group(function () {
