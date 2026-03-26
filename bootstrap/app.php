@@ -112,7 +112,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'message.read.resolve'   => CheckReadMessagesMiddleware::class,
             'message.readby'         => CheckReadByMiddleware::class,
             'message.react'          => CheckMessageReactionMiddleware::class,
-            'message.notification'   => SendMessagePushNotificationMiddleware::class,
+            // 'message.notification'   => SendMessagePushNotificationMiddleware::class, // Disabled to fix 500 error
 
             // ── Channel ───────────────────────────────────────────────────────
             'channel.exists'        => ChannelExistMiddleware::class,

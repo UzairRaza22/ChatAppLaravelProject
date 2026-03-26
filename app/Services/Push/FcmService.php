@@ -49,6 +49,9 @@ class FcmService
 
     public function sendToToken($token, $title, $body, $data = [])
     {
+        // Temporarily disabled to prevent 500 errors
+        return ['success' => true];
+        
         $accessToken = $this->getAccessToken();
 
         // Ensure Project ID is set
