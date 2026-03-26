@@ -15,10 +15,10 @@ Route::macro('update', function ($uri, $action) {
 
 Route::middleware(['check.token:login_token', 'check.active'])->group(function () {
 
-    // ── POST /messages/send ───────────────────────────────────────────────
+    // ── POST /messages/create ─────────────────────────────────────────────
     // Unified send for both directchannel and channelmessage
     // Payload: channel_id, message, file (optional)
-    Route::post('/send', [MessageController::class, 'create'])->middleware([
+    Route::post('/create', [MessageController::class, 'create'])->middleware([
         'message.channel.check',    // validates channel + membership (direct & public/private)
         'message.file.upload',      // handles GridFS upload if file present
         'message.notification',     // dispatches FCM push notification to receiver
@@ -35,7 +35,7 @@ Route::middleware(['check.token:login_token', 'check.active'])->group(function (
     // ── PATCH /messages/update ────────────────────────────────────────────
     // Update a message (sender only)
     // Payload: channel_id, message_id, message, file (optional)
-Route::match(['PATCH', 'POST'], '/update', [MessageController::class, 'update'])->middleware([
+    Route::match(['PATCH', 'POST'], '/update', [MessageController::class, 'update'])->middleware([
         'message.channel.check',
         'message.exists',           // resolves message by message_id + channel_id
         'message.sender',           // checks auth user is the sender
