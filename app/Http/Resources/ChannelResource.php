@@ -17,8 +17,8 @@ class ChannelResource extends JsonResource
             'type' => $this->type,
             'direct_id' => $this->direct_id ? (string) $this->direct_id : null,
             'created_id' => $this->created_id ? (string) $this->created_id : (string) $this->created_by,
-            'members_count' => is_array($this->members) ? count($this->members) : 0,
-            'members'      => $this->members ?? [],
+            // Transform members to an array of user IDs
+            'members' => $this->members ? collect($this->members)->pluck('user_id')->map(fn($id) => (string) $id)->toArray() : [],
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];
