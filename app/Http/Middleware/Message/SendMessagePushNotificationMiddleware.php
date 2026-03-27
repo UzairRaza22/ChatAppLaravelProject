@@ -18,6 +18,9 @@ class SendMessagePushNotificationMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // Completely disabled to prevent 500 errors
+        return $next($request);
+        
         $response = $next($request);
 
         // Only fire for successful message creation (201) with a receiver
