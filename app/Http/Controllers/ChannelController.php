@@ -27,7 +27,7 @@ class ChannelController extends Controller
             'created_id'   => (string) data_get($user, '_id'),
 
             'members' => [
-                [
+                (object) [
                     'user_id' => (string) data_get($user, '_id'),
                     'role'    => 'creator',
                 ]

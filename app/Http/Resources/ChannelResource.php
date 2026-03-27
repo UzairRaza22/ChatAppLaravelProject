@@ -10,10 +10,17 @@ class ChannelResource extends JsonResource
     {
         $members = collect($this->members ?? [])
             ->map(function ($member) {
-                return [
-                    'user_id' => (string) ($member['user_id'] ?? null),
-                    'role'    => $member['role'] ?? 'member',
-                ];
+                if (is_string($member)) {
+                    return [
+                        'user_id' => $member,
+                        'role'    => 'member',
+                    ];
+                } elseif (is_array($member)) {
+                    return [
+                        'user_id' => $member['user_id'] ?? null,
+                        'role'    => $member['role'] ?? 'member',
+                    ];
+                }
             })
             ->values()
             ->toArray();
@@ -28,9 +35,8 @@ class ChannelResource extends JsonResource
             'direct_id'     => $this->direct_id ? (string) $this->direct_id : null,
             'created_id'    => (string) ($this->created_id ?? $this->created_by),
 
-            'members_count' => count($members),
             'members'       => $members,
-
+            'members_count' => count($members),
             'created_at'    => $this->created_at ? $this->created_at->toDateTimeString() : null,
             'updated_at'    => $this->updated_at ? $this->updated_at->toDateTimeString() : null,
         ];
