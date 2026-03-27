@@ -8,17 +8,15 @@ class ChannelResource extends JsonResource
 {
     public function toArray($request)
     {
-        // Extract user IDs from members array
-        $memberIds = [];
-        if (isset($this->members) && is_array($this->members)) {
-            foreach ($this->members as $member) {
-                if (is_array($member) && isset($member['user_id'])) {
-                    $memberIds[] = $member['user_id'];
-                } elseif (is_string($member)) {
-                    $memberIds[] = $member;
-                }
-            }
-        }
+        $members = collect($this->members ?? [])
+            ->map(function ($member) {
+                return [
+                    'user_id' => (string) $member['user_id'],
+                    'role' => $member['role'] ?? 'member'
+                ];
+            })
+            ->values()
+            ->toArray();
 
         return [
             'id' => (string) ($this->id ?? $this->_id),
@@ -28,10 +26,13 @@ class ChannelResource extends JsonResource
             'team_id' => $this->team_id ? (string) $this->team_id : null,
             'type' => $this->type,
             'direct_id' => $this->direct_id ? (string) $this->direct_id : null,
-            'created_id' => $this->created_id ? (string) $this->created_id : (string) $this->created_by,
-            'members' => $memberIds,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
+            'created_id' => (string) ($this->created_id ?? $this->created_by),
+
+            'members_count' => count($members),
+            'members' => $members,
+
+            'created_at' => $this->created_at ? $this->created_at->toDateTimeString() : null,
+            'updated_at' => $this->updated_at ? $this->updated_at->toDateTimeString() : null,
         ];
     }
 }
