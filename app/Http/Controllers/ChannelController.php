@@ -14,7 +14,7 @@ use App\Models\Channel;
 class ChannelController extends Controller
 {
 
-public function create(Request $request)
+public function create(CreateChannelRequest $request)
 {
     $user = $request->user();
 
@@ -60,7 +60,7 @@ public function create(Request $request)
 
         return response()->success(null, 'Channel deleted successfully!');
     }
-    public function addMember(Request $request)
+    public function addMember(AddMemberRequest $request)
     {
     $channel = data_get($request, 'channel');
     $memberIds = data_get($request, 'member_ids', []);
@@ -76,7 +76,7 @@ public function create(Request $request)
 
     return response()->success(new ChannelResource($channel), 'Members added successfully');
     }
-    public function removeMember(Request $request)
+    public function removeMember(RemoveMemberRequest $request)
     {
     $channel = data_get($request, 'channel');
     $memberIds = data_get($request, 'member_ids', []);
