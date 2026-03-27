@@ -12,8 +12,10 @@ class ChannelResource extends JsonResource
         $memberIds = [];
         if (isset($this->members) && is_array($this->members)) {
             foreach ($this->members as $member) {
-                if (isset($member['user_id'])) {
+                if (is_array($member) && isset($member['user_id'])) {
                     $memberIds[] = $member['user_id'];
+                } elseif (is_string($member)) {
+                    $memberIds[] = $member;
                 }
             }
         }
