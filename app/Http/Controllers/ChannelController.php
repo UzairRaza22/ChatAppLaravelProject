@@ -41,7 +41,12 @@ class ChannelController extends Controller
     public function read(ReadChannelRequest $request)
     {
         $channel = data_get($request->attributes->all(), 'channel');
-        return response()->success(new ChannelResource($channel), 'Channel retrieved successfully');
+        if ($channel) {
+            return response()->success(new ChannelResource($channel), 'Channel retrieved successfully');
+        }
+
+        $channels = data_get($request->attributes->all(), 'channels', collect());
+        return response()->success(ChannelResource::collection($channels), 'Channels retrieved successfully');
     }
 
     // 3. List Channels by User

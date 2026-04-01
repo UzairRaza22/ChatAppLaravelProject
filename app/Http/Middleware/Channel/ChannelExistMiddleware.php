@@ -27,6 +27,16 @@ class ChannelExistMiddleware
             return $next($request);
         }
 
+        if ($userId === '') {
+            $user = $request->user() ?? $request->input('user') ?? $request->input('verified_user');
+            $userId = (string) (data_get($user, '_id') ?? data_get($user, 'id'));
+
+            if ($userId === '') {
+                $tokenRecord = $request->input('token_record');
+                $userId = (string) data_get($tokenRecord, 'user_id');
+            }
+        }
+
         if ($userId !== '') {
             $channels = Channel::where('members.user_id', $userId)->orWhere('created_id', $userId)->get();
             data_set($request, 'channels', $channels);

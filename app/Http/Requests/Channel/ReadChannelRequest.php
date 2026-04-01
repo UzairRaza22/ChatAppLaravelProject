@@ -14,7 +14,7 @@ class ReadChannelRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'channel_id' => 'required',
+            'channel_id' => 'sometimes',
         ];
     }
 }
