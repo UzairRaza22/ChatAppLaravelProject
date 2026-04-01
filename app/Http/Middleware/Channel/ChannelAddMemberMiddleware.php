@@ -22,15 +22,16 @@ class ChannelAddMemberMiddleware
         $authUser = $request->user() ?? $request->input('verified_user');
         $authUserId = (string) (data_get($authUser, '_id') ?? data_get($authUser, 'id') ?? auth()->id());
         $isDirect = (string) data_get($channel, 'type') === 'direct';
+        $isPublic = (string) data_get($channel, 'type') === 'public';
+        $isSelfJoin = (string) $userId === $authUserId;
 
         if ($isDirect) {
             return response()->error('Cannot add members to a direct channel');
         }
 
-        $isCreator = collect(data_get($channel, 'members', []))
-            ->contains(fn ($member) => (string) data_get($member, 'user_id') === $authUserId && data_get($member, 'role') === 'creator');
+        $isCreator = (string) data_get($channel, 'created_id') === $authUserId;
 
-        if ((string) data_get($channel, 'type') === 'public') {
+        if ($isPublic) {
             if ($userId !== $authUserId && !$isCreator) {
                 return response()->forbidden('Only creator can add other users to a public channel');
             }
@@ -61,8 +62,10 @@ class ChannelAddMemberMiddleware
             ->values()
             ->all();
 
-        if (!in_array((string) $userId, $workspaceMemberIds, true)) {
-            return response()->forbidden('User must be part of workspace to be added');
+        if (!$isPublic || !$isSelfJoin) {
+            if (!in_array((string) $userId, $workspaceMemberIds, true)) {
+                return response()->forbidden('User must be part of workspace to be added');
+            }
         }
 
         $team = Team::find(data_get($channel, 'team_id'));
@@ -84,17 +87,29 @@ class ChannelAddMemberMiddleware
             return response()->forbidden('User must be part of the team to be added');
         }
 
-        $alreadyMember = collect(data_get($channel, 'members', []))->contains(
-            fn ($member) => (string) data_get($member, 'user_id') === (string) $userId
-        );
+        $channelMemberIds = collect(data_get($channel, 'members', []))
+            ->map(function ($member) {
+                if (is_array($member)) {
+                    return (string) ($member['user_id'] ?? $member['_id'] ?? $member['id'] ?? '');
+                }
+                if (is_object($member)) {
+                    return (string) (data_get($member, 'user_id') ?? data_get($member, '_id') ?? data_get($member, 'id'));
+                }
+
+                return (string) $member;
+            })
+            ->filter()
+            ->values()
+            ->all();
+
+        $alreadyMember = in_array((string) $userId, $channelMemberIds, true);
 
         if ($alreadyMember) {
             return response()->error('User is already a member of the channel');
         }
 
-        $members = data_get($channel, 'members', []);
-        $members[] = ['user_id' => $userId, 'role' => 'member'];
-        $request->merge(['members' => collect($members)->values()->all()]);
+        $channelMemberIds[] = (string) $userId;
+        $request->merge(['members' => collect($channelMemberIds)->unique()->values()->all()]);
 
         return $next($request);
     }

@@ -38,7 +38,7 @@ class ChannelExistMiddleware
         }
 
         if ($userId !== '') {
-            $channels = Channel::where('members.user_id', $userId)->orWhere('created_id', $userId)->get();
+            $channels = Channel::where('members', $userId)->orWhere('created_id', $userId)->get();
             data_set($request, 'channels', $channels);
             $request->attributes->set('channels', $channels);
 
