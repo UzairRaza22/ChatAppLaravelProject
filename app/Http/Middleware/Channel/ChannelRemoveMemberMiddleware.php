@@ -14,17 +14,33 @@ class ChannelRemoveMemberMiddleware
         if (!$channel) {
             return response()->notFound('Channel not found.');
         }
-        $userId = (string) $request->input('user_id');
+        $userIds = $request->input('user_ids');
+        $userIds = is_array($userIds) && count($userIds) ? $userIds : [(string) $request->input('user_id')];
+        $userIds = collect($userIds)->map(fn ($id) => (string) $id)->filter()->values()->all();
+        $request->merge(['user_ids' => $userIds]);
+
+        $userId = (string) data_get($userIds, 0);
         $isDirect = (string) data_get($channel, 'type') === 'direct';
         
         if ($isDirect) {
             return response()->error('Cannot remove members from a direct channel');
         }
 
-        $members = collect(data_get($channel, 'members', []));
-        $isMember = $members->contains(
-            fn ($member) => (string) data_get($member, 'user_id') === (string) $userId
-        );
+        $members = collect(data_get($channel, 'members', []))
+            ->map(function ($member) {
+                if (is_array($member)) {
+                    return (string) ($member['user_id'] ?? $member['_id'] ?? $member['id'] ?? '');
+                }
+                if (is_object($member)) {
+                    return (string) (data_get($member, 'user_id') ?? data_get($member, '_id') ?? data_get($member, 'id'));
+                }
+
+                return (string) $member;
+            })
+            ->filter()
+            ->values();
+
+        $isMember = collect($userIds)->contains(fn ($id) => $members->contains((string) $id));
 
         if (!$isMember) {
             return response()->forbidden('User is not a member of this channel');
@@ -32,7 +48,7 @@ class ChannelRemoveMemberMiddleware
 
         $request->merge([
             'members' => $members
-                ->reject(fn ($member) => (string) data_get($member, 'user_id') === (string) $userId)
+                ->reject(fn ($member) => in_array((string) $member, $userIds, true))
                 ->values()
                 ->all()
         ]);

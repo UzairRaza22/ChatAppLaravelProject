@@ -22,6 +22,7 @@ class User extends Authenticatable // Hum Authenticatable use karenge taake Auth
     protected $attributes = [
         'is_active' => false,
         'workspace_ids' => [],
+        'channel_ids' => [],
         'access_token' => null,
     ];
 
@@ -31,6 +32,7 @@ class User extends Authenticatable // Hum Authenticatable use karenge taake Auth
         'password',
         'is_active',
         'workspace_ids',
+        'channel_ids',
         'access_token', // Aapka custom token field
         'google_id', 
         'avatar',   
@@ -76,6 +78,11 @@ class User extends Authenticatable // Hum Authenticatable use karenge taake Auth
     public function teams()
     {
         return $this->belongsToMany(Team::class, null, 'user_ids', 'team_ids');
+    }
+
+    public function channels()
+    {
+        return $this->belongsToMany(Channel::class, null, 'members', 'channel_ids');
     }
 
     public function tasks()

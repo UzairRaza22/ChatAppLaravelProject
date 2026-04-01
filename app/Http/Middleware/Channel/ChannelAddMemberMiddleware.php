@@ -18,12 +18,17 @@ class ChannelAddMemberMiddleware
             return response()->notFound('Channel not found.');
         }
 
-        $userId = (string) $request->input('user_id');
+        $userIds = $request->input('user_ids');
+        $userIds = is_array($userIds) && count($userIds) ? $userIds : [(string) $request->input('user_id')];
+        $userIds = collect($userIds)->map(fn ($id) => (string) $id)->filter()->values()->all();
+        $request->merge(['user_ids' => $userIds]);
+
+        $userId = (string) data_get($userIds, 0);
         $authUser = $request->user() ?? $request->input('verified_user');
         $authUserId = (string) (data_get($authUser, '_id') ?? data_get($authUser, 'id') ?? auth()->id());
         $isDirect = (string) data_get($channel, 'type') === 'direct';
         $isPublic = (string) data_get($channel, 'type') === 'public';
-        $isSelfJoin = (string) $userId === $authUserId;
+        $isSelfJoin = collect($userIds)->every(fn ($id) => (string) $id === $authUserId);
 
         if ($isDirect) {
             return response()->error('Cannot add members to a direct channel');
@@ -32,7 +37,7 @@ class ChannelAddMemberMiddleware
         $isCreator = (string) data_get($channel, 'created_id') === $authUserId;
 
         if ($isPublic) {
-            if ($userId !== $authUserId && !$isCreator) {
+            if (!$isSelfJoin && !$isCreator) {
                 return response()->forbidden('Only creator can add other users to a public channel');
             }
         } elseif (!$isCreator) {
@@ -63,7 +68,11 @@ class ChannelAddMemberMiddleware
             ->all();
 
         if (!$isPublic || !$isSelfJoin) {
-            if (!in_array((string) $userId, $workspaceMemberIds, true)) {
+            $missingWorkspace = collect($userIds)
+                ->reject(fn ($id) => in_array((string) $id, $workspaceMemberIds, true))
+                ->values()
+                ->all();
+            if (count($missingWorkspace)) {
                 return response()->forbidden('User must be part of workspace to be added');
             }
         }
@@ -83,7 +92,11 @@ class ChannelAddMemberMiddleware
             ->values()
             ->all();
 
-        if (!in_array((string) $userId, $teamMemberIds, true)) {
+        $missingTeam = collect($userIds)
+            ->reject(fn ($id) => in_array((string) $id, $teamMemberIds, true))
+            ->values()
+            ->all();
+        if (count($missingTeam)) {
             return response()->forbidden('User must be part of the team to be added');
         }
 
@@ -102,13 +115,13 @@ class ChannelAddMemberMiddleware
             ->values()
             ->all();
 
-        $alreadyMember = in_array((string) $userId, $channelMemberIds, true);
+        $alreadyMember = collect($userIds)->contains(fn ($id) => in_array((string) $id, $channelMemberIds, true));
 
         if ($alreadyMember) {
             return response()->error('User is already a member of the channel');
         }
 
-        $channelMemberIds[] = (string) $userId;
+        $channelMemberIds = array_merge($channelMemberIds, $userIds);
         $request->merge(['members' => collect($channelMemberIds)->unique()->values()->all()]);
 
         return $next($request);

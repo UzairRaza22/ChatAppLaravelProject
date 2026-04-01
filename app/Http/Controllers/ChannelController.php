@@ -27,10 +27,7 @@ class ChannelController extends Controller
             'created_id'   => (string) data_get($user, '_id'),
 
             'members' => [
-                (object) [
-                    'user_id' => (string) data_get($user, '_id'),
-                    'role'    => 'creator',
-                ]
+                (string) data_get($user, '_id')
             ]
         ]);
 
@@ -78,16 +75,8 @@ class ChannelController extends Controller
     public function addMember(AddMemberRequest $request)
     {
         $channel = data_get($request, 'channel');
-        $memberIds = data_get($request, 'member_ids', []);
-
-        $newMembers = collect($memberIds)->map(function ($id) {
-            return [
-                'user_id' => (string) $id,
-                'role'    => 'member'
-            ];
-        })->toArray();
-
-        $channel->push('members', $newMembers, true);
+        $userIds = data_get($request, 'user_ids', []);
+        $channel->members()->syncWithoutDetaching($userIds);
 
         return response()->success(new ChannelResource($channel), 'Members added successfully');
     }
@@ -96,17 +85,8 @@ class ChannelController extends Controller
     public function removeMember(RemoveMemberRequest $request)
     {
         $channel = data_get($request, 'channel');
-        $memberIds = data_get($request, 'member_ids', []);
-
-        $remainingMembers = collect($channel->members)
-            ->reject(function ($member) use ($memberIds) {
-                return in_array($member['user_id'], $memberIds);
-            })
-            ->values()
-            ->toArray();
-
-        $channel->members = $remainingMembers;
-        $channel->save();
+        $userIds = data_get($request, 'user_ids', []);
+        $channel->members()->detach($userIds);
 
         return response()->success(new ChannelResource($channel), 'Members removed successfully');
     }

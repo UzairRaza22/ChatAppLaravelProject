@@ -15,10 +15,8 @@ class RemoveMemberRequest extends FormRequest
     {
         return [
             'channel_id' => 'required',
-            'user_id' => 'required|exists:users,_id',
-            'members' => 'sometimes|array',
-            'members.*.user_id' => 'sometimes|string',
-            'members.*.role' => 'sometimes|string',
+            'user_ids' => 'required|array',
+            'user_ids.*' => 'required|exists:users,_id',
         ];
     }
 }
