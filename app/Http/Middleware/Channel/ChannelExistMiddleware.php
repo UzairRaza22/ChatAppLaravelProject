@@ -14,6 +14,7 @@ class ChannelExistMiddleware
         $channelId = (string) ($request->route('id') ?? $request->input('channel_id') ?? $request->query('channel_id'));
         $userId = (string) ($request->input('user_id') ?? $request->query('user_id'));
 
+        // If specific channel_id is provided, fetch that channel
         if ($channelId !== '') {
             $channel = Channel::where('_id', $channelId)->first();
 
@@ -27,6 +28,7 @@ class ChannelExistMiddleware
             return $next($request);
         }
 
+        // Get user ID from token if not provided
         if ($userId === '') {
             $user = $request->user() ?? $request->input('user') ?? $request->input('verified_user');
             $userId = (string) (data_get($user, '_id') ?? data_get($user, 'id'));
@@ -38,54 +40,14 @@ class ChannelExistMiddleware
         }
 
         if ($userId !== '') {
-            // Direct database query approach - no complex filtering
-            $channels = collect();
-            
-            // Get channels where user is creator
-            $creatorChannels = Channel::where('created_id', $userId)->get();
-            $channels = $channels->merge($creatorChannels);
-            
-            // Get ALL channels and check each one manually for membership
-            $allChannels = Channel::all();
-            
-            foreach ($allChannels as $channel) {
-                // Skip if already included as creator
-                if ((string) $channel->created_id === $userId) {
-                    continue;
-                }
-                
-                // Check if user is in members array
-                $members = $channel->members;
-                $isUserMember = false;
-                
-                if (is_array($members)) {
-                    foreach ($members as $member) {
-                        $memberUserId = null;
-                        
-                        // Extract user_id from different structures
-                        if (is_array($member) && isset($member['user_id'])) {
-                            $memberUserId = (string) $member['user_id'];
-                        } elseif (is_object($member) && isset($member->user_id)) {
-                            $memberUserId = (string) $member->user_id;
-                        } elseif (is_string($member)) {
-                            $memberUserId = (string) $member;
-                        }
-                        
-                        // Compare user IDs
-                        if ($memberUserId === $userId) {
-                            $isUserMember = true;
-                            break;
-                        }
-                    }
-                }
-                
-                if ($isUserMember) {
-                    $channels->push($channel);
-                }
-            }
-            
-            // Remove duplicates and convert to values
-            $channels = $channels->unique('_id')->values();
+            // Use MongoDB query to find channels where user is creator OR member
+            $channels = Channel::where(function ($query) use ($userId) {
+                // User is creator
+                $query->where('created_id', $userId)
+                      // OR user is in members array (handle different member structures)
+                      ->orWhere('members.user_id', $userId)  // For object structure: {"user_id": "...", "role": "..."}
+                      ->orWhere('members', $userId);         // For simple string structure
+            })->get();
             
             data_set($request, 'channels', $channels);
             $request->attributes->set('channels', $channels);
