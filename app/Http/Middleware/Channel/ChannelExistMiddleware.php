@@ -38,7 +38,12 @@ class ChannelExistMiddleware
         }
 
         if ($userId !== '') {
-            $channels = Channel::where('members', $userId)->orWhere('created_id', $userId)->get();
+            // Handle both member structures: simple array of IDs and array of objects with user_id
+            $channels = Channel::where(function ($query) use ($userId) {
+                $query->whereIn('members', [$userId])  // Simple array: ['user1', 'user2']
+                      ->orWhere('members.user_id', $userId);  // Object array: [{'user_id': 'user1'}, {'user_id': 'user2'}]
+            })->orWhere('created_id', $userId)->get();
+            
             data_set($request, 'channels', $channels);
             $request->attributes->set('channels', $channels);
 
