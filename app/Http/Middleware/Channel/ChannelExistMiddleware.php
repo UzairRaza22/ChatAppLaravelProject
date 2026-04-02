@@ -38,14 +38,40 @@ class ChannelExistMiddleware
         }
 
         if ($userId !== '') {
-            // Query channels where user is creator OR member
-            $channels = Channel::where(function ($query) use ($userId) {
-                $query->where('created_id', $userId)  // User is creator
-                      ->orWhere('members', $userId)  // User is in members array (simple string)
-                      ->orWhere('members.user_id', $userId)  // User is in members array (object with user_id)
-                      ->orWhere('members._id', $userId)  // User is in members array (object with _id)
-                      ->orWhere('members.id', $userId);  // User is in members array (object with id)
-            })->get();
+            // Get all channels and filter for this specific member structure
+            $allChannels = Channel::all();
+            
+            $userChannels = $allChannels->filter(function ($channel) use ($userId) {
+                // Check if user is creator
+                if ((string) $channel->created_id === $userId) {
+                    return true;
+                }
+                
+                // Check if user is member - handle the specific structure: [{"user_id": "...", "role": "..."}]
+                $members = $channel->members ?? [];
+                
+                foreach ($members as $member) {
+                    if (is_array($member) && isset($member['user_id'])) {
+                        if ((string) $member['user_id'] === $userId) {
+                            return true;
+                        }
+                    } elseif (is_object($member) && isset($member->user_id)) {
+                        if ((string) $member->user_id === $userId) {
+                            return true;
+                        }
+                    } elseif (is_string($member)) {
+                        // Fallback for simple string members
+                        if ((string) $member === $userId) {
+                            return true;
+                        }
+                    }
+                }
+                
+                return false;
+            });
+            
+            // Convert filtered collection back to a regular collection
+            $channels = $userChannels->values();
             
             data_set($request, 'channels', $channels);
             $request->attributes->set('channels', $channels);

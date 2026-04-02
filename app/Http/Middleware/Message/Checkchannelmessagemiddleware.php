@@ -43,15 +43,16 @@ class CheckChannelMessageMiddleware
         $isCreator = (string) $channel->created_id === $userId;
         
         $senderIsMember = $isCreator || $members->contains(function ($member) use ($userId) {
-            // Handle different member structures
+            // Handle the specific member structure: {"user_id": "...", "role": "..."}
+            if (is_array($member) && isset($member['user_id'])) {
+                return (string) $member['user_id'] === $userId;
+            }
+            if (is_object($member) && isset($member->user_id)) {
+                return (string) $member->user_id === $userId;
+            }
+            // Fallback for simple string members
             if (is_string($member)) {
                 return (string) $member === $userId;
-            }
-            if (is_array($member)) {
-                return (string) ($member['user_id'] ?? $member['_id'] ?? $member['id'] ?? '') === $userId;
-            }
-            if (is_object($member)) {
-                return (string) (data_get($member, 'user_id') ?? data_get($member, '_id') ?? data_get($member, 'id')) === $userId;
             }
             return false;
         });
@@ -64,15 +65,16 @@ class CheckChannelMessageMiddleware
         $isDirect = (string) $channel->type === 'direct';
 
         $otherMemberPresent = !$isDirect || $members->contains(function ($member) use ($userId) {
-            // Handle different member structures for other member check
+            // Handle the specific member structure for other member check
+            if (is_array($member) && isset($member['user_id'])) {
+                return (string) $member['user_id'] !== $userId;
+            }
+            if (is_object($member) && isset($member->user_id)) {
+                return (string) $member->user_id !== $userId;
+            }
+            // Fallback for simple string members
             if (is_string($member)) {
                 return (string) $member !== $userId;
-            }
-            if (is_array($member)) {
-                return (string) ($member['user_id'] ?? $member['_id'] ?? $member['id'] ?? '') !== $userId;
-            }
-            if (is_object($member)) {
-                return (string) (data_get($member, 'user_id') ?? data_get($member, '_id') ?? data_get($member, 'id')) !== $userId;
             }
             return false;
         });

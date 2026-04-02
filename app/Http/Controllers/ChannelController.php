@@ -27,7 +27,10 @@ class ChannelController extends Controller
             'created_id'   => (string) data_get($user, '_id'),
 
             'members' => [
-                (string) data_get($user, '_id')
+                [
+                    'user_id' => (string) data_get($user, '_id'),
+                    'role' => 'admin' // Creator gets admin role
+                ]
             ]
         ]);
 
@@ -75,10 +78,21 @@ class ChannelController extends Controller
     public function addMember(AddMemberRequest $request)
     {
         $channel = data_get($request->attributes->all(), 'channel');
-        $members = data_get($request, 'members', []);
+        $userIds = data_get($request, 'user_ids', []);
         
-        // Update the members array directly
-        $channel->update(['members' => $members]);
+        // Get current members (with correct structure)
+        $currentMembers = $channel->members ?? [];
+        
+        // Add new members with the correct structure: {"user_id": "...", "role": "member"}
+        foreach ($userIds as $userId) {
+            $currentMembers[] = [
+                'user_id' => (string) $userId,
+                'role' => 'member' // Default role for new members
+            ];
+        }
+        
+        // Update the members array with the correct structure
+        $channel->update(['members' => $currentMembers]);
 
         return response()->success(new ChannelResource($channel->fresh()), 'Members added successfully');
     }
@@ -87,10 +101,25 @@ class ChannelController extends Controller
     public function removeMember(RemoveMemberRequest $request)
     {
         $channel = data_get($request->attributes->all(), 'channel');
-        $members = data_get($request, 'members', []);
+        $userIds = data_get($request, 'user_ids', []);
         
-        // Update the members array with the processed members from middleware
-        $channel->update(['members' => $members]);
+        // Get current members and remove the specified user IDs
+        $currentMembers = collect($channel->members ?? []);
+        $updatedMembers = $currentMembers->reject(function ($member) use ($userIds) {
+            if (is_array($member) && isset($member['user_id'])) {
+                return in_array((string) $member['user_id'], array_map('strval', $userIds));
+            }
+            if (is_object($member) && isset($member->user_id)) {
+                return in_array((string) $member->user_id, array_map('strval', $userIds));
+            }
+            // Fallback for simple string members
+            if (is_string($member)) {
+                return in_array((string) $member, array_map('strval', $userIds));
+            }
+            return false;
+        })->values()->all();
+        
+        $channel->update(['members' => $updatedMembers]);
 
         return response()->success(new ChannelResource($channel->fresh()), 'Members removed successfully');
     }
