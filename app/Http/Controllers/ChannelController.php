@@ -74,20 +74,24 @@ class ChannelController extends Controller
     // 6. Add Members
     public function addMember(AddMemberRequest $request)
     {
-        $channel = data_get($request, 'channel');
-        $userIds = data_get($request, 'user_ids', []);
-        $channel->members()->syncWithoutDetaching($userIds);
+        $channel = data_get($request->attributes->all(), 'channel');
+        $members = data_get($request, 'members', []);
+        
+        // Update the members array directly
+        $channel->update(['members' => $members]);
 
-        return response()->success(new ChannelResource($channel), 'Members added successfully');
+        return response()->success(new ChannelResource($channel->fresh()), 'Members added successfully');
     }
 
     // 7. Remove Members
     public function removeMember(RemoveMemberRequest $request)
     {
-        $channel = data_get($request, 'channel');
-        $userIds = data_get($request, 'user_ids', []);
-        $channel->members()->detach($userIds);
+        $channel = data_get($request->attributes->all(), 'channel');
+        $members = data_get($request, 'members', []);
+        
+        // Update the members array with the processed members from middleware
+        $channel->update(['members' => $members]);
 
-        return response()->success(new ChannelResource($channel), 'Members removed successfully');
+        return response()->success(new ChannelResource($channel->fresh()), 'Members removed successfully');
     }
 }
