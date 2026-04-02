@@ -38,13 +38,14 @@ class ChannelExistMiddleware
         }
 
         if ($userId !== '') {
-            // Handle multiple member structures in MongoDB
+            // Query channels where user is creator OR member
             $channels = Channel::where(function ($query) use ($userId) {
-                $query->where('members', $userId)  // Simple string in array
-                      ->orWhere('members.user_id', $userId)  // Object with user_id field
-                      ->orWhere('members._id', $userId)  // Object with _id field
-                      ->orWhere('members.id', $userId);  // Object with id field
-            })->orWhere('created_id', $userId)->get();
+                $query->where('created_id', $userId)  // User is creator
+                      ->orWhere('members', $userId)  // User is in members array (simple string)
+                      ->orWhere('members.user_id', $userId)  // User is in members array (object with user_id)
+                      ->orWhere('members._id', $userId)  // User is in members array (object with _id)
+                      ->orWhere('members.id', $userId);  // User is in members array (object with id)
+            })->get();
             
             data_set($request, 'channels', $channels);
             $request->attributes->set('channels', $channels);

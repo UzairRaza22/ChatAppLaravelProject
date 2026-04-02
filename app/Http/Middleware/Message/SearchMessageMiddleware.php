@@ -59,9 +59,22 @@ class SearchMessageMiddleware
             $userId = (string) $user->_id;
             $members = collect($channel->members ?? []);
 
-            $senderIsMember = $members->contains(
-                fn($m) => (string) ($m['user_id'] ?? '') === $userId
-            );
+            // Check if user is a member OR the creator of the channel
+            $isCreator = (string) $channel->created_id === $userId;
+            
+            $senderIsMember = $isCreator || $members->contains(function ($member) use ($userId) {
+                // Handle different member structures
+                if (is_string($member)) {
+                    return (string) $member === $userId;
+                }
+                if (is_array($member)) {
+                    return (string) ($member['user_id'] ?? $member['_id'] ?? $member['id'] ?? '') === $userId;
+                }
+                if (is_object($member)) {
+                    return (string) (data_get($member, 'user_id') ?? data_get($member, '_id') ?? data_get($member, 'id')) === $userId;
+                }
+                return false;
+            });
 
             if (!$senderIsMember) {
                 return response()->json([
