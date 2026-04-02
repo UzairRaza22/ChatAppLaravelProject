@@ -38,43 +38,54 @@ class ChannelExistMiddleware
         }
 
         if ($userId !== '') {
-            // Simplified and more reliable approach
+            // Direct database query approach - no complex filtering
+            $channels = collect();
+            
+            // Get channels where user is creator
+            $creatorChannels = Channel::where('created_id', $userId)->get();
+            $channels = $channels->merge($creatorChannels);
+            
+            // Get ALL channels and check each one manually for membership
             $allChannels = Channel::all();
             
-            $userChannels = $allChannels->filter(function ($channel) use ($userId) {
-                // Check if user is creator
+            foreach ($allChannels as $channel) {
+                // Skip if already included as creator
                 if ((string) $channel->created_id === $userId) {
-                    return true;
+                    continue;
                 }
                 
-                // Check if user is member
-                $members = $channel->members ?? [];
+                // Check if user is in members array
+                $members = $channel->members;
+                $isUserMember = false;
                 
                 if (is_array($members)) {
                     foreach ($members as $member) {
-                        // Handle array structure: {"user_id": "...", "role": "..."}
+                        $memberUserId = null;
+                        
+                        // Extract user_id from different structures
                         if (is_array($member) && isset($member['user_id'])) {
-                            if ((string) $member['user_id'] === $userId) {
-                                return true;
-                            }
+                            $memberUserId = (string) $member['user_id'];
+                        } elseif (is_object($member) && isset($member->user_id)) {
+                            $memberUserId = (string) $member->user_id;
+                        } elseif (is_string($member)) {
+                            $memberUserId = (string) $member;
                         }
-                        // Handle object structure
-                        elseif (is_object($member) && property_exists($member, 'user_id')) {
-                            if ((string) $member->user_id === $userId) {
-                                return true;
-                            }
-                        }
-                        // Handle simple string structure
-                        elseif (is_string($member) && (string) $member === $userId) {
-                            return true;
+                        
+                        // Compare user IDs
+                        if ($memberUserId === $userId) {
+                            $isUserMember = true;
+                            break;
                         }
                     }
                 }
                 
-                return false;
-            });
+                if ($isUserMember) {
+                    $channels->push($channel);
+                }
+            }
             
-            $channels = $userChannels->values();
+            // Remove duplicates and convert to values
+            $channels = $channels->unique('_id')->values();
             
             data_set($request, 'channels', $channels);
             $request->attributes->set('channels', $channels);

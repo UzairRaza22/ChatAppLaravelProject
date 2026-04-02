@@ -23,6 +23,9 @@ Route::prefix('workspaces')->group(base_path('routes/workspaces.php'));
 Route::prefix('team')->group(base_path('routes/team.php'));
 Route::prefix('messages')->group(base_path('routes/Messages.php'));
 Route::prefix('channels')->group(base_path('routes/channel.php'));
+
+// Temporary test route - REMOVE after debugging
+require base_path('routes/test-channel.php');
 Route::get('test-webhook', function () {
     $webhookUrl = env('ALERT_WEBHOOK_URL');
 
