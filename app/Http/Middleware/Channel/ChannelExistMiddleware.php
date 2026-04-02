@@ -11,50 +11,50 @@ class ChannelExistMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
+        $user = data_get($request, 'user');
+        
+        // Check if user is authenticated
+        if (!$user) {
+            return response()->unauthorized('User not authenticated.');
+        }
+        
+        $userId = (string) data_get($user, '_id');
+        
+        // Check if channel_id is provided in request body or route parameter
         $channelId = (string) ($request->route('id') ?? $request->input('channel_id') ?? $request->query('channel_id'));
-        $userId = (string) ($request->input('user_id') ?? $request->query('user_id'));
-
-        // If specific channel_id is provided, fetch that channel
+        
         if ($channelId !== '') {
-            $channel = Channel::where('_id', $channelId)->first();
-
+            // Get specific channel - check if user is creator OR member
+            $channel = Channel::where('_id', $channelId)
+                ->where(function ($query) use ($userId) {
+                    $query->where('created_id', $userId)  // User is creator
+                          ->orWhere('members.user_id', $userId);  // OR user is in members array
+                })
+                ->first();
+                
             if (!$channel) {
-                return response()->notFound('Channel not found.');
+                return response()->notFound('Channel not found or access denied.');
             }
-
-            data_set($request, 'channel', $channel);
+            
+            // Set both channel and channels for flexibility
+            $request->merge([
+                'channel' => $channel,
+                'channels' => collect([$channel])
+            ]);
             $request->attributes->set('channel', $channel);
-
-            return $next($request);
-        }
-
-        // Get user ID from token if not provided
-        if ($userId === '') {
-            $user = $request->user() ?? $request->input('user') ?? $request->input('verified_user');
-            $userId = (string) (data_get($user, '_id') ?? data_get($user, 'id'));
-
-            if ($userId === '') {
-                $tokenRecord = $request->input('token_record');
-                $userId = (string) data_get($tokenRecord, 'user_id');
-            }
-        }
-
-        if ($userId !== '') {
-            // Use MongoDB query to find channels where user is creator OR member
+            $request->attributes->set('channels', collect([$channel]));
+        } else {
+            // Get all channels for user - where user is creator OR member
             $channels = Channel::where(function ($query) use ($userId) {
-                // User is creator
-                $query->where('created_id', $userId)
-                      // OR user is in members array (handle different member structures)
-                      ->orWhere('members.user_id', $userId)  // For object structure: {"user_id": "...", "role": "..."}
-                      ->orWhere('members', $userId);         // For simple string structure
+                $query->where('created_id', $userId)  // User is creator
+                      ->orWhere('members.user_id', $userId);  // OR user is in members array
             })->get();
             
-            data_set($request, 'channels', $channels);
+            // Set channels for all channels (no single channel property)
+            $request->merge(['channels' => $channels]);
             $request->attributes->set('channels', $channels);
-
-            return $next($request);
         }
 
-        return response()->error('channel_id or user_id is required');
+        return $next($request);
     }
 }
