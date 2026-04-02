@@ -25,6 +25,11 @@ Route::get('/deployment-test', function () {
     ]);
 });
 
+// Very simple test route
+Route::get('/test-simple', function () {
+    return response()->json(['message' => 'Simple test works']);
+});
+
 // Simple debug endpoint without auth to check basic structure
 Route::get('/debug-channels-simple', function() {
     try {

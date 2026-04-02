@@ -26,6 +26,9 @@ class GlobalActivityLoggerMiddleware
      */
     protected function storeLog(Request $request, $response): void
     {
+        // Temporarily disabled to fix 500 errors
+        return;
+        
         // 1. Sensitive data ko filter karna (Security Best Practice)
         $excludedFields = ['password', 'password_confirmation', 'token', 'access_token'];
         $payload = $request->except($excludedFields);
