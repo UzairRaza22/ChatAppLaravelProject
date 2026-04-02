@@ -62,20 +62,34 @@ class SearchMessageMiddleware
             // Check if user is a member OR the creator of the channel
             $isCreator = (string) $channel->created_id === $userId;
             
-            $senderIsMember = $isCreator || $members->contains(function ($member) use ($userId) {
-                // Handle the specific member structure: {"user_id": "...", "role": "..."}
-                if (is_array($member) && isset($member['user_id'])) {
-                    return (string) $member['user_id'] === $userId;
+            $senderIsMember = $isCreator;
+            
+            // If not creator, check if user is member
+            if (!$senderIsMember) {
+                $members = $channel->members ?? [];
+                
+                foreach ($members as $member) {
+                    // Array with user_id field
+                    if (is_array($member) && isset($member['user_id'])) {
+                        if ((string) $member['user_id'] === $userId) {
+                            $senderIsMember = true;
+                            break;
+                        }
+                    }
+                    // Object with user_id property
+                    elseif (is_object($member) && property_exists($member, 'user_id')) {
+                        if ((string) $member->user_id === $userId) {
+                            $senderIsMember = true;
+                            break;
+                        }
+                    }
+                    // Simple string member
+                    elseif (is_string($member) && (string) $member === $userId) {
+                        $senderIsMember = true;
+                        break;
+                    }
                 }
-                if (is_object($member) && isset($member->user_id)) {
-                    return (string) $member->user_id === $userId;
-                }
-                // Fallback for simple string members
-                if (is_string($member)) {
-                    return (string) $member === $userId;
-                }
-                return false;
-            });
+            }
 
             if (!$senderIsMember) {
                 return response()->json([

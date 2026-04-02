@@ -37,20 +37,34 @@ class CheckReadMessagesMiddleware
         // Check if user is a member OR the creator of the channel
         $isCreator = (string) $channel->created_id === $userId;
         
-        $isMember = $isCreator || collect($channel->members ?? [])->contains(function ($member) use ($userId) {
-            // Handle the specific member structure: {"user_id": "...", "role": "..."}
-            if (is_array($member) && isset($member['user_id'])) {
-                return (string) $member['user_id'] === $userId;
+        $isMember = $isCreator;
+        
+        // If not creator, check if user is member
+        if (!$isMember) {
+            $members = $channel->members ?? [];
+            
+            foreach ($members as $member) {
+                // Array with user_id field
+                if (is_array($member) && isset($member['user_id'])) {
+                    if ((string) $member['user_id'] === $userId) {
+                        $isMember = true;
+                        break;
+                    }
+                }
+                // Object with user_id property
+                elseif (is_object($member) && property_exists($member, 'user_id')) {
+                    if ((string) $member->user_id === $userId) {
+                        $isMember = true;
+                        break;
+                    }
+                }
+                // Simple string member
+                elseif (is_string($member) && (string) $member === $userId) {
+                    $isMember = true;
+                    break;
+                }
             }
-            if (is_object($member) && isset($member->user_id)) {
-                return (string) $member->user_id === $userId;
-            }
-            // Fallback for simple string members
-            if (is_string($member)) {
-                return (string) $member === $userId;
-            }
-            return false;
-        });
+        }
 
         if (!$isMember) {
             return response()->forbidden('You are not a member of this channel.');
