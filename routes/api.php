@@ -26,6 +26,27 @@ Route::prefix('channels')->group(base_path('routes/channel.php'));
 
 // Temporary test route - REMOVE after debugging
 require base_path('routes/test-channel.php');
+
+// Verification endpoint to check if changes are deployed
+Route::get('/verify-deployment', function() {
+    $middlewareContent = '';
+    $middlewarePath = app_path('Http/Middleware/Channel/ChannelExistMiddleware.php');
+    
+    if (file_exists($middlewarePath)) {
+        $middlewareContent = substr(file_get_contents($middlewarePath), 0, 500) . '...';
+    }
+    
+    return response()->json([
+        'success' => true,
+        'message' => 'Changes are deployed',
+        'timestamp' => now()->toISOString(),
+        'middleware_file_exists' => file_exists($middlewarePath),
+        'test_route_exists' => file_exists(base_path('routes/test-channel.php')),
+        'middleware_preview' => $middlewareContent,
+        'php_version' => PHP_VERSION,
+        'laravel_version' => app()->version()
+    ]);
+});
 Route::get('test-webhook', function () {
     $webhookUrl = env('ALERT_WEBHOOK_URL');
 
