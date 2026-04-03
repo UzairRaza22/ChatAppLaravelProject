@@ -50,49 +50,43 @@ class ChannelController extends Controller
         $user = $request->user();
         $userId = (string) data_get($user, '_id');
         
+        \Log::info('=== FILTERING CHANNELS FOR USER: ' . $userId . ' ===');
+        
         // Filter channels where user is creator OR member
         $userChannels = $channels->filter(function ($channel) use ($userId) {
+            \Log::info('Checking channel: ' . $channel->name . ' (created_by: ' . $channel->created_id . ')');
+            
             // Check if user is creator
             if ((string) $channel->created_id === $userId) {
+                \Log::info('✅ User is CREATOR of channel: ' . $channel->name);
                 return true;
             }
             
             // Check if user is member
             $members = $channel->members ?? [];
-            if (is_array($members)) {
-                foreach ($members as $member) {
+            \Log::info('Channel ' . $channel->name . ' has ' . count($members) . ' members: ' . json_encode($members));
+            
+            if (is_array($members) && count($members) > 0) {
+                foreach ($members as $index => $member) {
                     $memberUserId = null;
                     
-                    // Handle different member structures
-                    if (is_array($member)) {
-                        // Structure: {"user_id": "...", "role": "..."}
-                        if (isset($member['user_id'])) {
-                            $memberUserId = (string) $member['user_id'];
+                    if (is_array($member) && isset($member['id'])) {
+                        $memberUserId = (string) $member['id'];
+                        \Log::info('Found member ID: ' . $memberUserId . ' (comparing with user: ' . $userId . ')');
+                        
+                        if ($memberUserId === $userId) {
+                            \Log::info('✅ MATCH! User is member of channel: ' . $channel->name);
+                            return true;
                         }
-                        // Structure: {"id": "...", "name": "...", ...} (full user object)
-                        elseif (isset($member['id'])) {
-                            $memberUserId = (string) $member['id'];
-                        }
-                    } elseif (is_object($member)) {
-                        // Object structure
-                        if (isset($member->user_id)) {
-                            $memberUserId = (string) $member->user_id;
-                        } elseif (isset($member->id)) {
-                            $memberUserId = (string) $member->id;
-                        }
-                    } elseif (is_string($member)) {
-                        // Simple string member
-                        $memberUserId = (string) $member;
-                    }
-                    
-                    if ($memberUserId === $userId) {
-                        return true;
                     }
                 }
             }
             
+            \Log::info('❌ No match for channel: ' . $channel->name);
             return false;
         });
+        
+        \Log::info('Found ' . $userChannels->count() . ' channels for user');
         
         return response()->success(ChannelResource::collection($userChannels), 'Channels retrieved successfully');
     }
