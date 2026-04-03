@@ -7,6 +7,7 @@ use App\Http\Resources\MessageResource;
 use App\Http\Resources\SearchResource;
 use App\Http\Requests\Message\MessageSearchRequest;
 use App\Models\Message;
+use App\Models\Channel;
 use App\Services\AttachmentService;
 use Illuminate\Http\Request;
 
