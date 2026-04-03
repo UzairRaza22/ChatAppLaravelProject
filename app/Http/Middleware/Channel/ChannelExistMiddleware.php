@@ -14,6 +14,11 @@ class ChannelExistMiddleware
         $channelId = (string) ($request->route('id') ?? $request->input('channel_id') ?? $request->query('channel_id'));
         $workspaceId = data_get($request, 'workspace_id');
 
+        // Validate workspace_id is provided
+        if (empty($workspaceId)) {
+            return response()->error('workspace_id is required.', null, 400);
+        }
+
         if ($channelId !== '') {
             // Get specific channel
             $channel = Channel::where('_id', $channelId)->first();
@@ -40,7 +45,7 @@ class ChannelExistMiddleware
             ->get();
 
         if ($channels->isEmpty()) {
-            abort(404, 'No channels found for this workspace.');
+            return response()->notFound('No channels found for this workspace.');
         }
 
         $request->merge(['channels' => $channels]);
