@@ -26,8 +26,8 @@ class Channel extends Model
     protected function casts(): array
     {
         return [
-            'members' => 'array',
-            'join_requests' => 'array',
+            'members' => 'json', // Changed from 'array' to 'json' to handle JSON strings
+            'join_requests' => 'json',
             'deleted_at' => 'datetime',
         ];
     }
