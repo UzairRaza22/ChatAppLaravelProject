@@ -45,55 +45,9 @@ class ChannelController extends Controller
             return response()->success(new ChannelResource($channel), 'Channel retrieved successfully');
         }
 
-        // Get all channels and filter by user (like teams do)
+        // Just return all channels from middleware (same as teams)
         $channels = data_get($request->attributes->all(), 'channels', collect());
-        $user = $request->user();
-        $userId = (string) data_get($user, '_id');
-        
-        \Log::info('=== USER DEBUG ===');
-        \Log::info('User object: ' . json_encode($user));
-        \Log::info('User _id: ' . data_get($user, '_id'));
-        \Log::info('User id: ' . data_get($user, 'id'));
-        \Log::info('Final userId: ' . $userId);
-        \Log::info('=== FILTERING CHANNELS FOR USER: ' . $userId . ' ===');
-        
-        // Filter channels where user is creator OR member
-        $userChannels = $channels->filter(function ($channel) use ($userId) {
-            \Log::info('Checking channel: ' . $channel->name . ' (created_by: ' . $channel->created_id . ')');
-            
-            // Check if user is creator
-            if ((string) $channel->created_id === $userId) {
-                \Log::info('✅ User is CREATOR of channel: ' . $channel->name);
-                return true;
-            }
-            
-            // Check if user is member
-            $members = $channel->members ?? [];
-            \Log::info('Channel ' . $channel->name . ' has ' . count($members) . ' members: ' . json_encode($members));
-            
-            if (is_array($members) && count($members) > 0) {
-                foreach ($members as $index => $member) {
-                    $memberUserId = null;
-                    
-                    if (is_array($member) && isset($member['id'])) {
-                        $memberUserId = (string) $member['id'];
-                        \Log::info('Found member ID: ' . $memberUserId . ' (comparing with user: ' . $userId . ')');
-                        
-                        if ($memberUserId === $userId) {
-                            \Log::info('✅ MATCH! User is member of channel: ' . $channel->name);
-                            return true;
-                        }
-                    }
-                }
-            }
-            
-            \Log::info('❌ No match for channel: ' . $channel->name);
-            return false;
-        });
-        
-        \Log::info('Found ' . $userChannels->count() . ' channels for user');
-        
-        return response()->success(ChannelResource::collection($userChannels), 'Channels retrieved successfully');
+        return response()->success(ChannelResource::collection($channels), 'Channels retrieved successfully');
     }
 
     // 3. List Channels by User

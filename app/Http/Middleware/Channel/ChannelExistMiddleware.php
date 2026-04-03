@@ -12,6 +12,7 @@ class ChannelExistMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         $channelId = (string) ($request->route('id') ?? $request->input('channel_id') ?? $request->query('channel_id'));
+        $workspaceId = data_get($request, 'workspace_id');
 
         if ($channelId !== '') {
             // Get specific channel
@@ -27,18 +28,11 @@ class ChannelExistMiddleware
             return $next($request);
         }
 
-        // For listing channels - get ALL channels (same as teams logic)
-        $channels = Channel::all();
+        // For listing channels - get ALL channels in workspace (same as teams logic)
+        $channels = Channel::where('workspace_id', $workspaceId)->get();
 
-        // Debug: Log channel count
-        \Log::info('Total channels found: ' . $channels->count());
-        
         if ($channels->isEmpty()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'No channels found in database',
-                'data' => []
-            ]);
+            abort(404, 'No channels found for this workspace.');
         }
 
         $request->merge(['channels' => $channels]);
