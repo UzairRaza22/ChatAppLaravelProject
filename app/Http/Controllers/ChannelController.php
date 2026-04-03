@@ -57,6 +57,12 @@ class ChannelController extends Controller
         // Also log the first few characters of user ID for easier matching
         \Log::info('User ID (first 10 chars): ' . substr($userId, 0, 10));
         
+        // Test with known member IDs from the "An" channel
+        $testIds = ['69ca5c53e3328b0b6302b83c', '69ca5cc6b839cee74a0d4317'];
+        \Log::info('Testing if user ID matches known member IDs: ' . json_encode($testIds));
+        \Log::info('User ID matches Jawad: ' . ($userId === '69ca5c53e3328b0b6302b83c' ? 'YES' : 'NO'));
+        \Log::info('User ID matches Zain: ' . ($userId === '69ca5cc6b839cee74a0d4317' ? 'YES' : 'NO'));
+        
         // Filter channels where user is creator OR member
         $userChannels = $channels->filter(function ($channel) use ($userId) {
             // Check if user is creator
