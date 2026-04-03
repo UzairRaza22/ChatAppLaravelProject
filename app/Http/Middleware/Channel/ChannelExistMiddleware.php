@@ -35,7 +35,7 @@ class ChannelExistMiddleware
         $channels = Channel::where('workspace_id', $workspaceId)
             ->where(function($query) use ($userId) {
                 $query->where('created_id', $userId) // User is creator
-                      ->orWhere('members', 'all', [$userId]); // User is in members array
+                      ->orWhere('members', 'regex', new \MongoDB\BSON\Regex($userId)); // User is in members array
             })
             ->get();
 
