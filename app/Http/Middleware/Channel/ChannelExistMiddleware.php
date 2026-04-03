@@ -28,8 +28,16 @@ class ChannelExistMiddleware
             return $next($request);
         }
 
-        // For listing channels - get ALL channels in workspace (same as teams logic)
-        $channels = Channel::where('workspace_id', $workspaceId)->get();
+        // For listing channels - get channels where user is creator OR member
+        $user = $request->user();
+        $userId = (string) $user->_id;
+        
+        $channels = Channel::where('workspace_id', $workspaceId)
+            ->where(function($query) use ($userId) {
+                $query->where('created_id', $userId) // User is creator
+                      ->orWhereJsonContains('members', $userId); // User is in members array
+            })
+            ->get();
 
         if ($channels->isEmpty()) {
             abort(404, 'No channels found for this workspace.');

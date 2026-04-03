@@ -37,16 +37,6 @@ class CheckChannelMessageMiddleware
         $user   = $request->user();
         $userId = (string) $user->_id;
 
-        // Debug logging
-        \Log::info('=== MESSAGE MIDDLEWARE DEBUG ===');
-        \Log::info('Channel: ' . $channel->name);
-        \Log::info('User ID: ' . $userId);
-        \Log::info('Channel created_id: ' . $channel->created_id);
-        \Log::info('Raw members: ' . json_encode($channel->members));
-        \Log::info('Is creator: ' . ((string) $channel->created_id === $userId ? 'YES' : 'NO'));
-
-        $members = collect($channel->members ?? []);
-
         // Check if user is a member OR the creator of the channel
         $isCreator = (string) $channel->created_id === $userId;
         
@@ -81,12 +71,8 @@ class CheckChannelMessageMiddleware
         }
 
         if (!$senderIsMember) {
-            \Log::info('❌ User is NOT a member of channel: ' . $channel->name);
             return response()->forbidden('You are not a member of this channel.');
         }
-
-        \Log::info('✅ User IS a member of channel: ' . $channel->name);
-        \Log::info('=== END MESSAGE MIDDLEWARE DEBUG ===');
 
         // For direct channels — also verify the other member still belongs to the channel
         $isDirect = (string) $channel->type === 'direct';
