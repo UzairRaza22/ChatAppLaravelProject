@@ -54,6 +54,9 @@ class ChannelController extends Controller
         \Log::info('User ID: ' . $userId);
         \Log::info('Total channels from middleware: ' . $channels->count());
         
+        // Also log the first few characters of user ID for easier matching
+        \Log::info('User ID (first 10 chars): ' . substr($userId, 0, 10));
+        
         // Filter channels where user is creator OR member
         $userChannels = $channels->filter(function ($channel) use ($userId) {
             // Check if user is creator
@@ -95,6 +98,8 @@ class ChannelController extends Controller
                     if ($memberUserId === $userId) {
                         \Log::info('User is member of channel: ' . $channel->name . ' (member ID: ' . $memberUserId . ')');
                         return true;
+                    } else {
+                        \Log::info('Member ID mismatch: ' . $memberUserId . ' vs User ID: ' . $userId);
                     }
                 }
             }
