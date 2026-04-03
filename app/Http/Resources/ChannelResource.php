@@ -8,8 +8,10 @@ class ChannelResource extends JsonResource
 {
     public function toArray($request)
     {
-        // Get members safely using getAttribute to avoid MongoDB query issues
-        $membersData = $this->getAttribute('members');
+        // Get members safely by accessing raw attributes and decoding JSON
+        $rawMembers = $this->getRawOriginal()['members'] ?? '[]';
+        $membersData = json_decode($rawMembers, true) ?: [];
+        $members = collect($membersData)
             ->map(function ($member) {
                 if (is_string($member)) {
                     return [
