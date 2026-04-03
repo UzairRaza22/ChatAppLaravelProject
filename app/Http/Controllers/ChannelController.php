@@ -68,8 +68,32 @@ class ChannelController extends Controller
             
             if (is_array($members)) {
                 foreach ($members as $member) {
-                    if (is_array($member) && isset($member['user_id']) && (string) $member['user_id'] === $userId) {
-                        \Log::info('User is member of channel: ' . $channel->name);
+                    $memberUserId = null;
+                    
+                    // Handle different member structures
+                    if (is_array($member)) {
+                        // Structure: {"user_id": "...", "role": "..."}
+                        if (isset($member['user_id'])) {
+                            $memberUserId = (string) $member['user_id'];
+                        }
+                        // Structure: {"id": "...", "name": "...", ...} (full user object)
+                        elseif (isset($member['id'])) {
+                            $memberUserId = (string) $member['id'];
+                        }
+                    } elseif (is_object($member)) {
+                        // Object structure
+                        if (isset($member->user_id)) {
+                            $memberUserId = (string) $member->user_id;
+                        } elseif (isset($member->id)) {
+                            $memberUserId = (string) $member->id;
+                        }
+                    } elseif (is_string($member)) {
+                        // Simple string member
+                        $memberUserId = (string) $member;
+                    }
+                    
+                    if ($memberUserId === $userId) {
+                        \Log::info('User is member of channel: ' . $channel->name . ' (member ID: ' . $memberUserId . ')');
                         return true;
                     }
                 }
@@ -102,7 +126,31 @@ class ChannelController extends Controller
             $members = $channel->members ?? [];
             if (is_array($members)) {
                 foreach ($members as $member) {
-                    if (is_array($member) && isset($member['user_id']) && (string) $member['user_id'] === $userId) {
+                    $memberUserId = null;
+                    
+                    // Handle different member structures
+                    if (is_array($member)) {
+                        // Structure: {"user_id": "...", "role": "..."}
+                        if (isset($member['user_id'])) {
+                            $memberUserId = (string) $member['user_id'];
+                        }
+                        // Structure: {"id": "...", "name": "...", ...} (full user object)
+                        elseif (isset($member['id'])) {
+                            $memberUserId = (string) $member['id'];
+                        }
+                    } elseif (is_object($member)) {
+                        // Object structure
+                        if (isset($member->user_id)) {
+                            $memberUserId = (string) $member->user_id;
+                        } elseif (isset($member->id)) {
+                            $memberUserId = (string) $member->id;
+                        }
+                    } elseif (is_string($member)) {
+                        // Simple string member
+                        $memberUserId = (string) $member;
+                    }
+                    
+                    if ($memberUserId === $userId) {
                         return true;
                     }
                 }
