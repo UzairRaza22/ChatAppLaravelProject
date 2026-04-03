@@ -28,11 +28,18 @@ class CheckChannelMessageMiddleware
     {
         $channelId = $request->input('channel_id');
 
-        $channel = Channel::where('_id', $channelId)->first();
+        $channel = Channel::where(function($query) use ($channelId) {
+            $query->where('_id', $channelId)
+                  ->orWhere('id', $channelId);
+        })->first();
 
         if (!$channel) {
             return response()->notFound('Channel not found.');
         }
+
+        // Set channel in request for controller
+        $request->merge(['channel' => $channel]);
+        $request->attributes->set('channel', $channel);
 
         $user   = $request->user();
         $userId = (string) $user->_id;
