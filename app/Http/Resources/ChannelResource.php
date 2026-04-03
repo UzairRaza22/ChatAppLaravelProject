@@ -16,12 +16,30 @@ class ChannelResource extends JsonResource
                         'role'    => 'member',
                     ];
                 } elseif (is_array($member)) {
+                    // Handle different member structures
+                    $userId = null;
+                    $role = 'member';
+                    
+                    if (isset($member['user_id'])) {
+                        // Standard structure: {"user_id": "...", "role": "..."}
+                        $userId = $member['user_id'];
+                        $role = $member['role'] ?? 'member';
+                    } elseif (isset($member['id'])) {
+                        // Full user object: {"id": "...", "name": "...", ...}
+                        $userId = $member['id'];
+                        $role = $member['role'] ?? 'member';
+                    }
+                    
                     return [
-                        'user_id' => $member['user_id'] ?? null,
-                        'role'    => $member['role'] ?? 'member',
+                        'user_id' => $userId,
+                        'role'    => $role,
+                        'name'    => $member['name'] ?? null, // Include name if available
+                        'email'   => $member['email'] ?? null, // Include email if available
                     ];
                 }
+                return null;
             })
+            ->filter() // Remove null values
             ->values()
             ->toArray();
 
