@@ -31,16 +31,6 @@ class ChannelExistMiddleware
         // For listing channels - get ALL channels in workspace (same as teams logic)
         $channels = Channel::where('workspace_id', $workspaceId)->get();
 
-        // Debug: Check what's actually in the database
-        \Log::info('=== CHANNEL DATABASE DEBUG ===');
-        foreach ($channels as $channel) {
-            \Log::info('Channel: ' . $channel->name);
-            \Log::info('Raw attributes: ' . json_encode($channel->getAttributes()));
-            \Log::info('Members field: ' . json_encode($channel->getAttribute('members')));
-            \Log::info('Members property: ' . json_encode($channel->members));
-        }
-        \Log::info('=== END DATABASE DEBUG ===');
-
         if ($channels->isEmpty()) {
             abort(404, 'No channels found for this workspace.');
         }

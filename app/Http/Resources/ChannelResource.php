@@ -8,13 +8,8 @@ class ChannelResource extends JsonResource
 {
     public function toArray($request)
     {
-        // Debug the raw members data
-        \Log::info('ChannelResource - Raw members for channel ' . $this->name . ': ' . json_encode($this->members));
-        
         $members = collect($this->members ?? [])
             ->map(function ($member) {
-                \Log::info('Processing member: ' . json_encode($member));
-                
                 if (is_string($member)) {
                     return [
                         'user_id' => $member,
@@ -29,32 +24,24 @@ class ChannelResource extends JsonResource
                         // Standard structure: {"user_id": "...", "role": "..."}
                         $userId = $member['user_id'];
                         $role = $member['role'] ?? 'member';
-                        \Log::info('Found user_id structure: ' . $userId . ' with role: ' . $role);
                     } elseif (isset($member['id'])) {
                         // Full user object: {"id": "...", "name": "...", ...}
                         $userId = $member['id'];
                         $role = $member['role'] ?? 'member';
-                        \Log::info('Found id structure: ' . $userId . ' with role: ' . $role);
                     }
                     
-                    $result = [
+                    return [
                         'user_id' => $userId,
                         'role'    => $role,
-                        'name'    => $member['name'] ?? null, // Include name if available
-                        'email'   => $member['email'] ?? null, // Include email if available
+                        'name'    => $member['name'] ?? null,
+                        'email'   => $member['email'] ?? null,
                     ];
-                    
-                    \Log::info('Returning member: ' . json_encode($result));
-                    return $result;
                 }
-                \Log::info('Member is neither string nor array, returning null');
                 return null;
             })
-            ->filter() // Remove null values
+            ->filter()
             ->values()
             ->toArray();
-
-        \Log::info('Final processed members: ' . json_encode($members));
 
         return [
             'id'            => (string) ($this->id ?? $this->_id),
@@ -65,7 +52,6 @@ class ChannelResource extends JsonResource
             'type'          => $this->type,
             'direct_id'     => $this->direct_id ? (string) $this->direct_id : null,
             'created_id'    => (string) ($this->created_id ?? $this->created_by),
-
             'members'       => $members,
             'members_count' => count($members),
             'created_at'    => $this->created_at ? $this->created_at->toDateTimeString() : null,
