@@ -28,11 +28,7 @@ class ChannelExistMiddleware
             $channel = Channel::where('_id', $channelId)
                 ->where(function ($query) use ($userId) {
                     $query->where('created_id', $userId)  // User is creator
-                          // OR user is in members array - try different structures
-                          ->orWhere('members.user_id', $userId)           // Object: {"user_id": "...", "role": "..."}
-                          ->orWhere('members', 'elemMatch', ['user_id' => $userId])  // MongoDB elemMatch
-                          ->orWhere('members', $userId)                   // Simple string array
-                          ->orWhereRaw(['members' => ['$in' => [$userId]]]); // Raw MongoDB query
+                          ->orWhere('members', 'elemMatch', ['user_id' => $userId]);  // OR user is member
                 })
                 ->first();
                 
@@ -49,14 +45,9 @@ class ChannelExistMiddleware
             $request->attributes->set('channels', collect([$channel]));
         } else {
             // Get all channels for user - where user is creator OR member
-            // Handle multiple member storage formats
             $channels = Channel::where(function ($query) use ($userId) {
                 $query->where('created_id', $userId)  // User is creator
-                      // OR user is in members array - try different structures
-                      ->orWhere('members.user_id', $userId)           // Object: {"user_id": "...", "role": "..."}
-                      ->orWhere('members', 'elemMatch', ['user_id' => $userId])  // MongoDB elemMatch
-                      ->orWhere('members', $userId)                   // Simple string array
-                      ->orWhereRaw(['members' => ['$in' => [$userId]]]); // Raw MongoDB query
+                      ->orWhere('members', 'elemMatch', ['user_id' => $userId]);  // OR user is member
             })->get();
             
             // Set channels for all channels (no single channel property)
