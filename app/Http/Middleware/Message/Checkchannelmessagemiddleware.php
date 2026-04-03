@@ -46,7 +46,7 @@ class CheckChannelMessageMiddleware
 
         // Temporarily bypass membership check for debugging
         // TODO: Re-enable proper membership check after debugging
-        return $next($request);
+        return response()->success(['test' => 'bypass working'], 'Bypass is working', 200);
 
         // For direct channels — also verify the other member still belongs to the channel
         $isDirect = (string) $channel->type === 'direct';
