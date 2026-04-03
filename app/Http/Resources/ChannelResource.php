@@ -8,43 +8,54 @@ class ChannelResource extends JsonResource
 {
     public function toArray($request)
     {
-        // Get members safely by accessing raw attributes and decoding JSON
-        $rawMembers = $this->getRawOriginal()['members'] ?? '[]';
-        $membersData = json_decode($rawMembers, true) ?: [];
-        $members = collect($membersData)
-            ->map(function ($member) {
-                if (is_string($member)) {
-                    return [
-                        'user_id' => $member,
-                        'role'    => 'member',
-                    ];
-                } elseif (is_array($member)) {
-                    // Handle different member structures
-                    $userId = null;
-                    $role = 'member';
-                    
-                    if (isset($member['user_id'])) {
-                        // Standard structure: {"user_id": "...", "role": "..."}
-                        $userId = $member['user_id'];
-                        $role = $member['role'] ?? 'member';
-                    } elseif (isset($member['id'])) {
-                        // Full user object: {"id": "...", "name": "...", ...}
-                        $userId = $member['id'];
-                        $role = $member['role'] ?? 'member';
-                    }
-                    
-                    return [
-                        'user_id' => $userId,
-                        'role'    => $role,
-                        'name'    => $member['name'] ?? null,
-                        'email'   => $member['email'] ?? null,
-                    ];
-                }
-                return null;
-            })
-            ->filter()
-            ->values()
-            ->toArray();
+        // Handle members field with multiple fallback methods
+        $members = [];
+        
+        // Try raw attributes first (for MongoDB JSON strings)
+        $rawMembers = $this->getRawOriginal('members');
+        if ($rawMembers && is_string($rawMembers)) {
+            $decodedMembers = json_decode($rawMembers, true) ?: [];
+            $members = collect($decodedMembers);
+        } else {
+            // Fallback to attribute access
+            $members = collect($this->getAttribute('members') ?? []);
+        }
+        
+        // Process members into consistent format
+        $processedMembers = $members->map(function ($member) {
+            // Handle string members
+            if (is_string($member)) {
+                return [
+                    'user_id' => $member,
+                    'role'    => 'member',
+                ];
+            }
+            // Handle object members
+            elseif (is_array($member)) {
+                return [
+                    'user_id' => $member['user_id'] ?? null,
+                    'role'    => $member['role'] ?? 'member',
+                ];
+            }
+            // Handle full objects with user_id property
+            elseif (is_object($member) && isset($member->user_id)) {
+                return [
+                    'user_id' => (string) $member->user_id,
+                    'role'    => $member['role'] ?? 'member',
+                    'name'    => $member['name'] ?? null,
+                    'email'   => $member['email'] ?? null,
+                ];
+            }
+            // Default fallback
+            else {
+                return [
+                    'user_id' => null,
+                    'role'    => 'member',
+                ];
+            }
+        })
+        ->values()
+        ->toArray();
 
         return [
             'id'            => (string) ($this->id ?? $this->_id),
@@ -55,8 +66,9 @@ class ChannelResource extends JsonResource
             'type'          => $this->type,
             'direct_id'     => $this->direct_id ? (string) $this->direct_id : null,
             'created_id'    => (string) ($this->created_id ?? $this->created_by),
-            'members'       => $members,
-            'members_count' => count($members),
+
+            'members'       => $processedMembers,
+            'members_count' => count($processedMembers),
             'created_at'    => $this->created_at ? $this->created_at->toDateTimeString() : null,
             'updated_at'    => $this->updated_at ? $this->updated_at->toDateTimeString() : null,
         ];
