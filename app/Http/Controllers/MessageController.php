@@ -40,7 +40,17 @@ class MessageController extends Controller
     public function create(Request $request)
     {
         $user    = $request->user();
+        
+        // Get channel from middleware or look it up if not available
         $channel = $request->attributes->get('channel');
+        if (!$channel) {
+            $channelId = $request->input('channel_id');
+            $channel = Channel::where('_id', $channelId)->first();
+            
+            if (!$channel) {
+                return response()->notFound('Channel not found.');
+            }
+        }
 
         $fileData = $request->hasFile('file')
             ? $this->attachmentService->upload($request->file('file'), (string) $channel->workspace_id)
