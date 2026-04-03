@@ -38,13 +38,15 @@ class CheckChannelMessageMiddleware
         $userId = (string) $user->_id;
 
         // Check if user is a member OR the creator of the channel
-        $isCreator = (string) $channel->created_id === $userId;
+        $isCreator = (string) $channel->created_id === $userId || 
+                    (is_object($channel->created_id) && (string) $channel->created_id === $userId);
         
         // Debug logging
         \Log::info('=== MESSAGE MIDDLEWARE DEBUG ===');
         \Log::info('Channel: ' . $channel->name);
         \Log::info('User ID: ' . $userId);
         \Log::info('Channel created_id: ' . $channel->created_id);
+        \Log::info('Channel created_id type: ' . gettype($channel->created_id));
         \Log::info('Is creator: ' . ($isCreator ? 'YES' : 'NO'));
         \Log::info('Raw members: ' . json_encode($channel->members));
         
