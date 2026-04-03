@@ -45,15 +45,63 @@ class ChannelController extends Controller
             return response()->success(new ChannelResource($channel), 'Channel retrieved successfully');
         }
 
+        // Get all channels and filter by user (like teams do)
         $channels = data_get($request->attributes->all(), 'channels', collect());
-        return response()->success(ChannelResource::collection($channels), 'Channels retrieved successfully');
+        $user = $request->user();
+        $userId = (string) data_get($user, '_id');
+        
+        // Filter channels where user is creator OR member
+        $userChannels = $channels->filter(function ($channel) use ($userId) {
+            // Check if user is creator
+            if ((string) $channel->created_id === $userId) {
+                return true;
+            }
+            
+            // Check if user is member
+            $members = $channel->members ?? [];
+            if (is_array($members)) {
+                foreach ($members as $member) {
+                    if (is_array($member) && isset($member['user_id']) && (string) $member['user_id'] === $userId) {
+                        return true;
+                    }
+                }
+            }
+            
+            return false;
+        });
+        
+        return response()->success(ChannelResource::collection($userChannels), 'Channels retrieved successfully');
     }
 
     // 3. List Channels by User
     public function listByUser(ListUserChannelsRequest $request)
     {
+        // Get all channels and filter by user (same as read method)
         $channels = data_get($request->attributes->all(), 'channels', collect());
-        return response()->success(ChannelResource::collection($channels), 'Channels retrieved successfully');
+        $user = $request->user();
+        $userId = (string) data_get($user, '_id');
+        
+        // Filter channels where user is creator OR member
+        $userChannels = $channels->filter(function ($channel) use ($userId) {
+            // Check if user is creator
+            if ((string) $channel->created_id === $userId) {
+                return true;
+            }
+            
+            // Check if user is member
+            $members = $channel->members ?? [];
+            if (is_array($members)) {
+                foreach ($members as $member) {
+                    if (is_array($member) && isset($member['user_id']) && (string) $member['user_id'] === $userId) {
+                        return true;
+                    }
+                }
+            }
+            
+            return false;
+        });
+        
+        return response()->success(ChannelResource::collection($userChannels), 'Channels retrieved successfully');
     }
 
     // 4. Update Channel
