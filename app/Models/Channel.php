@@ -23,14 +23,11 @@ class Channel extends Model
         'join_requests',
     ];
 
-    protected $casts = [
-        'members' => 'array',
-        'join_requests' => 'array',
-    ];
-
     protected function casts(): array
     {
         return [
+            'members' => 'array',
+            'join_requests' => 'array',
             'deleted_at' => 'datetime',
         ];
     }
