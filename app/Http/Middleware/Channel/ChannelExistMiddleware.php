@@ -16,7 +16,7 @@ class ChannelExistMiddleware
 
         // Validate workspace_id is provided
         if (empty($workspaceId)) {
-            return response()->error('workspace_id is required.', null, 400);
+            return response()->error('workspace_id is required.', 400);
         }
 
         if ($channelId !== '') {
@@ -37,6 +37,14 @@ class ChannelExistMiddleware
         $user = $request->user();
         $userId = (string) $user->_id;
         
+        // Check if workspace exists by looking for any channels in it
+        $workspaceChannels = Channel::where('workspace_id', $workspaceId)->get();
+        
+        if ($workspaceChannels->isEmpty()) {
+            return response()->notFound('Workspace not found.');
+        }
+        
+        // Check if user is a member of any channels in this workspace
         $channels = Channel::where('workspace_id', $workspaceId)
             ->where(function($query) use ($userId) {
                 $query->where('created_id', $userId) // User is creator
@@ -45,7 +53,16 @@ class ChannelExistMiddleware
             ->get();
 
         if ($channels->isEmpty()) {
-            return response()->notFound('No channels found for this workspace.');
+            // Check if user exists in workspace at all
+            $userInWorkspace = $workspaceChannels->contains(function($channel) use ($userId) {
+                return (string) $channel->created_id === $userId;
+            });
+            
+            if (!$userInWorkspace) {
+                return response()->forbidden('User not in this workspace.');
+            }
+            
+            return response()->notFound('No channels found in this workspace.');
         }
 
         $request->merge(['channels' => $channels]);
