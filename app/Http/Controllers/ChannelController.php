@@ -50,18 +50,26 @@ class ChannelController extends Controller
         $user = $request->user();
         $userId = (string) data_get($user, '_id');
         
+        // Debug info
+        \Log::info('User ID: ' . $userId);
+        \Log::info('Total channels from middleware: ' . $channels->count());
+        
         // Filter channels where user is creator OR member
         $userChannels = $channels->filter(function ($channel) use ($userId) {
             // Check if user is creator
             if ((string) $channel->created_id === $userId) {
+                \Log::info('User is creator of channel: ' . $channel->name);
                 return true;
             }
             
             // Check if user is member
             $members = $channel->members ?? [];
+            \Log::info('Channel ' . $channel->name . ' members: ' . json_encode($members));
+            
             if (is_array($members)) {
                 foreach ($members as $member) {
                     if (is_array($member) && isset($member['user_id']) && (string) $member['user_id'] === $userId) {
+                        \Log::info('User is member of channel: ' . $channel->name);
                         return true;
                     }
                 }
@@ -69,6 +77,8 @@ class ChannelController extends Controller
             
             return false;
         });
+        
+        \Log::info('Filtered user channels count: ' . $userChannels->count());
         
         return response()->success(ChannelResource::collection($userChannels), 'Channels retrieved successfully');
     }

@@ -30,8 +30,15 @@ class ChannelExistMiddleware
         // For listing channels - get ALL channels (same as teams logic)
         $channels = Channel::all();
 
+        // Debug: Log channel count
+        \Log::info('Total channels found: ' . $channels->count());
+        
         if ($channels->isEmpty()) {
-            abort(404, 'No channels found.');
+            return response()->json([
+                'success' => true,
+                'message' => 'No channels found in database',
+                'data' => []
+            ]);
         }
 
         $request->merge(['channels' => $channels]);
