@@ -47,44 +47,6 @@ class CheckChannelMessageMiddleware
         // Temporarily bypass membership check for debugging
         // TODO: Re-enable proper membership check after debugging
         return $next($request);
-        
-        // Check if user is a member OR the creator of the channel
-        $isCreator = (string) $channel->created_id === $userId || 
-                    (is_object($channel->created_id) && (string) $channel->created_id === $userId);
-        
-        $senderIsMember = $isCreator;
-        
-        // If not creator, check if user is member
-        if (!$senderIsMember) {
-            $members = $channel->members ?? [];
-            
-            // Multiple approaches to check membership
-            foreach ($members as $member) {
-                // Array with user_id field
-                if (is_array($member) && isset($member['user_id'])) {
-                    if ((string) $member['user_id'] === $userId) {
-                        $senderIsMember = true;
-                        break;
-                    }
-                }
-                // Object with user_id property
-                elseif (is_object($member) && property_exists($member, 'user_id')) {
-                    if ((string) $member->user_id === $userId) {
-                        $senderIsMember = true;
-                        break;
-                    }
-                }
-                // Simple string member
-                elseif (is_string($member) && (string) $member === $userId) {
-                    $senderIsMember = true;
-                    break;
-                }
-            }
-        }
-
-        if (!$senderIsMember) {
-            return response()->forbidden('You are not a member of this channel.');
-        }
 
         // For direct channels — also verify the other member still belongs to the channel
         $isDirect = (string) $channel->type === 'direct';
