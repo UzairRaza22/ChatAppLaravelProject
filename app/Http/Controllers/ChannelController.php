@@ -50,6 +50,11 @@ class ChannelController extends Controller
         $user = $request->user();
         $userId = (string) data_get($user, '_id');
         
+        \Log::info('=== USER DEBUG ===');
+        \Log::info('User object: ' . json_encode($user));
+        \Log::info('User _id: ' . data_get($user, '_id'));
+        \Log::info('User id: ' . data_get($user, 'id'));
+        \Log::info('Final userId: ' . $userId);
         \Log::info('=== FILTERING CHANNELS FOR USER: ' . $userId . ' ===');
         
         // Filter channels where user is creator OR member
