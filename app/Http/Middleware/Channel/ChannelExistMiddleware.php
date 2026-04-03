@@ -35,7 +35,7 @@ class ChannelExistMiddleware
         $channels = Channel::where('workspace_id', $workspaceId)
             ->where(function($query) use ($userId) {
                 $query->where('created_id', $userId) // User is creator
-                      ->orWhereJsonContains('members', $userId); // User is in members array
+                      ->orWhereRaw('JSON_CONTAINS(members, ?0, ?1)', [$userId]); // User is in members array
             })
             ->get();
 
