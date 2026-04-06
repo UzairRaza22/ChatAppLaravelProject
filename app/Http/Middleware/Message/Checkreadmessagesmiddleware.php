@@ -34,6 +34,15 @@ class CheckReadMessagesMiddleware
         $user   = $request->user();
         $userId = (string) $user->_id;
 
+        // Debug logging
+        \Log::info('=== READ MESSAGES DEBUG ===');
+        \Log::info('Channel ID: ' . $channelId);
+        \Log::info('User ID: ' . $userId);
+        \Log::info('Channel created_id: ' . $channel->created_id);
+        \Log::info('Channel created_id type: ' . gettype($channel->created_id));
+        \Log::info('Raw members: ' . json_encode($channel->members));
+        \Log::info('Is creator: ' . ($isCreator ? 'YES' : 'NO'));
+        
         // Check if user is a member OR the creator of the channel
         $isCreator = (string) $channel->created_id === $userId || 
                     (is_object($channel->created_id) && (string) $channel->created_id === $userId);
