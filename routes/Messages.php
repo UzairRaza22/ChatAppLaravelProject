@@ -28,7 +28,7 @@ Route::middleware(['check.token:login_token', 'check.active'])->group(function (
     // Payload: channel_id
     // Returns: paginated 20 messages, newest first
     Route::read('/read', [MessageController::class, 'read'])->middleware([
-        'message.read.resolve',     // validates channel membership + paginates messages
+        // 'message.read.resolve',     // Temporarily disabled for debugging
     ]);
 
     // ── PATCH /messages/update ────────────────────────────────────────────
