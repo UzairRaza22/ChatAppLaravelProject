@@ -28,9 +28,31 @@ class Message extends Model
 
     protected $casts = [
         'deleted_at' => 'datetime',
-        'read_by' => 'array',
-        'reactions' => 'array',
+        // read_by and reactions removed from casts —
+        // MongoDB already returns them as arrays, casting causes double-decode
     ];
+
+    /**
+     * Always return read_by as a clean array.
+     */
+    public function getReadByAttribute($value): array
+    {
+        if (is_string($value)) {
+            return json_decode($value, true) ?: [];
+        }
+        return is_array($value) ? $value : [];
+    }
+
+    /**
+     * Always return reactions as a clean array.
+     */
+    public function getReactionsAttribute($value): array
+    {
+        if (is_string($value)) {
+            return json_decode($value, true) ?: [];
+        }
+        return is_array($value) ? $value : [];
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -38,29 +60,22 @@ class Message extends Model
     |--------------------------------------------------------------------------
     */
 
-    /**
-     * Get the indexable data array for the model.
-     *
-     * @return array<string, mixed>
-     */
     public function toSearchableArray(): array
     {
         $searchable = [
-            'id' => (string) $this->_id,
-            'content' => $this->content,
+            'id'           => (string) $this->_id,
+            'content'      => $this->content,
             'message_type' => $this->message_type,
             'workspace_id' => (string) $this->workspace_id,
-            'channel_id' => (string) $this->channel_id,
-            'sender_id' => (string) $this->sender_id,
-            'created_at' => $this->created_at?->timestamp,
+            'channel_id'   => (string) $this->channel_id,
+            'sender_id'    => (string) $this->sender_id,
+            'created_at'   => $this->created_at?->timestamp,
         ];
 
-        // Include sender name if relationship is loaded
         if ($this->relationLoaded('sender') && $this->sender) {
             $searchable['sender_name'] = $this->sender->name;
         }
 
-        // Include channel name if relationship is loaded
         if ($this->relationLoaded('channel') && $this->channel) {
             $searchable['channel_name'] = $this->channel->name;
         }
@@ -68,28 +83,18 @@ class Message extends Model
         return $searchable;
     }
 
-    /**
-     * Get the Scout index name for the model.
-     */
     public function searchableAs(): string
     {
         return 'messages_index';
     }
 
-    /**
-     * Modify the query used to retrieve models when making all of the models searchable.
-     */
     protected function makeAllSearchableUsing($query)
     {
         return $query->with(['sender', 'channel']);
     }
 
-    /**
-     * Determine if the model should be searchable.
-     */
     public function shouldBeSearchable(): bool
     {
-        // Only index non-deleted messages with content
         return !$this->trashed() && !empty($this->content);
     }
 
@@ -149,50 +154,29 @@ class Message extends Model
         return $message;
     }
 
-    /**
-     * Atomically add $userId to the read_by array of the given messages.
-     * Only updates messages that belong to $channelId.
-     * Uses $addToSet to avoid duplicates (idempotent).
-     *
-     * @return int Number of modified documents.
-     */
     public static function markReadBy(string $channelId, array $messageIds, string $userId): int
     {
-        $result = self::whereIn('_id', $messageIds)
+        return self::whereIn('_id', $messageIds)
             ->where('channel_id', $channelId)
-            ->push('read_by', $userId, true); // true = addToSet (unique)
-
-        return $result;
+            ->push('read_by', $userId, true);
     }
 
-    /**
-     * Toggle an emoji reaction for a user on a message.
-     * Uses $addToSet / $pull for atomic concurrency safety.
-     * After a pull, if the emoji array is empty, the key is unset.
-     *
-     * @return self Fresh message instance.
-     */
     public static function toggleReaction(self $message, string $userId, string $emoji): self
     {
-        $reactions = $message->reactions ?? [];
+        $reactions  = $message->reactions ?? [];
         $emojiUsers = $reactions[$emoji] ?? [];
 
         if (in_array($userId, $emojiUsers)) {
-            // Remove user from the emoji array
             $message->pull("reactions.{$emoji}", $userId);
-
-            // Re-fetch to check if array is now empty
             $message->refresh();
-            $refreshed = $message->reactions ?? [];
 
+            $refreshed = $message->reactions ?? [];
             if (isset($refreshed[$emoji]) && empty($refreshed[$emoji])) {
-                // Remove the now-empty emoji key entirely
                 $message->unset("reactions.{$emoji}");
                 $message->refresh();
             }
         } else {
-            // Add user to the emoji array
-            $message->push("reactions.{$emoji}", $userId, true); // true = addToSet
+            $message->push("reactions.{$emoji}", $userId, true);
             $message->refresh();
         }
 
