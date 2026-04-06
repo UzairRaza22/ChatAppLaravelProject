@@ -19,7 +19,7 @@ Route::middleware(['check.token:login_token', 'check.active'])->group(function (
     // Unified send for both directchannel and channelmessage
     // Payload: channel_id, message, file (optional)
     Route::post('/create', [MessageController::class, 'create'])->middleware([
-        // 'message.channel.check',    // Temporarily removed for debugging
+        'message.channel.check',    // validates channel + membership (direct & public/private)
         'message.file.upload',      // handles GridFS upload if file present
     ]);
 
@@ -28,7 +28,7 @@ Route::middleware(['check.token:login_token', 'check.active'])->group(function (
     // Payload: channel_id
     // Returns: paginated 20 messages, newest first
     Route::read('/read', [MessageController::class, 'read'])->middleware([
-        // 'message.read.resolve',     // Temporarily disabled for debugging
+        'message.read.resolve',     // validates channel membership + paginates messages
     ]);
 
     // ── PATCH /messages/update ────────────────────────────────────────────

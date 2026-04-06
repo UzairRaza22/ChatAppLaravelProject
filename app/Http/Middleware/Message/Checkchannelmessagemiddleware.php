@@ -44,9 +44,35 @@ class CheckChannelMessageMiddleware
         $user   = $request->user();
         $userId = (string) $user->_id;
 
-        // Temporarily bypass membership check for debugging
-        // TODO: Re-enable proper membership check after debugging
-        return response()->success(['test' => 'bypass working'], 'Bypass is working', 200);
+        // Comprehensive membership validation
+        $isCreator = (string) $channel->created_id === $userId || 
+                    (is_object($channel->created_id) && (string) $channel->created_id === $userId);
+        
+        if (!$isCreator) {
+            $isMember = false;
+            $members = $channel->members ?? [];
+            
+            foreach ($members as $member) {
+                $memberId = null;
+                
+                if (is_array($member) && isset($member['user_id'])) {
+                    $memberId = $member['user_id'];
+                } elseif (is_object($member) && property_exists($member, 'user_id')) {
+                    $memberId = $member->user_id;
+                } elseif (is_string($member)) {
+                    $memberId = $member;
+                }
+                
+                if ($memberId && (string) $memberId === $userId) {
+                    $isMember = true;
+                    break;
+                }
+            }
+            
+            if (!$isMember) {
+                return response()->forbidden('You are not a member of this channel.');
+            }
+        }
 
         // For direct channels — also verify the other member still belongs to the channel
         $isDirect = (string) $channel->type === 'direct';
@@ -77,8 +103,6 @@ class CheckChannelMessageMiddleware
         if (!$otherMemberPresent) {
             return response()->forbidden('The other user is no longer a member of this direct channel.');
         }
-
-        $request->attributes->set('channel', $channel);
 
         return $next($request);
     }

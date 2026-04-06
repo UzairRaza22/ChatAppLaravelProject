@@ -105,7 +105,6 @@ class MessageController extends Controller
     public function update(Request $request)
     {
         $message = $request->attributes->get('message');
-
         $fileData = $request->hasFile('file')
             ? $this->replaceFile($message, $request)
             : ['file_path' => $message->file_path, 'file_name' => $message->file_name, 'file_mime' => $message->file_mime];
@@ -136,6 +135,10 @@ class MessageController extends Controller
     public function delete(Request $request)
     {
         $message = $request->attributes->get('message');
+        
+        if ((string) $message->sender_id !== (string) $request->user()->_id) {
+            return response()->forbidden('Only the sender can delete this message.');
+        }
 
         $message->file_path && $this->attachmentService->delete($message->file_path);
 

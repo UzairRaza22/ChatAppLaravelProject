@@ -47,30 +47,19 @@ class CheckReadMessagesMiddleware
         $isCreator = (string) $channel->created_id === $userId || 
                     (is_object($channel->created_id) && (string) $channel->created_id === $userId);
         
-        $isMember = $isCreator;
-        
-        // Simple and robust membership check
-        $isMember = false;
-        
-        // Check if user is creator
-        if ((string) $channel->created_id === $userId) {
-            $isMember = true;
-        }
-        
-        // Check if user is in members array
-        if (!$isMember && !empty($channel->members)) {
-            $memberIds = [];
+        if (!$isCreator) {
+            $isMember = false;
+            $members = $channel->members ?? [];
             
-            // Extract all user_ids from members array
-            foreach ($channel->members as $member) {
+            foreach ($members as $member) {
                 $memberId = null;
                 
-                if (is_string($member)) {
-                    $memberId = $member;
-                } elseif (is_array($member) && isset($member['user_id'])) {
+                if (is_array($member) && isset($member['user_id'])) {
                     $memberId = $member['user_id'];
                 } elseif (is_object($member) && property_exists($member, 'user_id')) {
                     $memberId = $member->user_id;
+                } elseif (is_string($member)) {
+                    $memberId = $member;
                 }
                 
                 if ($memberId && (string) $memberId === $userId) {
@@ -78,6 +67,10 @@ class CheckReadMessagesMiddleware
                     break;
                 }
             }
+        }
+
+        if (!$isMember) {
+            return response()->forbidden('You are not a member of this channel.');
         }
 
         // Newest first → page 1 = most recent 20 messages
