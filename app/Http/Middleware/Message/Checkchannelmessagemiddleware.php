@@ -9,26 +9,11 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CheckChannelMessageMiddleware
 {
-    /**
-     * Unified middleware for both directchannel and channelmessage.
-     *
-     * For directchannel:
-     *   - channel.type === 'direct'
-     *   - sender must be a member of the direct channel
-     *   - the other user in the channel must also be a member
-     *
-     * For channelmessage:
-     *   - channel.type === 'public' or 'private'
-     *   - sender must be a member of the channel
-     *
-     * Token is read from Authorization header (set by check.token middleware).
-     * Payload: channel_id
-     */
     public function handle(Request $request, Closure $next): Response
     {
         $channelId = $request->input('channel_id');
 
-        $channel = Channel::where(function($query) use ($channelId) {
+        $channel = Channel::where(function ($query) use ($channelId) {
             $query->where('_id', $channelId)
                   ->orWhere('id', $channelId);
         })->first();
@@ -37,73 +22,66 @@ class CheckChannelMessageMiddleware
             return response()->notFound('Channel not found.');
         }
 
-        // Set channel in request for controller
-        $request->merge(['channel' => $channel]);
         $request->attributes->set('channel', $channel);
 
         $user   = $request->user();
         $userId = (string) $user->_id;
 
-        // Comprehensive membership validation
-        $isCreator = (string) $channel->created_id === $userId || 
-                    (is_object($channel->created_id) && (string) $channel->created_id === $userId);
-        
+        // Check creator first
+        $isCreator = (string) $channel->created_id === $userId;
+
         if (!$isCreator) {
-            $isMember = false;
-            $members = $channel->members ?? [];
-            
-            foreach ($members as $member) {
-                $memberId = null;
-                
-                if (is_array($member) && isset($member['user_id'])) {
-                    $memberId = $member['user_id'];
-                } elseif (is_object($member) && property_exists($member, 'user_id')) {
-                    $memberId = $member->user_id;
-                } elseif (is_string($member)) {
-                    $memberId = $member;
-                }
-                
-                if ($memberId && (string) $memberId === $userId) {
-                    $isMember = true;
-                    break;
-                }
-            }
-            
+            $isMember = $this->isChannelMember($channel->members, $userId);
+
             if (!$isMember) {
                 return response()->forbidden('You are not a member of this channel.');
             }
         }
 
-        // For direct channels — also verify the other member still belongs to the channel
-        $isDirect = (string) $channel->type === 'direct';
+        // For direct channels — verify other member is present
+        if ((string) $channel->type === 'direct') {
+            $otherMemberPresent = $this->hasOtherMember($channel->members, $userId);
 
-        $otherMemberPresent = !$isDirect;
-        
-        // For direct channels, check if there's another member
-        if ($isDirect) {
-            $members = $channel->members ?? [];
-            foreach ($members as $member) {
-                $memberId = null;
-                
-                if (is_array($member) && isset($member['user_id'])) {
-                    $memberId = (string) $member['user_id'];
-                } elseif (is_object($member) && property_exists($member, 'user_id')) {
-                    $memberId = (string) $member->user_id;
-                } elseif (is_string($member)) {
-                    $memberId = (string) $member;
-                }
-                
-                if ($memberId && $memberId !== $userId) {
-                    $otherMemberPresent = true;
-                    break;
-                }
+            if (!$otherMemberPresent) {
+                return response()->forbidden('The other user is no longer a member of this direct channel.');
             }
         }
 
-        if (!$otherMemberPresent) {
-            return response()->forbidden('The other user is no longer a member of this direct channel.');
-        }
-
         return $next($request);
+    }
+
+    private function isChannelMember(array $members, string $userId): bool
+    {
+        foreach ($members as $member) {
+            if ($this->extractMemberId($member) === $userId) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function hasOtherMember(array $members, string $userId): bool
+    {
+        foreach ($members as $member) {
+            $memberId = $this->extractMemberId($member);
+            if ($memberId && $memberId !== $userId) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function extractMemberId(mixed $member): ?string
+    {
+        if (is_array($member) && isset($member['user_id'])) {
+            return (string) $member['user_id'];
+        }
+        if (is_object($member) && property_exists($member, 'user_id')) {
+            return (string) $member->user_id;
+        }
+        if (is_string($member)) {
+            return $member;
+        }
+        return null;
     }
 }

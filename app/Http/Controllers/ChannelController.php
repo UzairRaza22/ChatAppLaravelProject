@@ -14,7 +14,6 @@ use App\Models\Channel;
 
 class ChannelController extends Controller
 {
-    // 1. Create Channel
     public function create(CreateChannelRequest $request)
     {
         $user = $request->user();
@@ -25,11 +24,10 @@ class ChannelController extends Controller
             'name'         => data_get($request, 'name'),
             'type'         => data_get($request, 'type', 'public'),
             'created_id'   => (string) data_get($user, '_id'),
-
-            'members' => [
+            'members'      => [
                 [
                     'user_id' => (string) data_get($user, '_id'),
-                    'role' => 'admin' // Creator gets admin role
+                    'role'    => 'admin'
                 ]
             ]
         ]);
@@ -37,7 +35,6 @@ class ChannelController extends Controller
         return response()->success(new ChannelResource($channel), 'Channel created successfully');
     }
 
-    // 2. Read Channel
     public function read(ReadChannelRequest $request)
     {
         $channel = data_get($request->attributes->all(), 'channel');
@@ -45,129 +42,107 @@ class ChannelController extends Controller
             return response()->success(new ChannelResource($channel), 'Channel retrieved successfully');
         }
 
-        // Just return all channels from middleware (same as teams)
         $channels = data_get($request->attributes->all(), 'channels', collect());
         return response()->success(ChannelResource::collection($channels), 'Channels retrieved successfully');
     }
 
-    // 3. List Channels by User
     public function listByUser(ListUserChannelsRequest $request)
     {
-        // Get all channels and filter by user (same as read method)
         $channels = data_get($request->attributes->all(), 'channels', collect());
-        $user = $request->user();
-        $userId = (string) data_get($user, '_id');
-        
-        // Filter channels where user is creator OR member
+        $user     = $request->user();
+        $userId   = (string) data_get($user, '_id');
+
         $userChannels = $channels->filter(function ($channel) use ($userId) {
-            // Check if user is creator
             if ((string) $channel->created_id === $userId) {
                 return true;
             }
-            
-            // Check if user is member
-            $members = $channel->members ?? [];
-            if (is_array($members)) {
-                foreach ($members as $member) {
-                    $memberUserId = null;
-                    
-                    // Handle different member structures
-                    if (is_array($member)) {
-                        // Structure: {"user_id": "...", "role": "..."}
-                        if (isset($member['user_id'])) {
-                            $memberUserId = (string) $member['user_id'];
-                        }
-                        // Structure: {"id": "...", "name": "...", ...} (full user object)
-                        elseif (isset($member['id'])) {
-                            $memberUserId = (string) $member['id'];
-                        }
-                    } elseif (is_object($member)) {
-                        // Object structure
-                        if (isset($member->user_id)) {
-                            $memberUserId = (string) $member->user_id;
-                        } elseif (isset($member->id)) {
-                            $memberUserId = (string) $member->id;
-                        }
-                    } elseif (is_string($member)) {
-                        // Simple string member
-                        $memberUserId = (string) $member;
-                    }
-                    
-                    if ($memberUserId === $userId) {
-                        return true;
-                    }
+
+            foreach ($channel->members as $member) {
+                $memberId = null;
+
+                if (is_array($member) && isset($member['user_id'])) {
+                    $memberId = (string) $member['user_id'];
+                } elseif (is_array($member) && isset($member['id'])) {
+                    $memberId = (string) $member['id'];
+                } elseif (is_object($member) && isset($member->user_id)) {
+                    $memberId = (string) $member->user_id;
+                } elseif (is_object($member) && isset($member->id)) {
+                    $memberId = (string) $member->id;
+                } elseif (is_string($member)) {
+                    $memberId = $member;
+                }
+
+                if ($memberId === $userId) {
+                    return true;
                 }
             }
-            
+
             return false;
         });
-        
+
         return response()->success(ChannelResource::collection($userChannels), 'Channels retrieved successfully');
     }
 
-    // 4. Update Channel
     public function update(UpdateChannelRequest $request)
     {
+        // Channel resolved by ChannelExistMiddleware — no workspace_id needed here
         $channel = data_get($request->attributes->all(), 'channel');
         $channel->update($request->validated());
 
         return response()->success(new ChannelResource($channel), 'Channel updated successfully');
     }
 
-    // 5. Delete Channel
     public function delete(DeleteChannelRequest $request)
     {
+        // Channel resolved by ChannelExistMiddleware — no workspace_id needed here
         $channel = data_get($request->attributes->all(), 'channel');
         $channel->forceDelete();
 
         return response()->success(null, 'Channel deleted successfully');
     }
 
-    // 6. Add Members
     public function addMember(AddMemberRequest $request)
     {
-        $channel = data_get($request->attributes->all(), 'channel');
-        $userIds = data_get($request, 'user_ids', []);
-        
-        // Get current members (with correct structure)
-        $currentMembers = $channel->members ?? [];
-        
-        // Add new members with the correct structure: {"user_id": "...", "role": "member"}
+        $channel  = data_get($request->attributes->all(), 'channel');
+        $userIds  = data_get($request, 'user_ids', []);
+
+        $currentMembers = $channel->members;
+
+        // Avoid duplicates
+        $existingIds = array_map(fn($m) => (string) ($m['user_id'] ?? ''), $currentMembers);
+
         foreach ($userIds as $userId) {
-            $currentMembers[] = [
-                'user_id' => (string) $userId,
-                'role' => 'member' // Default role for new members
-            ];
+            if (!in_array((string) $userId, $existingIds, true)) {
+                $currentMembers[] = [
+                    'user_id' => (string) $userId,
+                    'role'    => 'member'
+                ];
+            }
         }
-        
-        // Update the members array with the correct structure
+
         $channel->update(['members' => $currentMembers]);
 
         return response()->success(new ChannelResource($channel->fresh()), 'Members added successfully');
     }
 
-    // 7. Remove Members
     public function removeMember(RemoveMemberRequest $request)
     {
-        $channel = data_get($request->attributes->all(), 'channel');
-        $userIds = data_get($request, 'user_ids', []);
-        
-        // Get current members and remove the specified user IDs
-        $currentMembers = collect($channel->members ?? []);
-        $updatedMembers = $currentMembers->reject(function ($member) use ($userIds) {
+        $channel  = data_get($request->attributes->all(), 'channel');
+        $userIds  = array_map('strval', data_get($request, 'user_ids', []));
+
+        $updatedMembers = collect($channel->members)->reject(function ($member) use ($userIds) {
             if (is_array($member) && isset($member['user_id'])) {
-                return in_array((string) $member['user_id'], array_map('strval', $userIds));
+                return in_array((string) $member['user_id'], $userIds, true);
             }
             if (is_object($member) && isset($member->user_id)) {
-                return in_array((string) $member->user_id, array_map('strval', $userIds));
+                return in_array((string) $member->user_id, $userIds, true);
             }
-            // Fallback for simple string members
             if (is_string($member)) {
-                return in_array((string) $member, array_map('strval', $userIds));
+                return in_array($member, $userIds, true);
             }
             return false;
         })->values()->all();
-        
+
         $channel->update(['members' => $updatedMembers]);
 
         return response()->success(new ChannelResource($channel->fresh()), 'Members removed successfully');

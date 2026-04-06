@@ -16,20 +16,33 @@ class Channel extends Model
         'name',
         'workspace_id',
         'team_id',
-        'type', // public/private/direct
+        'type',
         'created_id',
         'direct_id',
-        'members', // array of {user_id, role}
+        'members',
         'join_requests',
     ];
 
     protected function casts(): array
     {
         return [
-            'members' => 'json', // Changed from 'array' to 'json' to handle JSON strings
-            'join_requests' => 'json',
-            'deleted_at' => 'datetime',
+            'members'      => 'json',
+            'join_requests'=> 'json',
+            'deleted_at'   => 'datetime',
         ];
+    }
+
+    /**
+     * Always returns members as a clean array regardless of how
+     * MongoDB stored it (JSON string, array, or null).
+     */
+    public function getMembersAttribute($value): array
+    {
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+            return is_array($decoded) ? $decoded : [];
+        }
+        return is_array($value) ? $value : [];
     }
 
     public function workspace()
@@ -40,16 +53,5 @@ class Channel extends Model
     public function messages()
     {
         return $this->hasMany(Message::class, 'channel_id', '_id');
-    }
-
-    public function members()
-    {
-        // Debug logging to understand members data storage
-        \Log::info('=== CHANNEL MEMBERS DEBUG ===');
-        \Log::info('Raw members attribute: ' . json_encode($this->attributes['members'] ?? 'null'));
-        \Log::info('Raw members relation: ' . json_encode($this->members ?? 'null'));
-        \Log::info('Members count: ' . count($this->members ?? []));
-        
-        return $this->belongsToMany(User::class, null, 'channel_ids', 'members');
     }
 }
