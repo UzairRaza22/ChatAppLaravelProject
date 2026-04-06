@@ -44,6 +44,12 @@ class Channel extends Model
 
     public function members()
     {
+        // Debug logging to understand members data storage
+        \Log::info('=== CHANNEL MEMBERS DEBUG ===');
+        \Log::info('Raw members attribute: ' . json_encode($this->attributes['members'] ?? 'null'));
+        \Log::info('Raw members relation: ' . json_encode($this->members ?? 'null'));
+        \Log::info('Members count: ' . count($this->members ?? []));
+        
         return $this->belongsToMany(User::class, null, 'channel_ids', 'members');
     }
 }
