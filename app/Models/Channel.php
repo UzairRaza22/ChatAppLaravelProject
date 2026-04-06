@@ -36,14 +36,19 @@ class Channel extends Model
      * Always returns members as a clean array regardless of how
      * MongoDB stored it (JSON string, array, or null).
      */
-    public function getMembersAttribute($value): array
-    {
-        if (is_string($value)) {
-            $decoded = json_decode($value, true);
-            return is_array($decoded) ? $decoded : [];
-        }
-        return is_array($value) ? $value : [];
+public function getMembersAttribute($value): array
+{
+    if (empty($value)) {
+        return [];
     }
+
+    if (is_string($value)) {
+        $decoded = json_decode($value, true);
+        return is_array($decoded) ? $decoded : [];
+    }
+
+    return is_array($value) ? $value : [];
+}
 
     public function workspace()
     {
