@@ -35,7 +35,8 @@ class CheckReadMessagesMiddleware
         $userId = (string) $user->_id;
 
         // Check if user is a member OR the creator of the channel
-        $isCreator = (string) $channel->created_id === $userId;
+        $isCreator = (string) $channel->created_id === $userId || 
+                    (is_object($channel->created_id) && (string) $channel->created_id === $userId);
         
         $isMember = $isCreator;
         
@@ -43,6 +44,7 @@ class CheckReadMessagesMiddleware
         if (!$isMember) {
             $members = $channel->members ?? [];
             
+            // Multiple approaches to check membership
             foreach ($members as $member) {
                 // Array with user_id field
                 if (is_array($member) && isset($member['user_id'])) {
