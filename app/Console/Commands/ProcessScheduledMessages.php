@@ -26,7 +26,7 @@ class ProcessScheduledMessages extends Command
      */
     public function handle()
     {
-        $now = now();
+        $now = now('UTC');
         $processed = 0;
         $skipped = 0;
 

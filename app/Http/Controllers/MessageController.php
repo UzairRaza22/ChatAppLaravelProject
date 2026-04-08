@@ -59,7 +59,7 @@ class MessageController extends Controller
             : ['file_path' => null, 'file_name' => null, 'file_mime' => null, 'message_type' => 'text'];
 
         $scheduleTime = $request->filled('schedule_time')
-            ? Carbon::parse($request->input('schedule_time'))
+            ? Carbon::createFromFormat('H:i', $request->input('schedule_time'), 'Asia/Karachi')->utc()
             : null;
 
         $status = $scheduleTime ? 'scheduled' : 'sent';
