@@ -41,13 +41,13 @@ class MessageController extends Controller
     public function create(Request $request)
     {
         $user    = $request->user();
-        
+
         // Get channel from middleware or look it up if not available
         $channel = $request->attributes->get('channel');
         if (!$channel) {
             $channelId = $request->input('channel_id');
             $channel = Channel::where('_id', $channelId)->first();
-            
+
             if (!$channel) {
                 return response()->notFound('Channel not found.');
             }
@@ -78,8 +78,8 @@ class MessageController extends Controller
     /*
     |--------------------------------------------------------------------------
     | Read Messages — unified for directchannel and channelmessage
-    | Payload: channel_id (same for both — middleware resolves channel type)
-    | resolved_messages → set by CheckReadMessagesMiddleware (paginated, newest first)
+    | Payload: channel_id, cursor (optional), limit (optional, default 20)
+    | resolved_messages → set by CheckReadMessagesMiddleware (cursor-based, newest first)
     |--------------------------------------------------------------------------
     */
     public function read(Request $request)
@@ -135,7 +135,7 @@ class MessageController extends Controller
     public function delete(Request $request)
     {
         $message = $request->attributes->get('message');
-        
+
         if ((string) $message->sender_id !== (string) $request->user()->_id) {
             return response()->forbidden('Only the sender can delete this message.');
         }
@@ -220,7 +220,7 @@ class MessageController extends Controller
         );
     }
 
-/*
+    /*
     | Private: Replace File on Update
     | Deletes the old GridFS file then uploads the new one.
     | Extracted to keep update() clean while grouping related service calls.

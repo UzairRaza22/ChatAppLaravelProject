@@ -51,19 +51,27 @@ class CheckReadMessagesMiddleware
             }
         }
 
-        $messages = Message::where('channel_id', (string) $channel->_id)
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
+        $cursor = $request->input('cursor');
+        $limit = $request->input('limit', 20);
+
+        $query = Message::where('channel_id', (string) $channel->_id)
+            ->orderBy('created_at', 'desc');
+
+        if ($cursor) {
+            $query->where('_id', '<', $cursor);
+        }
+
+        $messages = $query->limit($limit)->get();
+
+        $hasMore = $messages->count() === $limit;
+        $nextCursor = $hasMore ? (string) $messages->last()->_id : null;
 
         $request->attributes->set('channel', $channel);
         $request->attributes->set('resolved_messages', [
-            'data'          => MessageResource::collection($messages->items()),
-            'current_page'  => $messages->currentPage(),
-            'per_page'      => $messages->perPage(),
-            'total'         => $messages->total(),
-            'last_page'     => $messages->lastPage(),
-            'next_page_url' => $messages->nextPageUrl(),
-            'prev_page_url' => $messages->previousPageUrl(),
+            'data'       => MessageResource::collection($messages),
+            'has_more'   => $hasMore,
+            'next_cursor' => $nextCursor,
+            'limit'      => $limit,
         ]);
 
         return $next($request);

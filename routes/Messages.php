@@ -25,10 +25,10 @@ Route::middleware(['check.token:login_token', 'check.active'])->group(function (
 
     // ── GET /messages/read ────────────────────────────────────────────────
     // Unified read for both directchannel and channelmessage
-    // Payload: channel_id
-    // Returns: paginated 20 messages, newest first
+    // Payload: channel_id, cursor (optional), limit (optional, default 20)
+    // Returns: messages with cursor for infinite scroll, newest first
     Route::read('/read', [MessageController::class, 'read'])->middleware([
-        'message.read.resolve',     // validates channel membership + paginates messages
+        'message.read.resolve',     // validates channel membership + loads messages with cursor
     ]);
 
     // ── PATCH /messages/update ────────────────────────────────────────────
