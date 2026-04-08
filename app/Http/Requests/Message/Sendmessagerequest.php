@@ -17,7 +17,7 @@ class SendMessageRequest extends FormRequest
             'channel_id' => 'required|string',
             'message'    => 'nullable|string|max:5000',
             'file'       => 'nullable|file|max:10240|mimes:jpg,jpeg,png,gif,webp,pdf,doc,docx,xls,xlsx,ppt,pptx,txt,zip,mp4,mp3',
-            'schedule_time' => 'nullable|string|regex:/^([01]\d|2[0-3]):[0-5]\d$/',
+            'schedule_time' => 'nullable|date',
         ];
     }
 
@@ -30,18 +30,17 @@ class SendMessageRequest extends FormRequest
 
             if ($this->filled('schedule_time')) {
                 try {
-                    $scheduleTime = \Illuminate\Support\Carbon::createFromFormat(
-                        'H:i',
+                    $scheduleTime = \Illuminate\Support\Carbon::parse(
                         $this->input('schedule_time'),
                         'Asia/Karachi'
                     );
                     $nowPtk = \Illuminate\Support\Carbon::now('Asia/Karachi');
 
                     if ($scheduleTime->lessThanOrEqualTo($nowPtk)) {
-                        $validator->errors()->add('schedule_time', 'schedule_time must be a future time in Pakistan.');
+                        $validator->errors()->add('schedule_time', 'schedule_time must be a future datetime in Pakistan.');
                     }
                 } catch (\Throwable $e) {
-                    $validator->errors()->add('schedule_time', 'schedule_time format must be HH:MM (24-hour).');
+                    $validator->errors()->add('schedule_time', 'schedule_time must be a valid datetime.');
                 }
             }
         });

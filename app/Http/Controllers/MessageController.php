@@ -8,6 +8,7 @@ use App\Http\Resources\SearchResource;
 use App\Http\Requests\Message\MessageSearchRequest;
 use App\Models\Message;
 use App\Models\Channel;
+use App\Jobs\SendScheduledMessageJob;
 use App\Services\AttachmentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -39,7 +40,7 @@ class MessageController extends Controller
     | file_path, file_name, file_mime, message_type ready for MongoDB.
     |--------------------------------------------------------------------------
     */
-    public function create(Request $request)
+    public function create(SendMessageRequest $request)
     {
         $user    = $request->user();
 
@@ -59,10 +60,11 @@ class MessageController extends Controller
             : ['file_path' => null, 'file_name' => null, 'file_mime' => null, 'message_type' => 'text'];
 
         $scheduleTime = $request->filled('schedule_time')
-            ? Carbon::createFromFormat('H:i', $request->input('schedule_time'), 'Asia/Karachi')->utc()
+            ? Carbon::parse($request->input('schedule_time'), 'Asia/Karachi')
             : null;
 
         $status = $scheduleTime ? 'scheduled' : 'sent';
+        $scheduleTimeUtc = $scheduleTime ? $scheduleTime->copy()->utc() : null;
 
         $message = Message::add([
             'workspace_id' => (string) $channel->workspace_id,
@@ -73,9 +75,14 @@ class MessageController extends Controller
             'file_path'    => $fileData['file_path'],
             'file_name'    => $fileData['file_name'],
             'file_mime'    => $fileData['file_mime'],
-            'schedule_time' => $scheduleTime,
+            'schedule_time' => $scheduleTimeUtc,
             'status'        => $status,
         ]);
+
+        if ($scheduleTime) {
+            SendScheduledMessageJob::dispatch((string) $message->_id)
+                ->delay($scheduleTimeUtc);
+        }
 
         return response()->success(
             ['message' => MessageResource::make($message->load(['sender', 'channel']))],
