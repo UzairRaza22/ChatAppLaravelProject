@@ -57,6 +57,11 @@ class CheckReadMessagesMiddleware
         $query = Message::where('channel_id', (string) $channel->_id)
             ->orderBy('created_at', 'desc');
 
+        $query->where(function ($query) {
+            $query->whereNull('status')
+                ->orWhere('status', 'sent');
+        });
+
         if ($cursor) {
             $query->where('_id', '<', $cursor);
         }

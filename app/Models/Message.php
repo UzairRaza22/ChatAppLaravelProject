@@ -24,10 +24,13 @@ class Message extends Model
         'file_mime',
         'read_by',
         'reactions',
+        'schedule_time',
+        'status',
     ];
 
     protected $casts = [
         'deleted_at' => 'datetime',
+        'schedule_time' => 'datetime',
         // read_by and reactions removed from casts —
         // MongoDB already returns them as arrays, casting causes double-decode
     ];
@@ -95,7 +98,15 @@ class Message extends Model
 
     public function shouldBeSearchable(): bool
     {
-        return !$this->trashed() && !empty($this->content);
+        if ($this->trashed() || empty($this->content)) {
+            return false;
+        }
+
+        if (!$this->status) {
+            return true;
+        }
+
+        return $this->status === 'sent';
     }
 
     /*

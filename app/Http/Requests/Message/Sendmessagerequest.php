@@ -17,6 +17,7 @@ class SendMessageRequest extends FormRequest
             'channel_id' => 'required|string',
             'message'    => 'nullable|string|max:5000',
             'file'       => 'nullable|file|max:10240|mimes:jpg,jpeg,png,gif,webp,pdf,doc,docx,xls,xlsx,ppt,pptx,txt,zip,mp4,mp3',
+            'schedule_time' => 'nullable|date|after:now',
         ];
     }
 

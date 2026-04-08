@@ -10,6 +10,7 @@ use App\Models\Message;
 use App\Models\Channel;
 use App\Services\AttachmentService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 class MessageController extends Controller
 {
@@ -57,6 +58,12 @@ class MessageController extends Controller
             ? $this->attachmentService->upload($request->file('file'), (string) $channel->workspace_id)
             : ['file_path' => null, 'file_name' => null, 'file_mime' => null, 'message_type' => 'text'];
 
+        $scheduleTime = $request->filled('schedule_time')
+            ? Carbon::parse($request->input('schedule_time'))
+            : null;
+
+        $status = $scheduleTime ? 'scheduled' : 'sent';
+
         $message = Message::add([
             'workspace_id' => (string) $channel->workspace_id,
             'sender_id'    => (string) $user->_id,
@@ -66,6 +73,8 @@ class MessageController extends Controller
             'file_path'    => $fileData['file_path'],
             'file_name'    => $fileData['file_name'],
             'file_mime'    => $fileData['file_mime'],
+            'schedule_time' => $scheduleTime,
+            'status'        => $status,
         ]);
 
         return response()->success(
@@ -74,7 +83,6 @@ class MessageController extends Controller
             201
         );
     }
-
     /*
     |--------------------------------------------------------------------------
     | Read Messages — unified for directchannel and channelmessage
