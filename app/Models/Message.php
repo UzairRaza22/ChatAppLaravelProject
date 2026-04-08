@@ -6,9 +6,21 @@ use MongoDB\Laravel\Eloquent\Model;
 use MongoDB\Laravel\Eloquent\SoftDeletes;
 use Laravel\Scout\Searchable;
 
+if (trait_exists(\Laravel\Scout\Searchable::class)) {
+    trait MessageSearchable
+    {
+        use Searchable;
+    }
+} else {
+    trait MessageSearchable
+    {
+        // Scout not installed; keep model functional without search indexing.
+    }
+}
+
 class Message extends Model
 {
-    use SoftDeletes, Searchable;
+    use SoftDeletes, MessageSearchable;
 
     protected $collection = 'messages';
 

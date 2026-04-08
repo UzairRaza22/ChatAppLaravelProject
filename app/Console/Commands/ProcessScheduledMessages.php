@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Message;
 use Illuminate\Console\Command;
+use MongoDB\BSON\ObjectId;
 
 class ProcessScheduledMessages extends Command
 {
@@ -40,7 +41,11 @@ class ProcessScheduledMessages extends Command
             ->orderBy('schedule_time', 'asc')
             ->chunk(100, function ($messages) use (&$processed, &$skipped) {
                 foreach ($messages as $message) {
-                    $claimed = Message::where('_id', (string) $message->_id)
+                    $id = $message->_id instanceof ObjectId
+                        ? $message->_id
+                        : new ObjectId((string) $message->_id);
+
+                    $claimed = Message::where('_id', $id)
                         ->where(function ($query) {
                             $query->where('status', 'scheduled')
                                 ->orWhere('status', 'processing');
@@ -54,12 +59,12 @@ class ProcessScheduledMessages extends Command
 
                     try {
                         // Existing send behavior is tied to the message record itself.
-                        Message::where('_id', (string) $message->_id)
+                        Message::where('_id', $id)
                             ->update(['status' => 'sent']);
 
                         $processed++;
                     } catch (\Throwable $e) {
-                        Message::where('_id', (string) $message->_id)
+                        Message::where('_id', $id)
                             ->update(['status' => 'scheduled']);
 
                         $this->error('Failed to process scheduled message: ' . $e->getMessage());
