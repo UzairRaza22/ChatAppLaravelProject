@@ -17,20 +17,36 @@ class ChannelController extends Controller
     public function create(CreateChannelRequest $request)
     {
         $user = $request->user();
+        $type = data_get($request, 'type', 'public');
 
-        $channel = Channel::create([
+        $members = $type === 'direct'
+            ? (data_get($request, 'members') ?: [
+                [
+                    'user_id' => (string) data_get($user, '_id'),
+                    'role'    => 'creator',
+                ],
+            ])
+            : [
+                [
+                    'user_id' => (string) data_get($user, '_id'),
+                    'role'    => 'admin',
+                ],
+            ];
+
+        $channelData = [
             'workspace_id' => data_get($request, 'workspace_id'),
             'team_id'      => data_get($request, 'team_id'),
             'name'         => data_get($request, 'name'),
-            'type'         => data_get($request, 'type', 'public'),
+            'type'         => $type,
             'created_id'   => (string) data_get($user, '_id'),
-            'members'      => [
-                [
-                    'user_id' => (string) data_get($user, '_id'),
-                    'role'    => 'admin'
-                ]
-            ]
-        ]);
+            'members'      => $members,
+        ];
+
+        if ($type === 'direct' && data_get($request, 'direct_id')) {
+            $channelData['direct_id'] = data_get($request, 'direct_id');
+        }
+
+        $channel = Channel::create($channelData);
 
         return response()->success(new ChannelResource($channel), 'Channel created successfully');
     }
