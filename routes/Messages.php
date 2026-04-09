@@ -18,11 +18,11 @@ Route::middleware(['check.token:login_token', 'check.active'])->group(function (
     // ── POST /messages/create ─────────────────────────────────────────────
     // Unified send for both directchannel and channelmessage
     // Payload: channel_id, message, file (optional)
-    Route::post('/create', [MessageController::class, 'create'])->middleware([
-        'message.channel.check',    // validates channel + membership (direct & public/private)
-        'message.file.upload',      // handles GridFS upload if file present
-    ]);
-
+ Route::post('/create', [MessageController::class, 'create'])->middleware([
+    'check.validation:send_message_request',
+    'message.channel.check',
+    'message.file.upload',
+]);
     // ── GET /messages/read ────────────────────────────────────────────────
     // Unified read for both directchannel and channelmessage
     // Payload: channel_id, cursor (optional), limit (optional, default 20)

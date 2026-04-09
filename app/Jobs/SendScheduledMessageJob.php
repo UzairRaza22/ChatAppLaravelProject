@@ -23,9 +23,7 @@ class SendScheduledMessageJob implements ShouldQueue
 
     public function handle(): void
     {
-        $id = $this->messageId instanceof ObjectId
-            ? $this->messageId
-            : new ObjectId($this->messageId);
+        $id = new ObjectId($this->messageId);
 
         $message = Message::where('_id', $id)->first();
 
