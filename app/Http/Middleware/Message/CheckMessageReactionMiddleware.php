@@ -37,8 +37,24 @@ class CheckMessageReactionMiddleware
             return response()->notFound('Message not found.');
         }
 
+        $emoji = trim($request->input('emoji'));
+        $userId = (string) auth()->id();
+        
+        // Detect user's current reaction across all emojis
+        $reactions = $message->reactions ?? [];
+        $userCurrentReaction = null;
+        
+        foreach ($reactions as $existingEmoji => $userIds) {
+            if (in_array($userId, (array) $userIds)) {
+                $userCurrentReaction = $existingEmoji;
+                break;
+            }
+        }
+
         $request->attributes->set('message', $message);
-        $request->attributes->set('resolved_emoji', trim($request->input('emoji')));
+        $request->attributes->set('resolved_emoji', $emoji);
+        $request->attributes->set('user_current_reaction', $userCurrentReaction); // null if no reaction
+        $request->attributes->set('is_double_click', $userCurrentReaction === $emoji); // true if same emoji
 
         return $next($request);
     }

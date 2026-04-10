@@ -197,20 +197,38 @@ class MessageController extends Controller
 
     /*
     |--------------------------------------------------------------------------
-    | Toggle Emoji Reaction  (add or remove)
-    | Payload: channel_id, message_id, emoji
-    | message        → resolved by CheckMessageExistsMiddleware
-    | resolved_emoji → resolved/trimmed by CheckMessageReactionMiddleware
+    | Smart Emoji Reaction  (replace, delete on double-click, or add)
+    | Payload: channel_id, message_ids[], emoji
+    |
+    | Behavior:
+    |   - First click on emoji → Add reaction
+    |   - Switch to different emoji → Replace old with new
+    |   - Double-click same emoji → Delete reaction
+    |
+    | Resolved by CheckMessageReactionMiddleware:
+    |   - message: The message document
+    |   - resolved_emoji: The emoji being reacted with
+    |   - user_current_reaction: User's current reaction (null if none)
+    |   - is_double_click: Boolean indicating double-click
     |--------------------------------------------------------------------------
     */
     public function react(Request $request)
     {
-        $message = $request->attributes->get('message');
-        $emoji   = $request->attributes->get('resolved_emoji');
-        $user    = $request->user();
-        $userId  = (string) $user->_id;
+        $message  = $request->attributes->get('message');
+        $emoji    = $request->attributes->get('resolved_emoji');
+        $currentReaction = $request->attributes->get('user_current_reaction'); // null if no reaction
+        $isDoubleClick = $request->attributes->get('is_double_click', false); // true if same emoji
+        $user     = $request->user();
+        $userId   = (string) $user->_id;
 
-        $fresh = Message::toggleReaction($message, $userId, $emoji);
+        // Smart reaction update (handles replacement, deletion, addition)
+        $fresh = Message::toggleReaction(
+            $message,
+            $userId,
+            $emoji,
+            $currentReaction,
+            $isDoubleClick
+        );
 
         return response()->success(
             ['message' => MessageResource::make($fresh->load(['sender', 'channel']))],
