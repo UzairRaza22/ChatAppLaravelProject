@@ -186,13 +186,13 @@ class Message extends Model
 
     /**
      * Smart reaction handling with replacement and double-click deletion
-     * 
+     *
      * Logic:
      * 1. Double-click (same emoji) → Delete reaction
      * 2. Replace (different emoji) → Remove old reaction, add new one
      * 3. New emoji → Add reaction
      * 4. Automatically removes emoji key if no users left
-     * 
+     *
      * @param self $message
      * @param string $userId
      * @param string $emoji - New emoji to react with

@@ -39,11 +39,11 @@ class CheckMessageReactionMiddleware
 
         $emoji = trim($request->input('emoji'));
         $userId = (string) auth()->id();
-        
+
         // Detect user's current reaction across all emojis
         $reactions = $message->reactions ?? [];
         $userCurrentReaction = null;
-        
+
         foreach ($reactions as $existingEmoji => $userIds) {
             if (in_array($userId, (array) $userIds)) {
                 $userCurrentReaction = $existingEmoji;
