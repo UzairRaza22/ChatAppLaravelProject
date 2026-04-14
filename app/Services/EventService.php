@@ -8,7 +8,7 @@ class EventService
     public function send(array $event)
     {
         DB::connection('mongodb')
-            ->collection('events')
+            ->table('events')
             ->insert([
                 'eventName'   => $event['eventName'],
                 'module'      => $event['module'],
