@@ -11,10 +11,32 @@ use App\Http\Requests\Channel\RemoveMemberRequest;
 use App\Http\Requests\Channel\UpdateChannelRequest;
 use App\Http\Resources\ChannelResource;
 use App\Models\Channel;
-use Illuminate\Support\Facades\Http;
 use App\Services\EventService;
 class ChannelController extends Controller
 {
+    protected EventService $eventService;
+
+    public function __construct(EventService $eventService)
+    {
+        $this->eventService = $eventService;
+    }
+
+    private function channelMemberIds($channel): array
+    {
+        return collect($channel->members ?? [])
+            ->map(function ($m) {
+                if (is_array($m) && isset($m['user_id'])) return (string) $m['user_id'];
+                if (is_array($m) && isset($m['id'])) return (string) $m['id'];
+                if (is_object($m) && isset($m->user_id)) return (string) $m->user_id;
+                if (is_object($m) && isset($m->id)) return (string) $m->id;
+                if (is_string($m)) return (string) $m;
+                return null;
+            })
+            ->filter()
+            ->values()
+            ->unique()
+            ->toArray();
+    }
     public function create(CreateChannelRequest $request)
     {
         $user = $request->user();
@@ -60,7 +82,7 @@ class ChannelController extends Controller
             ]
         ];
 
-        $this->sendEvent($event);
+        $this->eventService->send($event);
 
         return response()->success(new ChannelResource($channel), 'Channel created successfully');
     }
@@ -130,7 +152,7 @@ class ChannelController extends Controller
             ]
         ];
 
-        $this->sendEvent($event);
+        $this->eventService->send($event);
 
         return response()->success(new ChannelResource($channel), 'Channel updated successfully');
     }
@@ -159,7 +181,7 @@ class ChannelController extends Controller
         ]
     ];
 
-    $this->sendEvent($event);
+    $this->eventService->send($event);
 
 
         return response()->success(null, 'Channel deleted successfully');
@@ -198,7 +220,7 @@ class ChannelController extends Controller
             ]
         ];
 
-        $this->sendEvent($event);
+        $this->eventService->send($event);
         return response()->success(new ChannelResource($channel->fresh()), 'Members added successfully');
     }
 
@@ -237,7 +259,7 @@ class ChannelController extends Controller
             ]
         ];
 
-        $this->sendEvent($event);
+        $this->eventService->send($event);
 
         return response()->success(new ChannelResource($channel->fresh()), 'Members removed successfully');
     }

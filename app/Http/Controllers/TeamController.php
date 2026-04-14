@@ -5,13 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Team;
 use App\Http\Resources\TeamResource;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use App\Services\EventService;
 class TeamController extends Controller
 {
-    private function sendEvent($event)
+    protected EventService $eventService;
+
+    public function __construct(EventService $eventService)
     {
-        Http::post('http://localhost:3000/event', $event);
+        $this->eventService = $eventService;
     }
     // 1. Create Team
     public function create(Request $request)
@@ -37,7 +38,7 @@ class TeamController extends Controller
             ]
         ];
 
-        $this->sendEvent($event);
+        $this->eventService->send($event);
         return response()->success(new TeamResource($team), 'Team created successfully');
     }
     
@@ -71,7 +72,7 @@ class TeamController extends Controller
             ]
         ];
 
-        $this->sendEvent($event);
+        $this->eventService->send($event);
         return response()->success(new TeamResource($team), 'Team updated successfully');
     }
 
@@ -98,7 +99,7 @@ class TeamController extends Controller
             ]
         ];
 
-        $this->sendEvent($event);
+        $this->eventService->send($event);
         return response()->success(new TeamResource($team), 'Members added to team successfully');
     }
 
@@ -126,7 +127,7 @@ class TeamController extends Controller
             ]
         ];
 
-        $this->sendEvent($event);
+        $this->eventService->send($event);
         return response()->success(new TeamResource($team), 'Members removed from team successfully');
     }
 
@@ -151,7 +152,7 @@ class TeamController extends Controller
         ]
     ];
 
-    $this->sendEvent($event);
+    $this->eventService->send($event);
         return response()->success(null, 'Team deleted successfully');
     }
 }

@@ -12,15 +12,12 @@ use App\Jobs\SendScheduledMessageJob;
 use App\Services\AttachmentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Http;
 use App\Services\EventService;
 
 class MessageController extends Controller
 {
-    private function sendEvent($event)
-{
-    Http::post('http://localhost:3000/event', $event);
-}
+    protected AttachmentService $attachmentService;
+    protected EventService $eventService;
     /*
     |--------------------------------------------------------------------------
     | AttachmentService handles ALL GridFS operations:
@@ -29,11 +26,30 @@ class MessageController extends Controller
     |   delete()  → removes file + .meta.json sidecar from GridFS
     |--------------------------------------------------------------------------
     */
-    protected AttachmentService $attachmentService;
-
-    public function __construct(AttachmentService $attachmentService)
+    public function __construct(AttachmentService $attachmentService, EventService $eventService)
     {
         $this->attachmentService = $attachmentService;
+        $this->eventService = $eventService;
+    }
+    
+    private function channelMemberIds($channelOrId): array
+    {
+        $channel = is_object($channelOrId) ? $channelOrId : Channel::where('_id', $channelOrId)->first();
+        if (!$channel) return [];
+
+        return collect($channel->members ?? [])
+            ->map(function ($m) {
+                if (is_array($m) && isset($m['user_id'])) return (string) $m['user_id'];
+                if (is_array($m) && isset($m['id'])) return (string) $m['id'];
+                if (is_object($m) && isset($m->user_id)) return (string) $m->user_id;
+                if (is_object($m) && isset($m->id)) return (string) $m->id;
+                if (is_string($m)) return (string) $m;
+                return null;
+            })
+            ->filter()
+            ->values()
+            ->unique()
+            ->toArray();
     }
 
     /*
@@ -96,13 +112,13 @@ class MessageController extends Controller
     'module' => 'message',
     'operation' => 'create',
     'referenceId' => (string) $message->_id,
-    'userIds' => [(string) $channel->_id], // channel audience
+    'userIds' => $this->channelMemberIds($channel),
     'metadata' => [
         'message' => new MessageResource($message->load(['sender', 'channel']))
     ]
 ];
 
-$this->sendEvent($event);
+$this->eventService->send($event);
 
         return response()->success(
             ['message' => MessageResource::make($message->load(['sender', 'channel']))],
@@ -157,13 +173,13 @@ $this->sendEvent($event);
     'module' => 'message',
     'operation' => 'update',
     'referenceId' => (string) $updated->_id,
-    'userIds' => [(string) $message->channel_id],
+    'userIds' => $this->channelMemberIds($message->channel_id),
     'metadata' => [
         'message' => new MessageResource($updated->load(['sender', 'channel']))
     ]
 ];
 
-$this->sendEvent($event);
+$this->eventService->send($event);
 
         return response()->success(
             ['message' => MessageResource::make($updated->load(['sender', 'channel']))],
@@ -200,14 +216,14 @@ $this->sendEvent($event);
         'module' => 'message',
         'operation' => 'delete',
         'referenceId' => (string) $messageId,
-        'userIds' => [(string) $channelId],
+        'userIds' => $this->channelMemberIds($channelId),
         'metadata' => [
             'messageId' => (string) $messageId,
             'channelId' => (string) $channelId
         ]
     ];
 
-    $this->sendEvent($event);
+    $this->eventService->send($event);
         return response()->success(null, 'Message deleted successfully!');
     }
 
@@ -283,7 +299,7 @@ $this->sendEvent($event);
     'module' => 'message',
     'operation' => 'reaction',
     'referenceId' => (string) $message->_id,
-    'userIds' => [(string) $message->channel_id],
+    'userIds' => $this->channelMemberIds($message->channel_id),
     'metadata' => [
         'message' => new MessageResource($fresh->load(['sender', 'channel'])),
         'emoji' => $emoji,
@@ -291,7 +307,7 @@ $this->sendEvent($event);
     ]
 ];
 
-$this->sendEvent($event);
+$this->eventService->send($event);
         return response()->success(
             ['message' => MessageResource::make($fresh->load(['sender', 'channel']))],
             'Reaction updated successfully!'
