@@ -12,6 +12,7 @@ use App\Http\Requests\Channel\UpdateChannelRequest;
 use App\Http\Resources\ChannelResource;
 use App\Models\Channel;
 use Illuminate\Support\Facades\Http;
+use App\Services\EventService;
 class ChannelController extends Controller
 {
     public function create(CreateChannelRequest $request)

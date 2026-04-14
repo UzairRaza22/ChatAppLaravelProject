@@ -6,6 +6,7 @@ use App\Models\Team;
 use App\Http\Resources\TeamResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use App\Services\EventService;
 class TeamController extends Controller
 {
     private function sendEvent($event)

@@ -13,6 +13,8 @@ use App\Services\AttachmentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
+use App\Services\EventService;
+
 class MessageController extends Controller
 {
     private function sendEvent($event)

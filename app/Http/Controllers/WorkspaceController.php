@@ -8,12 +8,15 @@ use App\Http\Resources\WorkspaceResource;
 use App\Http\Resources\UserListResource;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
+use App\Services\EventService;
 class WorkspaceController extends Controller
 {
-     private function sendEvent($event)
-    {
-        Http::post('http://localhost:3000/event', $event);
-    }
+    protected EventService $eventService;
+
+public function __construct(EventService $eventService)
+{
+    $this->eventService = $eventService;
+}
     public function create(Request $request)
     {
         $user = data_get($request, 'user');
@@ -36,7 +39,7 @@ class WorkspaceController extends Controller
             ]
         ];
 
-        $this->sendEvent($event);
+        $this->eventService->send($event);
 
         return response()->success([
             'workspace' => WorkspaceResource::make($workspace)
@@ -69,7 +72,7 @@ class WorkspaceController extends Controller
             ]
         ];
 
-        $this->sendEvent($event);
+        $this->eventService->send($event);
 
         return response()->success([
             'workspace' => WorkspaceResource::make($workspace)
@@ -96,7 +99,7 @@ class WorkspaceController extends Controller
         ]
     ];
 
-    $this->sendEvent($event);
+    $this->eventService->send($event);
         return response()->success(null, 'Workspace deleted successfully!');
     }
 
@@ -234,7 +237,7 @@ class WorkspaceController extends Controller
         ]
     ];
 
-    $this->sendEvent($event);
+    $this->eventService->send($event);
         return response()->success([
             'workspace' => WorkspaceResource::make($workspace->load('members')),
             'added_members' => UserListResource::collection($addedUsers),
@@ -264,7 +267,7 @@ class WorkspaceController extends Controller
         ]
     ];
 
-    $this->sendEvent($event);
+    $this->eventService->send($event);
 
         return response()->success(null, 'Members removed successfully!');
     }
