@@ -34,6 +34,7 @@ class Message extends Model
         'file_path',
         'file_name',
         'file_mime',
+        'audio_duration',
         'read_by',
         'reactions',
         'schedule_time',
@@ -170,6 +171,9 @@ class Message extends Model
             $updateData['file_path'] = $data['file_path'];
             $updateData['file_name'] = $data['file_name'] ?? null;
             $updateData['file_mime'] = $data['file_mime'] ?? null;
+        }
+        if (array_key_exists('audio_duration', $data)) {
+            $updateData['audio_duration'] = $data['audio_duration'];
         }
 
         $message->update($updateData);

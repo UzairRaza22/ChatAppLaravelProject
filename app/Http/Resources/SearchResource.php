@@ -24,6 +24,7 @@ class SearchResource extends JsonResource
                 'name' => $this->file_name,
                 'mime_type' => $this->file_mime,
             ]),
+            'audio_duration' => $this->audio_duration,
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
             'sender' => $this->when($this->relationLoaded('sender') && $this->sender, [

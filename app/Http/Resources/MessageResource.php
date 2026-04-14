@@ -21,6 +21,7 @@ class MessageResource extends JsonResource
             'file_path'    => $this->file_path,
             'file_name'    => $this->file_name,
             'file_mime'    => $this->file_mime,
+            'audio_duration' => $this->audio_duration,
             'file_download_url' => $this->file_path
                 ? url('api/messages/download?path=' . urlencode($this->file_path))
                 : null,

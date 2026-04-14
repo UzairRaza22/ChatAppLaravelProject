@@ -5,9 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Team;
 use App\Http\Resources\TeamResource;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Http;
 class TeamController extends Controller
 {
+    private function sendEvent($event)
+    {
+        Http::post('http://localhost:3000/event', $event);
+    }
     // 1. Create Team
     public function create(Request $request)
     {
@@ -20,7 +24,19 @@ class TeamController extends Controller
             'creator_id'   => data_get($user, '_id'),
             'members'      => [(string) data_get($user, '_id')] 
         ]);
+        //eent
+        $event = [
+            'eventName' => 'team_created',
+            'module' => 'team',
+            'operation' => 'create',
+            'referenceId' => $team->_id ?? $team->id,
+            'userIds' => $team->members,
+            'metadata' => [
+                'team' => new TeamResource($team)
+            ]
+        ];
 
+        $this->sendEvent($event);
         return response()->success(new TeamResource($team), 'Team created successfully');
     }
     
@@ -42,7 +58,19 @@ class TeamController extends Controller
             'name'         => data_get($request, 'name'),
             'description'  => data_get($request, 'description')
         ]);
+    //eent
+     $event = [
+            'eventName' => 'team_updated',
+            'module' => 'team',
+            'operation' => 'update',
+            'referenceId' => $team->_id ?? $team->id,
+            'userIds' => $team->members,
+            'metadata' => [
+                'team' => new TeamResource($team)
+            ]
+        ];
 
+        $this->sendEvent($event);
         return response()->success(new TeamResource($team), 'Team updated successfully');
     }
 
@@ -54,7 +82,22 @@ class TeamController extends Controller
         $memberIds = data_get($request, 'member_ids', []); 
 
         $team->push('members', $memberIds, true);
+//eent
+ $event = [
+            'eventName' => 'team_member_added',
+            'module' => 'team',
+            'operation' => 'member_added',
+            'referenceId' => $team->_id ?? $team->id,
+            'userIds' => $team->members,
+            'metadata' => [
+                'team' => new TeamResource($team),
+                'teamId' => (string) ($team->_id ?? $team->id),
+                'workspaceId' => $team->workspace_id,
+                'addedUserIds' => $memberIds
+            ]
+        ];
 
+        $this->sendEvent($event);
         return response()->success(new TeamResource($team), 'Members added to team successfully');
     }
 
@@ -67,7 +110,22 @@ class TeamController extends Controller
         $userIds = data_get($request, 'member_ids', []);
 
         $team->pull('members', $userIds);
+    //eent
+        $event = [
+            'eventName' => 'team_member_removed',
+            'module' => 'team',
+            'operation' => 'member_removed',
+            'referenceId' => $team->_id ?? $team->id,
+            'userIds' => $team->members,
+            'metadata' => [
+                'team' => new TeamResource($team),
+                'teamId' => (string) ($team->_id ?? $team->id),
+                'workspaceId' => $team->workspace_id,
+                'removedUserIds' => $userIds
+            ]
+        ];
 
+        $this->sendEvent($event);
         return response()->success(new TeamResource($team), 'Members removed from team successfully');
     }
 
@@ -77,8 +135,22 @@ class TeamController extends Controller
     public function delete(Request $request)
     {
         $team = data_get($request, 'team');
+         $teamId = $team->_id ?? $team->id;
+         $memberIds = $team->members ?? [];
         $team->delete();
+    //eent
+     $event = [
+        'eventName' => 'team_deleted',
+        'module' => 'team',
+        'operation' => 'delete',
+        'referenceId' => (string) $teamId,
+        'userIds' => $memberIds,
+        'metadata' => [
+            'teamId' => (string) $teamId
+        ]
+    ];
 
+    $this->sendEvent($event);
         return response()->success(null, 'Team deleted successfully');
     }
 }

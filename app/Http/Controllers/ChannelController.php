@@ -11,7 +11,7 @@ use App\Http\Requests\Channel\RemoveMemberRequest;
 use App\Http\Requests\Channel\UpdateChannelRequest;
 use App\Http\Resources\ChannelResource;
 use App\Models\Channel;
-
+use Illuminate\Support\Facades\Http;
 class ChannelController extends Controller
 {
     public function create(CreateChannelRequest $request)
@@ -47,6 +47,19 @@ class ChannelController extends Controller
         }
 
         $channel = Channel::create($channelData);
+    //eent
+     $event = [
+            'eventName' => 'channel_created',
+            'module' => 'channel',
+            'operation' => 'create',
+            'referenceId' => $channel->_id ?? $channel->id,
+            'userIds' => $this->channelMemberIds($channel),
+            'metadata' => [
+                'channel' => new ChannelResource($channel)
+            ]
+        ];
+
+        $this->sendEvent($event);
 
         return response()->success(new ChannelResource($channel), 'Channel created successfully');
     }
@@ -104,6 +117,19 @@ class ChannelController extends Controller
         // Channel resolved by ChannelExistMiddleware — no workspace_id needed here
         $channel = data_get($request->attributes->all(), 'channel');
         $channel->update($request->validated());
+    //eent
+      $event = [
+            'eventName' => 'channel_updated',
+            'module' => 'channel',
+            'operation' => 'update',
+            'referenceId' => $channel->_id ?? $channel->id,
+            'userIds' => $this->channelMemberIds($channel),
+            'metadata' => [
+                'channel' => new ChannelResource($channel)
+            ]
+        ];
+
+        $this->sendEvent($event);
 
         return response()->success(new ChannelResource($channel), 'Channel updated successfully');
     }
@@ -112,7 +138,28 @@ class ChannelController extends Controller
     {
         // Channel resolved by ChannelExistMiddleware — no workspace_id needed here
         $channel = data_get($request->attributes->all(), 'channel');
+        $channelId = $channel->_id ?? $channel->id;
+
+    $memberIds = collect($channel->members ?? [])
+        ->map(fn ($m) => $m['user_id'] ?? $m->user_id ?? $m)
+        ->map(fn ($id) => (string) $id)
+        ->toArray();
+
         $channel->forceDelete();
+    // eent
+      $event = [
+        'eventName' => 'channel_deleted',
+        'module' => 'channel',
+        'operation' => 'delete',
+        'referenceId' => (string) $channelId,
+        'userIds' => $memberIds,
+        'metadata' => [
+            'channelId' => (string) $channelId
+        ]
+    ];
+
+    $this->sendEvent($event);
+
 
         return response()->success(null, 'Channel deleted successfully');
     }
@@ -137,7 +184,20 @@ class ChannelController extends Controller
         }
 
         $channel->update(['members' => $currentMembers]);
+    //eent
+      $event = [
+            'eventName' => 'channel_member_added',
+            'module' => 'channel',
+            'operation' => 'member_added',
+            'referenceId' => $channel->_id ?? $channel->id,
+            'userIds' => $this->channelMemberIds($channel),
+            'metadata' => [
+                'channel' => new ChannelResource($channel),
+                'addedUserIds' => $userIds
+            ]
+        ];
 
+        $this->sendEvent($event);
         return response()->success(new ChannelResource($channel->fresh()), 'Members added successfully');
     }
 
@@ -160,6 +220,23 @@ class ChannelController extends Controller
         })->values()->all();
 
         $channel->update(['members' => $updatedMembers]);
+    //eeent
+     $event = [
+            'eventName' => 'channel_member_removed',
+            'module' => 'channel',
+            'operation' => 'member_removed',
+            'referenceId' => $channel->_id ?? $channel->id,
+            'userIds' => array_values(array_unique(array_merge(
+                $this->channelMemberIds($channel),
+                $userIds
+            ))),
+            'metadata' => [
+                'channel' => new ChannelResource($channel),
+                'removedUserIds' => $userIds
+            ]
+        ];
+
+        $this->sendEvent($event);
 
         return response()->success(new ChannelResource($channel->fresh()), 'Members removed successfully');
     }

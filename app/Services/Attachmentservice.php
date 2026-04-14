@@ -31,6 +31,7 @@ class AttachmentService
         $fileMime = $file->getMimeType();
         $fileSize = $file->getSize();
         $filePath = 'workspaces/' . $workspaceId . '/messages/' . $fileName;
+        $isAudio  = str_starts_with($fileMime, 'audio/');
 
         // Store file in GridFS
         $this->disk()->put($filePath, file_get_contents($file->getRealPath()));
@@ -46,7 +47,7 @@ class AttachmentService
             'file_path'    => $filePath,
             'file_name'    => $fileName,
             'file_mime'    => $fileMime,
-            'message_type' => 'file',
+            'message_type' => $isAudio ? 'voice' : 'file',
         ];
     }
 

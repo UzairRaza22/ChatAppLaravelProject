@@ -12,9 +12,13 @@ use App\Jobs\SendScheduledMessageJob;
 use App\Services\AttachmentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-
+use Illuminate\Support\Facades\Http;
 class MessageController extends Controller
 {
+    private function sendEvent($event)
+{
+    Http::post('http://localhost:3000/event', $event);
+}
     /*
     |--------------------------------------------------------------------------
     | AttachmentService handles ALL GridFS operations:
@@ -75,6 +79,7 @@ class MessageController extends Controller
             'file_path'    => $fileData['file_path'],
             'file_name'    => $fileData['file_name'],
             'file_mime'    => $fileData['file_mime'],
+            'audio_duration' => $request->input('audio_duration'),
             'schedule_time' => $scheduleTimeUtc,
             'status'        => $status,
         ]);
@@ -83,6 +88,19 @@ class MessageController extends Controller
             SendScheduledMessageJob::dispatch((string) $message->_id)
                 ->delay($scheduleTimeUtc);
         }
+    // eent
+    $event = [
+    'eventName' => 'message_created',
+    'module' => 'message',
+    'operation' => 'create',
+    'referenceId' => (string) $message->_id,
+    'userIds' => [(string) $channel->_id], // channel audience
+    'metadata' => [
+        'message' => new MessageResource($message->load(['sender', 'channel']))
+    ]
+];
+
+$this->sendEvent($event);
 
         return response()->success(
             ['message' => MessageResource::make($message->load(['sender', 'channel']))],
@@ -129,7 +147,21 @@ class MessageController extends Controller
             'file_path' => $fileData['file_path'],
             'file_name' => $fileData['file_name'],
             'file_mime' => $fileData['file_mime'],
+            'audio_duration' => $request->input('audio_duration'),
         ], $message);
+    // eent
+    $event = [
+    'eventName' => 'message_updated',
+    'module' => 'message',
+    'operation' => 'update',
+    'referenceId' => (string) $updated->_id,
+    'userIds' => [(string) $message->channel_id],
+    'metadata' => [
+        'message' => new MessageResource($updated->load(['sender', 'channel']))
+    ]
+];
+
+$this->sendEvent($event);
 
         return response()->success(
             ['message' => MessageResource::make($updated->load(['sender', 'channel']))],
@@ -154,11 +186,26 @@ class MessageController extends Controller
         if ((string) $message->sender_id !== (string) $request->user()->_id) {
             return response()->forbidden('Only the sender can delete this message.');
         }
+        $messageId = $message->_id ?? $message->id;
+    $channelId = $message->channel_id;
 
         $message->file_path && $this->attachmentService->delete($message->file_path);
 
         $message->delete();
+    // eent
+    $event = [
+        'eventName' => 'message_deleted',
+        'module' => 'message',
+        'operation' => 'delete',
+        'referenceId' => (string) $messageId,
+        'userIds' => [(string) $channelId],
+        'metadata' => [
+            'messageId' => (string) $messageId,
+            'channelId' => (string) $channelId
+        ]
+    ];
 
+    $this->sendEvent($event);
         return response()->success(null, 'Message deleted successfully!');
     }
 
@@ -211,6 +258,21 @@ class MessageController extends Controller
         $userId  = (string) $user->_id;
 
         $fresh = Message::toggleReaction($message, $userId, $emoji);
+    // eent
+    $event = [
+    'eventName' => 'message_reaction_updated',
+    'module' => 'message',
+    'operation' => 'reaction',
+    'referenceId' => (string) $message->_id,
+    'userIds' => [(string) $message->channel_id],
+    'metadata' => [
+        'message' => new MessageResource($fresh->load(['sender', 'channel'])),
+        'emoji' => $emoji,
+        'userId' => $userId
+    ]
+];
+
+$this->sendEvent($event);
 
         return response()->success(
             ['message' => MessageResource::make($fresh->load(['sender', 'channel']))],
