@@ -17,13 +17,25 @@ class CheckWorkspaceExistsMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $workspaceId = data_get($request, 'workspace_id');
+        // Try to get workspace_id from multiple sources:
+        // 1. From request body/query (POST/DELETE endpoints)
+        // 2. From route parameter {id} (GET endpoints)
+        $workspaceId = data_get($request, 'workspace_id')
+                    ?? $request->route('id')
+                    ?? $request->query('workspace_id');
+
+        if (!$workspaceId) {
+            return response()->notFound('Workspace ID is required.');
+        }
 
         $workspace = Workspace::where('_id', $workspaceId)->first();
 
         if (!$workspace) {
             return response()->notFound('Workspace not found.');
         }
+
+        // Store workspace in request for use in controller
+        $request->merge(['workspace' => $workspace]);
 
         return $next($request);
     }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Workspace;
 use App\Http\Resources\WorkspaceResource;
+use App\Http\Resources\UserListResource;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
 class WorkspaceController extends Controller
@@ -99,17 +100,128 @@ class WorkspaceController extends Controller
         return response()->success(null, 'Workspace deleted successfully!');
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | List Available Users for Member Addition
+    |--------------------------------------------------------------------------
+    | Get all verified users that can be added to the workspace
+    | Excludes already added members for cleaner UI
+    | Endpoint: GET /workspaces/{id}/available-members
+    |--------------------------------------------------------------------------
+    */
+    public function listAvailableMembers(Request $request)
+    {
+        $workspace = data_get($request, 'workspace');
+        $currentMemberIds = $workspace->members->pluck('_id')->toArray();
+
+        // Get all verified users excluding current members
+        $availableUsers = User::where('is_active', true)
+            ->whereNotIn('_id', $currentMemberIds)
+            ->select('_id', 'name', 'email', 'is_active', 'avatar', 'created_at')
+            ->get();
+
+        return response()->success([
+            'available_members' => UserListResource::collection($availableUsers),
+            'count' => $availableUsers->count(),
+        ], 'Available members retrieved successfully!');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Search Users by Name or Email
+    |--------------------------------------------------------------------------
+    | Quick search to find users by name or email
+    | Query parameter: 'query' (minimum 2 characters)
+    | Endpoint: GET /workspaces/{id}/search-members?query=john
+    |--------------------------------------------------------------------------
+    */
+    public function searchMembers(Request $request)
+    {
+        $request->validate([
+            'query' => 'required|string|min:2|max:50',
+        ]);
+
+        $workspace = data_get($request, 'workspace');
+        $query = $request->input('query');
+        $currentMemberIds = $workspace->members->pluck('_id')->toArray();
+
+        // Search by name or email
+        $users = User::where('is_active', true)
+            ->whereNotIn('_id', $currentMemberIds)
+            ->where(function ($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                  ->orWhere('email', 'like', "%{$query}%");
+            })
+            ->select('_id', 'name', 'email', 'is_active', 'avatar', 'created_at')
+            ->limit(20)
+            ->get();
+
+        return response()->success([
+            'search_results' => UserListResource::collection($users),
+            'count' => $users->count(),
+            'query' => $query,
+        ], 'Users found successfully!');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Add Members to Workspace
+    |--------------------------------------------------------------------------
+    | Accepts user_ids and/or user_emails
+    | Intelligently maps emails to IDs internally
+    | Handles both ID and email-based member addition
+    | Endpoint: POST /workspaces/add-members
+    |--------------------------------------------------------------------------
+    */
     public function addMembers(Request $request)
     {
         $workspace = data_get($request, 'workspace');
 
-        // Get user IDs from request
-        $userIds = data_get($request, 'user_ids');
+        $userIds = array_filter($request->input('user_ids', []));
+        $userEmails = array_filter($request->input('user_emails', []));
 
-        // Sync without detaching to add new members
-        $workspace->members()->syncWithoutDetaching($userIds);
-    //eent
-    $event = [
+        // Get user IDs from emails
+        $userIdsByEmail = [];
+        if (!empty($userEmails)) {
+            $userIdsByEmail = User::whereIn('email', $userEmails)
+                ->where('is_active', true)
+                ->pluck('_id')
+                ->toArray();
+        }
+
+        // Merge both IDs and IDs from emails
+        $allUserIds = array_unique(array_merge($userIds, $userIdsByEmail));
+
+        if (empty($allUserIds)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No valid users found to add.',
+            ], 422);
+        }
+
+        // Get existing member IDs
+        $existingMemberIds = $workspace->members->pluck('_id')->toArray();
+
+        // Filter out already added members
+        $newMemberIds = array_diff($allUserIds, $existingMemberIds);
+
+        if (empty($newMemberIds)) {
+            return response()->json([
+                'success' => true,
+                'message' => 'All selected users are already members.',
+                'workspace' => WorkspaceResource::make($workspace->load('members')),
+            ]);
+        }
+
+        // Add new members
+        $workspace->members()->syncWithoutDetaching($newMemberIds);
+
+        // Get added users info
+        $addedUsers = User::whereIn('_id', $newMemberIds)
+            ->select('_id', 'name', 'email')
+            ->get();
+        // eent
+         $event = [
         'eventName' => 'workspace_member_added',
         'module' => 'workspace',
         'operation' => 'member_added',
@@ -123,9 +235,10 @@ class WorkspaceController extends Controller
     ];
 
     $this->sendEvent($event);
-
         return response()->success([
-            'workspace' => WorkspaceResource::make($workspace->load('members'))
+            'workspace' => WorkspaceResource::make($workspace->load('members')),
+            'added_members' => UserListResource::collection($addedUsers),
+            'added_count' => $addedUsers->count(),
         ], 'Members added successfully!');
     }
 

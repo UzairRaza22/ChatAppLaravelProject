@@ -188,23 +188,78 @@ class Message extends Model
             ->push('read_by', $userId, true);
     }
 
-    public static function toggleReaction(self $message, string $userId, string $emoji): self
-    {
-        $reactions  = $message->reactions ?? [];
-        $emojiUsers = $reactions[$emoji] ?? [];
+    /**
+     * Smart reaction handling with replacement and double-click deletion
+     *
+     * Logic:
+     * 1. Double-click (same emoji) → Delete reaction
+     * 2. Replace (different emoji) → Remove old reaction, add new one
+     * 3. New emoji → Add reaction
+     * 4. Automatically removes emoji key if no users left
+     *
+     * @param self $message
+     * @param string $userId
+     * @param string $emoji - New emoji to react with
+     * @param string|null $userCurrentReaction - User's current reaction (for smart replacement)
+     * @param bool $isDoubleClick - Whether this is a double-click action
+     * @return self
+     */
+    public static function toggleReaction(
+        self $message,
+        string $userId,
+        string $emoji,
+        ?string $userCurrentReaction = null,
+        bool $isDoubleClick = false
+    ): self {
+        $reactions = $message->reactions ?? [];
 
-        if (in_array($userId, $emojiUsers)) {
+        // Case 1: Double-click on same emoji → Delete reaction
+        if ($isDoubleClick && $userCurrentReaction && $userCurrentReaction === $emoji) {
             $message->pull("reactions.{$emoji}", $userId);
             $message->refresh();
 
+            // Remove emoji key if no users left
             $refreshed = $message->reactions ?? [];
             if (isset($refreshed[$emoji]) && empty($refreshed[$emoji])) {
                 $message->unset("reactions.{$emoji}");
                 $message->refresh();
             }
-        } else {
+        }
+        // Case 2: Replace - user has different emoji, remove old and add new
+        else if ($userCurrentReaction && $userCurrentReaction !== $emoji) {
+            // Remove from old emoji
+            $message->pull("reactions.{$userCurrentReaction}", $userId);
+            $message->refresh();
+
+            // Clean up old emoji if empty
+            $refreshed = $message->reactions ?? [];
+            if (isset($refreshed[$userCurrentReaction]) && empty($refreshed[$userCurrentReaction])) {
+                $message->unset("reactions.{$userCurrentReaction}");
+            }
+
+            // Add new emoji reaction
             $message->push("reactions.{$emoji}", $userId, true);
             $message->refresh();
+        }
+        // Case 3: New emoji (user has no current reaction) → Add reaction
+        else if (!$userCurrentReaction) {
+            $message->push("reactions.{$emoji}", $userId, true);
+            $message->refresh();
+        }
+        // Case 4: User clicked same emoji (but not flagged as double-click) → Do nothing or treat as toggle
+        // This maintains backward compatibility if frontend doesn't send double-click flag
+        else if ($userCurrentReaction === $emoji) {
+            $emojiUsers = $reactions[$emoji] ?? [];
+            if (in_array($userId, $emojiUsers)) {
+                $message->pull("reactions.{$emoji}", $userId);
+                $message->refresh();
+
+                $refreshed = $message->reactions ?? [];
+                if (isset($refreshed[$emoji]) && empty($refreshed[$emoji])) {
+                    $message->unset("reactions.{$emoji}");
+                    $message->refresh();
+                }
+            }
         }
 
         return $message->fresh();

@@ -15,7 +15,7 @@ Route::middleware('check.token:login_token')->group(function () {
     Route::get('/read', [WorkspaceController::class, 'read'])->middleware(
         'check.workspaces.exist'
     );
-    
+
     //read specific workspace
     Route::get('/read/{id}', [WorkspaceController::class, 'read'])->middleware(
         'check.workspaces.exist'
@@ -35,6 +35,28 @@ Route::middleware('check.token:login_token')->group(function () {
         'check.workspace.creator',
     ]);
 
+    /*
+    |--------------------------------------------------------------------------
+    | NEW: List Available Members
+    | Get all verified users that can be added to workspace
+    | Excludes currently added members
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/{id}/available-members', [WorkspaceController::class, 'listAvailableMembers'])->middleware([
+        'check.workspace.exists',
+    ]);
+
+    /*
+    |--------------------------------------------------------------------------
+    | NEW: Search Members by Name or Email
+    | Quick user search (minimum 2 characters)
+    | Query: /workspaces/{id}/search-members?query=john
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/{id}/search-members', [WorkspaceController::class, 'searchMembers'])->middleware([
+        'check.workspace.exists',
+    ]);
+
     //add members
     Route::post('/add-members', [WorkspaceController::class, 'addMembers'])->middleware([
         'check.validation:add_workspace_member_request',
@@ -48,6 +70,6 @@ Route::middleware('check.token:login_token')->group(function () {
         'check.workspace.exists',
         'check.workspace.creator',
         'check.members.exist'
-       
+
     ]);
 });
